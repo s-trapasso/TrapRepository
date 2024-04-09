@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="MVVM_MAUI_UDEMY.View.NewsDetailPage"
+             Title="NewsDetailPage"
+             xmlns:viewmodel="clr-namespace:MVVM_MAUI_UDEMY.ViewModel"
+             x:DataType="viewmodel:NewsDetailViewModel">
+
+    <VerticalStackLayout>
+        <Image HeightRequest="200" WidthRequest="250"
+               Aspect="Fill"
+               Source="{Binding News.ImageUrl}"></Image>
+        <Label Text="{Binding News.Title}"></Label>
+        <Label Text="{Binding News.Content}"></Label>
+    </VerticalStackLayout>
+    
+    
+</ContentPage>
