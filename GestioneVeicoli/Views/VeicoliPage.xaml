@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converters="clr-namespace:GestioneVeicoli.Resources.Converters"
+             x:Class="GestioneVeicoli.Views.VeicoliPage"
+             Title="Elenco Veicoli">
+    <VerticalStackLayout Padding="10">
+        <!--Form per aggiungere un nuovo veicolo-->
+        <Entry Placeholder="Targa" Text="{Binding NewVeicolo.Targa}" />
+        <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca}" />
+        <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello}" />
+        <!--<Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno}" Keyboard="Numeric" />-->
+        <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Converter={converters:StringToIntConverters}}" Keyboard="Numeric" />
+        <Button Text="Aggiungi Veicolo" Command="{Binding AggiungiCommand}" />
+
+
+        <CollectionView ItemsSource="{Binding Veicoli}" 
+                SelectionMode="Single"
+                SelectionChanged="OnSelectionChanged">
+            <CollectionView.ItemTemplate>
+            <DataTemplate>
+                <VerticalStackLayout Padding="10">
+                    <Label Text="{Binding Targa}" FontAttributes="Bold" />
+                    <Label Text="{Binding Marca}" />
+                    <Label Text="{Binding Modello}" />
+                    <Label Text="{Binding Anno}" />
+                 </VerticalStackLayout>
+              </DataTemplate>
+        </CollectionView.ItemTemplate>
+        </CollectionView>
+    </VerticalStackLayout>
+</ContentPage>

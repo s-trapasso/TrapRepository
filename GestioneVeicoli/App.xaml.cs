@@ -1,15 +1,13 @@
-﻿namespace GestioneVeicoli
+﻿using GestioneVeicoli.Views;
+
+namespace GestioneVeicoli
 {
     public partial class App : Application
     {
-        public App()
+        public App(VeicoliPage veicoliPage)
         {
             InitializeComponent();
-        }
-
-        protected override Window CreateWindow(IActivationState? activationState)
-        {
-            return new Window(new AppShell());
+            MainPage = new NavigationPage(veicoliPage);
         }
     }
 }

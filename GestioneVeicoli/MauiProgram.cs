@@ -1,9 +1,14 @@
-﻿using Microsoft.Extensions.Logging;
+﻿
+using GestioneVeicoli.Services;
+using GestioneVeicoli.ViewModels;
+using GestioneVeicoli.Views;
+using Microsoft.Extensions.Logging;
 
 namespace GestioneVeicoli
 {
     public static class MauiProgram
     {
+        public static IServiceProvider ServiceProvider { get; private set; }
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -17,9 +22,18 @@ namespace GestioneVeicoli
 
 #if DEBUG
     		builder.Logging.AddDebug();
+            builder.Services.AddSingleton<IVeicoliRepository, VeicoliRepository>();
+            builder.Services.AddSingleton<VeicoliViewModel>();
+            builder.Services.AddTransient<VeicoloDettaglioViewModel>();
+            builder.Services.AddTransient<VeicoliPage>();
+            
 #endif
 
-            return builder.Build();
+            var app = builder.Build();
+            ServiceProvider = app.Services; // Salvo il provider di servizi
+            
+            
+            return app;
         }
     }
 }
