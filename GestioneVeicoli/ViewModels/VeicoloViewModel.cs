@@ -12,44 +12,44 @@ using GestioneVeicoli.Views;
 
 namespace GestioneVeicoli.ViewModels
 {
-    public class VeicoliViewModel : INotifyPropertyChanged
+    public class VeicoloViewModel : INotifyPropertyChanged
     {
         public readonly IVeicoliRepository _veicoloRepository;
-
+        public ObservableCollection<Veicolo> Veicoli { get; set; } = new ObservableCollection<Veicolo>();
         #region COMMAND
         public ICommand CaricaCommand { get; }
         public ICommand AggiungiCommand { get; }
         public ICommand SelezionaCommand { get; }
         public ICommand EliminaCommand { get; }
         #endregion
-        public ObservableCollection<Veicolo> Veicoli { get; set; } = new ObservableCollection<Veicolo>();
+       
 
         private Veicolo _newVeicolo = new Veicolo();
-        
-
         public Veicolo NewVeicolo
         {
             get => _newVeicolo;
-            set => _newVeicolo = value;
+            set
+            {
+                if (_newVeicolo != value)
+                {
+                    _newVeicolo = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewVeicolo)));
+                }
+            }
         }
-        public VeicoliViewModel(IVeicoliRepository veicoloRepository)
+        public VeicoloViewModel(IVeicoliRepository veicoloRepository)
         {
             _veicoloRepository = veicoloRepository;
 
-            CaricaCommand = new Command(async () => await CaricaAsync());
-            AggiungiCommand = new Command(AggiungiVeicolo);
-            SelezionaCommand = new Command<Veicolo>(async (veicolo) => await DettaglioVeicoloAsync(veicolo));
-            EliminaCommand = new Command<Veicolo>(EliminaVeicolo);
+            CaricaCommand = new Command(async () => await CaricaVeicoliAsync());
+            AggiungiCommand = new Command(async () => await AggiungiVeicoloAsync());
+            EliminaCommand = new Command<Veicolo>(async (veicolo) => await EliminaVeicoloAsync(veicolo));
 
-            
-            //Carica veicoli all'avvio
-            Task.Run(async () =>
-            {
-                await CaricaAsync();
-            });
+            // Carica i veicoli all'avvio
+            Task.Run(async () => await CaricaVeicoliAsync());
 
         }
-        private async Task CaricaAsync()
+        private async Task CaricaVeicoliAsync()
         {
             Veicoli.Clear();
             var lista = await _veicoloRepository.GetVeicoliAsync();
@@ -57,23 +57,15 @@ namespace GestioneVeicoli.ViewModels
                 Veicoli.Add(v);
         }
 
-        private void AggiungiVeicolo()
+        private async Task AggiungiVeicoloAsync()
         {
             if (!string.IsNullOrWhiteSpace(NewVeicolo.Targa) &&
-                !string.IsNullOrWhiteSpace(NewVeicolo.Marca) &&
-                !string.IsNullOrWhiteSpace(NewVeicolo.Modello))
+               !string.IsNullOrWhiteSpace(NewVeicolo.Marca) &&
+               !string.IsNullOrWhiteSpace(NewVeicolo.Modello))
             {
-                Veicoli.Add(new Veicolo
-                {
-                    Targa = NewVeicolo.Targa,
-                    Marca = NewVeicolo.Marca,
-                    Modello = NewVeicolo.Modello,
-                    Anno = NewVeicolo.Anno
-                });
-
-                // Resetta il veicolo per il prossimo inserimento
-                NewVeicolo = new Veicolo();
-
+                await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
+                Veicoli.Add(NewVeicolo);
+                NewVeicolo = new Veicolo(); // Resetta il modello
             }
         }
 
@@ -88,13 +80,13 @@ namespace GestioneVeicoli.ViewModels
             });
         }
 
-        private void EliminaVeicolo(Veicolo veicoloSelezionato)
+        private async Task EliminaVeicoloAsync(Veicolo veicoloSelezionato)
         {
-            if (veicoloSelezionato is null)
-                return;
-            Veicoli.Remove(veicoloSelezionato);
-            // Chiamata al repository per eliminare il veicolo
-            _ = _veicoloRepository.DeleteVeicoloAsync(veicoloSelezionato.Id);
+            if (veicoloSelezionato != null)
+            {
+                await _veicoloRepository.DeleteVeicoloAsync(veicoloSelezionato.Id);
+                Veicoli.Remove(veicoloSelezionato);
+            }
         }
 
 

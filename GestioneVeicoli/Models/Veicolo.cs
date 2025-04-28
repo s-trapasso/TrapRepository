@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,6 +17,8 @@ namespace GestioneVeicoli.Models
         private string _modello;
         private int _anno;
         public event PropertyChangedEventHandler PropertyChanged;
+
+        [Key]
         public int Id
         {
             get => _id;
@@ -28,6 +31,8 @@ namespace GestioneVeicoli.Models
                 }
             }
         }
+        [Required]
+        [MaxLength(50)]
         public string Targa
         {
             get => _targa;
@@ -40,6 +45,8 @@ namespace GestioneVeicoli.Models
                 }
             }
         }
+        [Required]
+        [MaxLength(50)]
         public string Marca
         {
             get => _marca;
@@ -52,6 +59,8 @@ namespace GestioneVeicoli.Models
                 }
             }
         }
+        [Required]
+        [MaxLength(50)]
         public string Modello
         {
             get => _modello;
@@ -64,6 +73,8 @@ namespace GestioneVeicoli.Models
                 }
             }
         }
+        [Required]
+        [MaxLength(4)]
         public int Anno
         {
             get => _anno;

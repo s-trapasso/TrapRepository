@@ -59,7 +59,20 @@
 		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Remove="appSettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="appSettings.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	</ItemGroup>
+
 	<ItemGroup>		
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.4" />		
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />		
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.4" />		
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.0" />
 	</ItemGroup>

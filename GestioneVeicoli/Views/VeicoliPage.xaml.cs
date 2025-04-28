@@ -1,26 +1,26 @@
 using GestioneVeicoli.Models;
+using GestioneVeicoli.Services;
 using GestioneVeicoli.ViewModels;
 
 namespace GestioneVeicoli.Views;
 
 public partial class VeicoliPage : ContentPage
 {
-    private readonly VeicoliViewModel _veicoliViewModel;
-    public VeicoliPage(VeicoliViewModel viewModel)
+    private readonly VeicoloViewModel _VeicoloViewModel;
+    public VeicoliPage(VeicoloViewModel viewModel)
     {
         InitializeComponent();
         BindingContext = viewModel;
-        _veicoliViewModel = viewModel;
+        _VeicoloViewModel = viewModel;
     }
-
     private async void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         //Questo codice fa in modo che alla selezione di un veicolo, venga aperta la pagina di dettaglio
         //if (e.CurrentSelection.FirstOrDefault() is Veicolo veicoloSelezionato)
         //{
         //    // Naviga alla pagina di dettaglio con il repository
-        //    var veicoloViewModel = (VeicoliViewModel)BindingContext;
-        //    var repository = ((VeicoliViewModel)BindingContext)._veicoloRepository;
+        //    var veicoloViewModel = (VeicoloViewModel)BindingContext;
+        //    var repository = ((VeicoloViewModel)BindingContext)._veicoloRepository;
         //    await Navigation.PushAsync(new VeicoloDettaglioPage
         //    {
         //        BindingContext = new VeicoloDettaglioViewModel(veicoloSelezionato, repository, veicoloViewModel)
@@ -29,38 +29,39 @@ public partial class VeicoliPage : ContentPage
         //    // Deseleziona l'elemento per evitare selezioni persistenti
         //    ((CollectionView)sender).SelectedItem = null;
         //}
-        if (e.CurrentSelection.FirstOrDefault() is Veicolo veicoloSelezionato)
+        try
         {
-            // Mostra un dialogo per scegliere l'azione
-            string azione = await DisplayActionSheet(
-                "Scegli un'azione",
-                "Annulla",
-                null,
-                "Modifica",
-                "Elimina"
-            );
-
-            switch (azione)
+            if (e.CurrentSelection.FirstOrDefault() is Veicolo veicoloSelezionato)
             {
-                case "Modifica":
-                    // Naviga alla pagina di dettaglio
-                    //var repository = ((VeicoliViewModel)BindingContext)._veicoloRepository;
-                    await Navigation.PushAsync(new VeicoloDettaglioPage
-                    {
-                        BindingContext = new VeicoloDettaglioViewModel(veicoloSelezionato, _veicoliViewModel._veicoloRepository, _veicoliViewModel)
-                    });
-                    break;
+                string azione = await DisplayActionSheet(
+                    "Scegli un'azione",
+                    "Annulla",
+                    null,
+                    "Modifica",
+                    "Elimina"
+                );
 
-                case "Elimina":
-                    // Esegui il comando di eliminazione
-                    _veicoliViewModel.EliminaCommand.Execute(veicoloSelezionato);
-                    break;
+                var navigationService = MauiProgram.ServiceProvider.GetRequiredService<NavigationService>();
 
-                default:
-                    // Deseleziona l'elemento se l'utente annulla
-                    ((CollectionView)sender).SelectedItem = null;
-                    break;
+                if (azione == "Modifica")
+                {
+                    await navigationService.NavigateToDettaglioAsync(veicoloSelezionato);
+                }
+                else if (azione == "Elimina")
+                {
+                    _VeicoloViewModel.EliminaCommand.Execute(veicoloSelezionato);
+                }
             }
         }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Errore", $"Si è verificato un errore: {ex.Message}", "OK");
+        }
+        finally
+        {
+            // Deseleziona l'elemento in ogni caso
+            ((CollectionView)sender).SelectedItem = null;
+        }
     }
+    
 }
