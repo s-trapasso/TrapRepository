@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using GestioneVeicoli.Log;
 using GestioneVeicoli.Models;
 using GestioneVeicoli.Services;
 using GestioneVeicoli.Views;
@@ -15,6 +16,7 @@ namespace GestioneVeicoli.ViewModels
     public class VeicoloViewModel : INotifyPropertyChanged
     {
         public readonly IVeicoliRepository _veicoloRepository;
+        public readonly ILoggingService _logger;
         public ObservableCollection<Veicolo> Veicoli { get; set; } = new ObservableCollection<Veicolo>();
         #region COMMAND
         public ICommand CaricaCommand { get; }
@@ -37,10 +39,11 @@ namespace GestioneVeicoli.ViewModels
                 }
             }
         }
-        public VeicoloViewModel(IVeicoliRepository veicoloRepository)
+        public VeicoloViewModel(IVeicoliRepository veicoloRepository,ILoggingServiceFactory loggingServiceFactory)
         {
             _veicoloRepository = veicoloRepository;
-
+            _logger = loggingServiceFactory.CreateLogger<VeicoloViewModel>();
+            _logger.Info("VeicoliVierModel inizializzato");
             CaricaCommand = new Command(async () => await CaricaVeicoliAsync());
             AggiungiCommand = new Command(async () => await AggiungiVeicoloAsync());
             EliminaCommand = new Command<Veicolo>(async (veicolo) => await EliminaVeicoloAsync(veicolo));

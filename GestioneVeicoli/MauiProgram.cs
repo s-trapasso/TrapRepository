@@ -1,8 +1,12 @@
 ﻿
+using System.Reflection;
 using GestioneVeicoli.Data;
+using GestioneVeicoli.Log;
 using GestioneVeicoli.Services;
 using GestioneVeicoli.ViewModels;
 using GestioneVeicoli.Views;
+using log4net;
+using log4net.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -14,6 +18,18 @@ namespace GestioneVeicoli
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
+
+            // Percorso del file di configurazione
+            var logConfigPath = Path.Combine(AppContext.BaseDirectory, "log4net.config");
+
+            // Crea la cartella Log se non esiste
+            var logDir = Path.Combine(AppContext.BaseDirectory, "Log");
+            Directory.CreateDirectory(logDir);
+
+            // Inizializza log4net
+            var repository = LogManager.GetRepository(Assembly.GetExecutingAssembly());
+            XmlConfigurator.Configure(repository, new FileInfo(logConfigPath));
+
             builder
                 .UseMauiApp<App>()
                 .ConfigureFonts(fonts =>
@@ -50,6 +66,7 @@ namespace GestioneVeicoli
             services.AddTransient<VeicoloDettaglioViewModel>();
             services.AddTransient<VeicoliPage>();
             services.AddSingleton<NavigationService>(); // Registrazione del servizio di navigazione
+            services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
         }
     }
 }
