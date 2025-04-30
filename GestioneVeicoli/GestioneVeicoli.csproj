@@ -79,6 +79,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Update="Log\ILoggingService.cs">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Compile>
+	  <Compile Update="Log\ILoggingServiceFactory.cs">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Compile>
+	  <Compile Update="Log\LoggingService .cs">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </Compile>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiXaml Update="Views\VeicoloDettaglioPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

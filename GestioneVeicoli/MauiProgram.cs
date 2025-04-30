@@ -15,6 +15,7 @@ namespace GestioneVeicoli
     public static class MauiProgram
     {
         public static IServiceProvider ServiceProvider { get; private set; }
+        
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -38,25 +39,26 @@ namespace GestioneVeicoli
                     fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
                 });
 
-            // Configurazione del database
-            builder.Services.AddDbContext<VeicoliDbContext>(options =>
-                options.UseSqlServer("Server=DESKTOP-6DONDJT\\MSSQLSERVER_TRAP;Database=GestioneVeicoli;User Id=sa;Password=admintrap;Encrypt=False;"));
-#if DEBUG
-            builder.Logging.AddDebug();
+            // ✅ Configura servizi
             ConfiguraServizi(builder.Services);
 
+            // ✅ Crea un ServiceProvider temporaneo per il logging
+            var tempProvider = builder.Services.BuildServiceProvider();
+            var loggerFactory = tempProvider.GetRequiredService<ILoggingServiceFactory>();
+            var logger = loggerFactory.CreateLogger(typeof(MauiProgram));
+            logger.Info("Avvio configurazione dell'applicazione...");
+
+            // Configurazione del database
+            logger.Info("Inizializzazione del database");
+            builder.Services.AddDbContext<VeicoliDbContext>(options =>
+                options.UseSqlServer("Server=DESKTOP-6DONDJT\\MSSQLSERVER_TRAP;Database=GestioneVeicoli;User Id=sa;Password=admintrap;Encrypt=False;"));
+
+#if DEBUG
+            builder.Logging.AddDebug();
 #endif
 
             var app = builder.Build();
-            //// Creazione automatica del database
-            //using (var scope = app.Services.CreateScope())
-            //{
-            //    var dbContext = scope.ServiceProvider.GetRequiredService<VeicoliDbContext>();
-            //    dbContext.Database.EnsureCreated();
-            //}
             ServiceProvider = app.Services; // Salvo il provider di servizi
-            
-            
             return app;
         }
         private static void ConfiguraServizi(IServiceCollection services)

@@ -10,6 +10,7 @@ using GestioneVeicoli.Log;
 using GestioneVeicoli.Models;
 using GestioneVeicoli.Services;
 using GestioneVeicoli.Views;
+using log4net.Repository.Hierarchy;
 
 namespace GestioneVeicoli.ViewModels
 {
@@ -43,7 +44,6 @@ namespace GestioneVeicoli.ViewModels
         {
             _veicoloRepository = veicoloRepository;
             _logger = loggingServiceFactory.CreateLogger<VeicoloViewModel>();
-            _logger.Info("VeicoliVierModel inizializzato");
             CaricaCommand = new Command(async () => await CaricaVeicoliAsync());
             AggiungiCommand = new Command(async () => await AggiungiVeicoloAsync());
             EliminaCommand = new Command<Veicolo>(async (veicolo) => await EliminaVeicoloAsync(veicolo));
@@ -54,21 +54,44 @@ namespace GestioneVeicoli.ViewModels
         }
         private async Task CaricaVeicoliAsync()
         {
-            Veicoli.Clear();
-            var lista = await _veicoloRepository.GetVeicoliAsync();
-            foreach (var v in lista)
-                Veicoli.Add(v);
+            try
+            {
+                Veicoli.Clear();
+                var lista = await _veicoloRepository.GetVeicoliAsync();
+                foreach (var v in lista)
+                    Veicoli.Add(v);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Errore durante il caricamento dei veicoli", ex);
+                await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante il caricamento dei veicoli\n Errore {ex.Message}.", "OK");
+            }
+            
         }
 
         private async Task AggiungiVeicoloAsync()
         {
-            if (!string.IsNullOrWhiteSpace(NewVeicolo.Targa) &&
-               !string.IsNullOrWhiteSpace(NewVeicolo.Marca) &&
-               !string.IsNullOrWhiteSpace(NewVeicolo.Modello))
+            try
             {
-                await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
-                Veicoli.Add(NewVeicolo);
-                NewVeicolo = new Veicolo(); // Resetta il modello
+                if (string.IsNullOrWhiteSpace(NewVeicolo.Targa) ||
+                    string.IsNullOrWhiteSpace(NewVeicolo.Marca) ||
+                    string.IsNullOrWhiteSpace(NewVeicolo.Modello))
+                {
+                    await App.Current.MainPage.DisplayAlert("Errore", "Tutti i campi sono obbligatori.", "OK");
+                    return;
+                }
+                else
+                {
+                    await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
+                    Veicoli.Add(NewVeicolo);
+                    NewVeicolo = new Veicolo(); // Resetta il modello
+                    _logger.Info($"Veicolo aggiunto");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Errore durante l'aggiunta del veicolo", ex);
+                await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante l'aggiunta del veicolo\n Errore {ex.Message}.", "OK");
             }
         }
 
@@ -85,10 +108,19 @@ namespace GestioneVeicoli.ViewModels
 
         private async Task EliminaVeicoloAsync(Veicolo veicoloSelezionato)
         {
-            if (veicoloSelezionato != null)
+            try 
             {
-                await _veicoloRepository.DeleteVeicoloAsync(veicoloSelezionato.Id);
-                Veicoli.Remove(veicoloSelezionato);
+                if (veicoloSelezionato != null)
+                {
+                    await _veicoloRepository.DeleteVeicoloAsync(veicoloSelezionato.Id);
+                    Veicoli.Remove(veicoloSelezionato);
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("Errore durante l'eliminazione del veicolo", ex);
+                await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante l'eliminazione del veicolo\n Errore {ex.Message}.", "OK");
             }
         }
 

@@ -9,11 +9,13 @@ namespace GestioneVeicoli.Log
     public interface ILoggingServiceFactory
     {
         ILoggingService CreateLogger<T>();
+        ILoggingService CreateLogger(Type type);
     }
 
     public class LoggingServiceFactory : ILoggingServiceFactory
     {
         public ILoggingService CreateLogger<T>() => new LoggingService(typeof(T));
+        public ILoggingService CreateLogger(Type type) => new LoggingService(type);
     }
 
 }
