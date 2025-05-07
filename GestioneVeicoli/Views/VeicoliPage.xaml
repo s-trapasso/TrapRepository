@@ -2,31 +2,60 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:GestioneVeicoli.Resources.Converters"
+             xmlns:models="clr-namespace:GestioneVeicoli.Models"
+             xmlns:vm="clr-namespace:GestioneVeicoli.ViewModels"
              x:Class="GestioneVeicoli.Views.VeicoliPage"
-             Title="Elenco Veicoli">
-    <VerticalStackLayout Padding="10">
-        <!--Form per aggiungere un nuovo veicolo-->
-        <Entry Placeholder="Targa" Text="{Binding NewVeicolo.Targa}" />
-        <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca}" />
-        <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello}" />
-        <!--<Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno}" Keyboard="Numeric" />-->
-        <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Converter={converters:StringToIntConverters}}" Keyboard="Numeric" />
-        <Button Text="Aggiungi Veicolo" Command="{Binding AggiungiCommand}" />
+             Title="Elenco Veicoli"
+             BackgroundColor="#F2F2F2">
 
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <!-- Form per aggiungere un nuovo veicolo -->
+            <Entry Placeholder="Targa" Text="{Binding NewVeicolo.Targa, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />
+            <Button Text="Aggiungi Veicolo" Command="{Binding AggiungiCommand}" />
 
-        <CollectionView ItemsSource="{Binding Veicoli}" 
-                SelectionMode="Single"
-                SelectionChanged="OnSelectionChanged">
-            <CollectionView.ItemTemplate>
-            <DataTemplate>
-                <VerticalStackLayout Padding="10">
-                    <Label Text="{Binding Targa}" FontAttributes="Bold" />
-                    <Label Text="{Binding Marca}" />
-                    <Label Text="{Binding Modello}" />
-                    <Label Text="{Binding Anno}" />
-                 </VerticalStackLayout>
-              </DataTemplate>
-        </CollectionView.ItemTemplate>
-        </CollectionView>
-    </VerticalStackLayout>
+            <CollectionView ItemsSource="{Binding Veicoli}" 
+                            SelectionMode="Single"
+                            Margin="0,20,0,0">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Veicolo">
+                        <Border Stroke="#CCCCCC"
+                                StrokeThickness="1"
+                                BackgroundColor="White"
+                                Padding="15"
+                                Margin="5"
+                                StrokeShape="RoundRectangle 10">
+                            <Grid RowDefinitions="Auto,Auto"
+                                  ColumnDefinitions="*,Auto,Auto">
+                                <!-- Dati del veicolo -->
+                                <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                    <Label Text="{Binding Targa}" FontAttributes="Bold" FontSize="16" TextColor="Black" />
+                                    <Label Text="{Binding Marca}" FontSize="14" TextColor="DarkGray" />
+                                    <Label Text="{Binding Modello}" FontSize="14" TextColor="DarkGray" />
+                                    <Label Text="{Binding Anno}" FontSize="14" TextColor="DarkGray" />
+                                </VerticalStackLayout>
+
+                                <!-- Pulsante Modifica -->
+                                <Button Grid.Column="1"
+                                        Text="✏️"
+                                        BackgroundColor="Transparent"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VeicoloViewModel}}, Path=SelezionaCommand}"
+                                        CommandParameter="{Binding .}" />
+
+                                <!-- Pulsante Elimina -->
+                                <Button Grid.Column="2"
+                                        Text="🗑️"
+                                        BackgroundColor="Transparent"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VeicoloViewModel}}, Path=EliminaCommand}"
+                                        CommandParameter="{Binding .}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
 </ContentPage>
