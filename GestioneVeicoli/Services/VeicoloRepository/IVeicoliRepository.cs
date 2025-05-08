@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using GestioneVeicoli.Models;
 
-namespace GestioneVeicoli.Services
+namespace GestioneVeicoli.Services.VeicoloRepository
 {
     public interface IVeicoliRepository
     {

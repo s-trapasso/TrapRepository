@@ -7,7 +7,7 @@ using GestioneVeicoli.Data;
 using GestioneVeicoli.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GestioneVeicoli.Services
+namespace GestioneVeicoli.Services.VeicoloRepository
 {
     public class VeicoliRepository : IVeicoliRepository
     {

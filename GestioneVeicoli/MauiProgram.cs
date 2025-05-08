@@ -3,6 +3,7 @@ using System.Reflection;
 using GestioneVeicoli.Data;
 using GestioneVeicoli.Log;
 using GestioneVeicoli.Services;
+using GestioneVeicoli.Services.VeicoloRepository;
 using GestioneVeicoli.ViewModels;
 using GestioneVeicoli.Views;
 using log4net;

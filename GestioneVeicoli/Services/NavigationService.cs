@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using GestioneVeicoli.Models;
+using GestioneVeicoli.Services.VeicoloRepository;
 using GestioneVeicoli.ViewModels;
 using GestioneVeicoli.Views;
 

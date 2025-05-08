@@ -11,6 +11,7 @@ using CommunityToolkit.Mvvm.Input;
 using GestioneVeicoli.Log;
 using GestioneVeicoli.Models;
 using GestioneVeicoli.Services;
+using GestioneVeicoli.Services.VeicoloRepository;
 using GestioneVeicoli.Views;
 using log4net.Repository.Hierarchy;
 

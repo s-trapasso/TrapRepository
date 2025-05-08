@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using GestioneVeicoli.Models;
-using GestioneVeicoli.Services;
+using GestioneVeicoli.Services.VeicoloRepository;
 
 namespace GestioneVeicoli.ViewModels
 {
