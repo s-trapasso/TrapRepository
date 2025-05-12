@@ -1,5 +1,5 @@
-using GestioneVeicoli.Models;
-using GestioneVeicoli.Services;
+using GestioneVeicoli.Data.Models;
+using GestioneVeicoli.Data.Services;
 using GestioneVeicoli.ViewModels;
 
 namespace GestioneVeicoli.Views;

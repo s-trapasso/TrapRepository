@@ -9,9 +9,9 @@ using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GestioneVeicoli.Log;
-using GestioneVeicoli.Models;
-using GestioneVeicoli.Services;
-using GestioneVeicoli.Services.VeicoloRepository;
+using GestioneVeicoli.Data.Models;
+using GestioneVeicoli.Data.Services;
+using GestioneVeicoli.Data.Services.VeicoloRepository;
 using GestioneVeicoli.Views;
 using log4net.Repository.Hierarchy;
 

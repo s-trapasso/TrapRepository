@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GestioneVeicoli.Models;
+using GestioneVeicoli.Data.Models;
 
-namespace GestioneVeicoli.Services.VeicoloRepository
+namespace GestioneVeicoli.Data.Services.VeicoloRepository
 {
     public interface IVeicoliRepository
     {

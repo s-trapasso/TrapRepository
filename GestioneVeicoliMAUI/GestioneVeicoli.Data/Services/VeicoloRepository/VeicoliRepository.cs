@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GestioneVeicoli.Data;
-using GestioneVeicoli.Models;
+using GestioneVeicoli.Data.Data;
+using GestioneVeicoli.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GestioneVeicoli.Services.VeicoloRepository
+namespace GestioneVeicoli.Data.Services.VeicoloRepository
 {
     public class VeicoliRepository : IVeicoliRepository
     {

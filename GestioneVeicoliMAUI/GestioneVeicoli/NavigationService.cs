@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using GestioneVeicoli.Models;
-using GestioneVeicoli.Services.VeicoloRepository;
+using GestioneVeicoli.Data.Models;
+using GestioneVeicoli.Data.Services.VeicoloRepository;
 using GestioneVeicoli.ViewModels;
 using GestioneVeicoli.Views;
 
-namespace GestioneVeicoli.Services
+namespace GestioneVeicoli
 {
     public class NavigationService
     {

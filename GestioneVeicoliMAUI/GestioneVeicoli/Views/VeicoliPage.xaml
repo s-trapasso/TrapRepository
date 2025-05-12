@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:converters="clr-namespace:GestioneVeicoli.Resources.Converters"
-             xmlns:models="clr-namespace:GestioneVeicoli.Models"
+             xmlns:models="clr-namespace:GestioneVeicoli.Data.Models;assembly=GestioneVeicoli.Data"
              xmlns:vm="clr-namespace:GestioneVeicoli.ViewModels"
              x:Class="GestioneVeicoli.Views.VeicoliPage"
              Title="Elenco Veicoli"

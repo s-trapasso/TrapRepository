@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GestioneVeicoli.Models
+namespace GestioneVeicoli.Data.Models
 {
     public class Veicolo : INotifyPropertyChanged
     {
