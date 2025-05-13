@@ -67,12 +67,15 @@ namespace GestioneVeicoli
         private static void ConfiguraServizi(IServiceCollection services)
         {
             services.AddSingleton<IVeicoliRepository, VeicoliRepository>();
-            services.AddSingleton<IProprietarioRepository, ProprietarioRepository>();
             services.AddSingleton<VeicoloViewModel>();
             services.AddTransient<VeicoloDettaglioViewModel>();
             services.AddTransient<VeicoliPage>();
             services.AddSingleton<NavigationService>(); // Registrazione del servizio di navigazione
             services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
+
+            //Proprietario
+            services.AddSingleton<IProprietarioRepository, ProprietarioRepository>();
+            services.AddSingleton<ProprietarioViewModel>();
         }
     }
 }

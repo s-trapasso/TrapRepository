@@ -114,11 +114,11 @@ namespace GestioneVeicoli.ViewModels
 
                 if (proprietarioEsistente != null)
                 {
+                    _logger.Info("Proprietario già esistente.");
                     NewVeicolo.ProprietarioId = proprietarioEsistente.Id;
                 }
                 else
                 {
-                    _logger.Info("Proprietario già esistente.");
                     await _proprietarioRepository.AddProprietarioAsync(Proprietario);
                     NewVeicolo.ProprietarioId = Proprietario.Id;
                 }
@@ -168,74 +168,25 @@ namespace GestioneVeicoli.ViewModels
         }
                 
         [RelayCommand]
-        private async Task SelezionaAsync(Veicolo veicolo)
+        private async Task SelezionaVeicoloAsync(Veicolo veicolo)
         {
             if (veicolo == null)
             {
-                _logger.Warn("Veicolo passato a SelezionaAsync è null.");
+                _logger.Warn("Veicolo passato a SelezionaVeicoloAsync è null.");
+                return;
+            }
+            await _navigationService.NavigateToDettaglioAsync(veicolo);
+        }
+
+        [RelayCommand]
+        private async Task SelezionaProprietarioAsync(Veicolo veicolo)
+        {
+            if (veicolo == null)
+            {
+                _logger.Warn("Veicolo passato a SelezionaProprietarioAsync è null.");
                 return;
             }
             await _navigationService.NavigateToDettaglioAsync(veicolo);
         }
     }
-    //private async Task AggiungiVeicoloAsync()
-    //{
-    //    try
-    //    {
-    //        if (string.IsNullOrWhiteSpace(NewVeicolo.Targa) ||
-    //            string.IsNullOrWhiteSpace(NewVeicolo.Marca) ||
-    //            string.IsNullOrWhiteSpace(NewVeicolo.Modello))
-    //        {
-    //            await App.Current.MainPage.DisplayAlert("Errore", "Tutti i campi sono obbligatori.", "OK");
-    //            return;
-    //        }
-    //        else
-    //        {
-    //            await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
-    //            Veicoli.Add(NewVeicolo);
-    //            NewVeicolo = new Veicolo(); // Resetta il modello
-    //            _logger.Info($"Veicolo aggiunto");
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.Error("Errore durante l'aggiunta del veicolo", ex);
-    //        await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante l'aggiunta del veicolo\n Errore {ex.Message}.", "OK");
-    //    }
-    //}
-
-    //private async Task DettaglioVeicoloAsync(Veicolo veicolo)
-    //{
-    //    if(veicolo is null)
-    //        return;
-
-    //    await App.Current.MainPage.Navigation.PushAsync(new VeicoloDettaglioPage
-    //    {
-    //        BindingContext = new VeicoloDettaglioViewModel(veicolo,_veicoloRepository,this)
-    //    });
-    //}
-
-    //private async Task EliminaVeicoloAsync(Veicolo veicoloSelezionato)
-    //{
-    //    try 
-    //    {
-    //        if (veicoloSelezionato != null)
-    //        {
-    //            await _veicoloRepository.DeleteVeicoloAsync(veicoloSelezionato.Id);
-    //            Veicoli.Remove(veicoloSelezionato);
-    //        }
-
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.Error("Errore durante l'eliminazione del veicolo", ex);
-    //        await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante l'eliminazione del veicolo\n Errore {ex.Message}.", "OK");
-    //    }
-    //}
-
-
-    //// Aggiungi comandi come AddCommand, DeleteCommand ecc.
-    //// Implementa INotifyPropertyChanged come di consueto
-    //public event PropertyChangedEventHandler PropertyChanged;
-
 }

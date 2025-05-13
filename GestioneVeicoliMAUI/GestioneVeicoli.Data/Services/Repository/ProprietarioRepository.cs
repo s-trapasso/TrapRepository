@@ -19,6 +19,10 @@ namespace GestioneVeicoli.Data.Services.VeicoloRepository
             _context = context;
         }
 
+        public ProprietarioRepository()
+        {
+        }
+
         public async Task AddProprietarioAsync(Proprietario proprietario)
         {
             _context.Proprietari.Add(proprietario);

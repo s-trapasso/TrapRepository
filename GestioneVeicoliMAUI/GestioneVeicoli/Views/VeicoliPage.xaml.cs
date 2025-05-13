@@ -13,72 +13,15 @@ public partial class VeicoliPage : ContentPage
         BindingContext = viewModel;
         _VeicoloViewModel = viewModel;
     }
-    private async void OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        ////Questo codice fa in modo che alla selezione di un veicolo, venga aperta la pagina di dettaglio
-        ////if (e.CurrentSelection.FirstOrDefault() is Veicolo veicoloSelezionato)
-        ////{
-        ////    // Naviga alla pagina di dettaglio con il repository
-        ////    var veicoloViewModel = (VeicoloViewModel)BindingContext;
-        ////    var repository = ((VeicoloViewModel)BindingContext)._veicoloRepository;
-        ////    await Navigation.PushAsync(new VeicoloDettaglioPage
-        ////    {
-        ////        BindingContext = new VeicoloDettaglioViewModel(veicoloSelezionato, repository, veicoloViewModel)
-        ////    });
-
-        ////    // Deseleziona l'elemento per evitare selezioni persistenti
-        ////    ((CollectionView)sender).SelectedItem = null;
-        ////}
-
-        //if (e.CurrentSelection.FirstOrDefault() is not Veicolo veicoloSelezionato)
-        //    return;
-        //try
-        //{
-            
-        //        string azione = await DisplayActionSheet(
-        //            "Scegli un'azione",
-        //            "Annulla",
-        //            null,
-        //            "Modifica",
-        //            "Elimina"
-        //        );
-
-        //       var vm = BindingContext as VeicoloViewModel;
-
-        //    switch (azione)
-        //    {
-        //        case "Modifica":
-        //            if (vm.SelezionaCommand.CanExecute(veicoloSelezionato))
-        //                vm.SelezionaCommand.Execute(veicoloSelezionato);
-        //            break;
-        //        case "Elimina":
-        //            if(vm.EliminaCommand.CanExecute(veicoloSelezionato))
-        //            {
-        //                await vm.EliminaCommand.ExecuteAsync(veicoloSelezionato);
-        //            }
-        //            break;
-        //    }
-            
-        //}
-        //catch (Exception ex)
-        //{
-        //    await DisplayAlert("Errore", $"Si è verificato un errore: {ex.Message}", "OK");
-        //}
-        //finally
-        //{
-        //    // Deseleziona l'elemento in ogni caso
-        //    ((CollectionView)sender).SelectedItem = null;
-        //}
-    }
     // Metodo per gestire la modifica di un veicolo
     private void ModificaVeicolo(object sender, EventArgs e)
     {
         if (sender is Button button && button.CommandParameter is Veicolo veicolo)
         {
             var vm = BindingContext as VeicoloViewModel;
-            if (vm?.SelezionaCommand?.CanExecute(veicolo) ?? false)
+            if (vm?.SelezionaVeicoloCommand?.CanExecute(veicolo) ?? false)
             {
-                vm.SelezionaCommand.Execute(veicolo);
+                vm.SelezionaVeicoloCommand.Execute(veicolo);
             }
         }
     }

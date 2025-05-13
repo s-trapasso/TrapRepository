@@ -12,14 +12,14 @@ namespace GestioneVeicoli.ViewModels
     public class VeicoloDettaglioViewModel
     {
         private readonly IVeicoliRepository _veicoloRepository;
-        private readonly VeicoloViewModel _VeicoloViewModel;
+        private readonly VeicoloViewModel _veicoloViewModel;
         public Veicolo Veicolo { get; set; }
         public ICommand SalvaCommand { get; }
-        public VeicoloDettaglioViewModel(Veicolo veicolo, IVeicoliRepository veicoliRepository, VeicoloViewModel VeicoloViewModel)
+        public VeicoloDettaglioViewModel(Veicolo veicolo, IVeicoliRepository veicoliRepository, VeicoloViewModel veicoloViewModel)
         {
             Veicolo = veicolo;
             _veicoloRepository = veicoliRepository;
-            _VeicoloViewModel = VeicoloViewModel;
+            _veicoloViewModel = veicoloViewModel;
 
             SalvaCommand = new Command(async () => await SalvaVeicoloAsync());
         }
@@ -33,7 +33,7 @@ namespace GestioneVeicoli.ViewModels
                 await _veicoloRepository.UpdateVeicoloAsync(Veicolo);
 
                 // Aggiorna direttamente l'elemento nella lista
-                var veicoloDaAggiornare = _VeicoloViewModel.Veicoli.FirstOrDefault(v => v.Id == Veicolo.Id);
+                var veicoloDaAggiornare = _veicoloViewModel.Veicoli.FirstOrDefault(v => v.Id == Veicolo.Id);
                 if (veicoloDaAggiornare != null)
                 {
                     veicoloDaAggiornare.Targa = Veicolo.Targa;
