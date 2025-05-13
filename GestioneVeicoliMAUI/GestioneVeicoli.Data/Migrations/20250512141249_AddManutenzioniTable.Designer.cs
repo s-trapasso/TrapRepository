@@ -4,6 +4,7 @@ using GestioneVeicoli.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestioneVeicoli.Data.Migrations
 {
     [DbContext(typeof(VeicoliDbContext))]
-    partial class VeicoliDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250512141249_AddManutenzioniTable")]
+    partial class AddManutenzioniTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,16 +87,8 @@ namespace GestioneVeicoli.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Alimentazione")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
                     b.Property<int>("Anno")
                         .HasMaxLength(4)
-                        .HasColumnType("int");
-
-                    b.Property<int>("Km")
                         .HasColumnType("int");
 
                     b.Property<string>("Marca")

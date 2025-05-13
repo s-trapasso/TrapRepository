@@ -11,6 +11,7 @@ using log4net;
 using log4net.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using GestioneVeicoli.Data.Services.Interfaces;
 
 namespace GestioneVeicoli
 {
@@ -66,6 +67,7 @@ namespace GestioneVeicoli
         private static void ConfiguraServizi(IServiceCollection services)
         {
             services.AddSingleton<IVeicoliRepository, VeicoliRepository>();
+            services.AddSingleton<IProprietarioRepository, ProprietarioRepository>();
             services.AddSingleton<VeicoloViewModel>();
             services.AddTransient<VeicoloDettaglioViewModel>();
             services.AddTransient<VeicoliPage>();

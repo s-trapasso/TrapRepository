@@ -11,15 +11,16 @@ using CommunityToolkit.Mvvm.Input;
 using GestioneVeicoli.Log;
 using GestioneVeicoli.Data.Models;
 using GestioneVeicoli.Data.Services;
-using GestioneVeicoli.Data.Services.VeicoloRepository;
 using GestioneVeicoli.Views;
 using log4net.Repository.Hierarchy;
+using GestioneVeicoli.Data.Services.Interfaces;
 
 namespace GestioneVeicoli.ViewModels
 {
     public partial class VeicoloViewModel : ObservableObject //INotifyPropertyChanged
     {
         public readonly IVeicoliRepository _veicoloRepository;
+        public readonly IProprietarioRepository _proprietarioRepository;
         public readonly ILoggingService _logger;
         public readonly NavigationService _navigationService;
 
@@ -29,6 +30,8 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         private Veicolo _newVeicolo = new Veicolo();
 
+        [ObservableProperty]
+        private Proprietario _proprietario = new Proprietario();
 
         //#region COMMAND
         //public ICommand CaricaCommand { get; }
@@ -51,9 +54,11 @@ namespace GestioneVeicoli.ViewModels
         //        }
         //    }
         //}
-        public VeicoloViewModel(IVeicoliRepository veicoloRepository,ILoggingServiceFactory loggingServiceFactory, NavigationService navigationService)
+        public VeicoloViewModel(IVeicoliRepository veicoloRepository, IProprietarioRepository proprietarioRepository,
+            ILoggingServiceFactory loggingServiceFactory, NavigationService navigationService)
         {
             _veicoloRepository = veicoloRepository;
+            _proprietarioRepository = proprietarioRepository;
             _logger = loggingServiceFactory.CreateLogger<VeicoloViewModel>();
             _navigationService = navigationService;
             // Inizializza i comandi
@@ -91,18 +96,53 @@ namespace GestioneVeicoli.ViewModels
         {
             try
             {
+                // 1. Validazione campi obbligatori
                 if (string.IsNullOrWhiteSpace(NewVeicolo.Targa) ||
                     string.IsNullOrWhiteSpace(NewVeicolo.Marca) ||
-                    string.IsNullOrWhiteSpace(NewVeicolo.Modello))
+                    string.IsNullOrWhiteSpace(NewVeicolo.Modello) ||
+                    string.IsNullOrWhiteSpace(Proprietario.Nome) ||
+                    string.IsNullOrWhiteSpace(Proprietario.Cognome) ||
+                    string.IsNullOrWhiteSpace(Proprietario.Indirizzo))
                 {
                     await App.Current.MainPage.DisplayAlert("Errore", "Tutti i campi sono obbligatori.", "OK");
                     return;
                 }
 
+                // 2. Controllo se il proprietario esiste già
+                var proprietarioEsistente = await _proprietarioRepository
+                    .GetProprietarioByDetailsAsync(Proprietario.Nome, Proprietario.Cognome, Proprietario.Indirizzo);
+
+                if (proprietarioEsistente != null)
+                {
+                    NewVeicolo.ProprietarioId = proprietarioEsistente.Id;
+                }
+                else
+                {
+                    _logger.Info("Proprietario già esistente.");
+                    await _proprietarioRepository.AddProprietarioAsync(Proprietario);
+                    NewVeicolo.ProprietarioId = Proprietario.Id;
+                }
+
+                // 3. Controllo se esiste già un veicolo con la stessa targa
+                var veicoloEsistente = await _veicoloRepository
+                    .GetVeicoloByTargaAsync(NewVeicolo.Targa);
+
+                if (veicoloEsistente != null)
+                {
+                    await App.Current.MainPage.DisplayAlert("Errore", "Veicolo già esistente con la stessa targa.", "OK");
+                    _logger.Info("Veicolo già esistente con la stessa targa.");
+                    return;
+                }
+
+                // 4. Inserimento nuovo veicolo
                 await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
                 Veicoli.Add(NewVeicolo);
-                NewVeicolo = new Veicolo(); // reset
-                _logger.Info("Veicolo aggiunto");
+
+                // 5. Reset modelli
+                NewVeicolo = new Veicolo();
+                Proprietario = new Proprietario();
+
+                _logger.Info("Nuovo veicolo e (eventualmente) nuovo proprietario aggiunti.");
             }
             catch (Exception ex)
             {

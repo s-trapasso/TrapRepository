@@ -17,7 +17,7 @@ namespace GestioneVeicoli.Data.Data
 
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appSettings.json")
                 .Build();
 
             var connectionString = configuration.GetConnectionString("DefaultConnection");

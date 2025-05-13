@@ -15,6 +15,11 @@
             <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca, Converter={converters:UpperCaseConverter}}" />
             <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello, Converter={converters:UpperCaseConverter}}" />
             <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />
+            <Entry Placeholder="Alimentazione" Text="{Binding NewVeicolo.Alimentazione, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Chilometraggio" Text="{Binding NewVeicolo.Km, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric"></Entry>
+            <Entry Placeholder="Nome" Text="{Binding Proprietario.Nome, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Cognome" Text="{Binding Proprietario.Cognome, Converter={converters:UpperCaseConverter}}" />
+            <Entry Placeholder="Indirizzo" Text="{Binding Proprietario.Indirizzo, Converter={converters:UpperCaseConverter}}" />
             <Button Text="Aggiungi Veicolo" Command="{Binding AggiungiCommand}" />
 
             <CollectionView ItemsSource="{Binding Veicoli}" 
@@ -35,7 +40,12 @@
                                     <Label Text="{Binding Targa}" FontAttributes="Bold" FontSize="16" TextColor="Black" />
                                     <Label Text="{Binding Marca}" FontSize="14" TextColor="DarkGray" />
                                     <Label Text="{Binding Modello}" FontSize="14" TextColor="DarkGray" />
-                                    <Label Text="{Binding Anno}" FontSize="14" TextColor="DarkGray" />
+                                    <Label Text="{Binding Proprietario.Nome}" FontSize="14" TextColor="DarkGray" />
+                                    
+                                    
+                                    <!--<Label Text="{Binding Anno}" FontSize="14" TextColor="DarkGray" />
+                                    <Label Text="{Binding Alimentazione}" FontSize="14" TextColor="DarkGray" />
+                                    <Label Text="{Binding Km}" FontSize="14" TextColor="DarkGray" />-->
                                 </VerticalStackLayout>
 
                                 <!-- Pulsante Modifica -->

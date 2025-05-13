@@ -16,6 +16,8 @@ namespace GestioneVeicoli.Data.Models
         private string _marca;
         private string _modello;
         private int _anno;
+        private int? km;
+        private string alimentazione;
         public event PropertyChangedEventHandler PropertyChanged;
 
         [Key]
@@ -87,6 +89,38 @@ namespace GestioneVeicoli.Data.Models
                 }
             }
         }
+
+        [MaxLength(100)]
+        public string Alimentazione
+        {
+            get => alimentazione;
+            set
+            {
+                if (alimentazione != value)
+                {
+                    alimentazione = value;
+                    OnPropertyChanged(nameof(Alimentazione));
+                }
+            }
+        }
+        public int? Km
+        {
+            get => km;
+            set
+            {
+                if (km != value)
+                {
+                    km = value;
+                    OnPropertyChanged(nameof(Km));
+                }
+            }
+        }
+        // Relazione con Manutenzioni
+        public ICollection<Manutenzione> Manutenzioni { get; set; }
+        public int ProprietarioId { get; set; }  // chiave esterna
+
+        public Proprietario Proprietario { get; set; }  // navigation property
+
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
