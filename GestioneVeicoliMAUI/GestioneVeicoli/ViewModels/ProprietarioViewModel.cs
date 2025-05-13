@@ -1,15 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GestioneVeicoli.Data.Models;
-using GestioneVeicoli.Data.Services.Interfaces;
-using System.Windows.Input;
-using GestioneVeicoli.Data.Services.VeicoloRepository;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using System.Collections.ObjectModel;
+using GestioneVeicoli.Data.Models;
+using GestioneVeicoli.Data.Services.Interfaces;
 using GestioneVeicoli.Log;
 
 namespace GestioneVeicoli.ViewModels
@@ -29,8 +22,8 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         private bool isEditMode;
 
-        public ProprietarioViewModel(IProprietarioRepository proprietarioRepository, 
-            ILoggingServiceFactory loggingServiceFactory, 
+        public ProprietarioViewModel(IProprietarioRepository proprietarioRepository,
+            ILoggingServiceFactory loggingServiceFactory,
             NavigationService navigationService)
         {
             _proprietarioRepository = proprietarioRepository;

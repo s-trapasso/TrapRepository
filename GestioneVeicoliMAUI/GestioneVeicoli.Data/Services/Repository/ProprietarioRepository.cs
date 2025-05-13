@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GestioneVeicoli.Data.Data;
+﻿using GestioneVeicoli.Data.Data;
 using GestioneVeicoli.Data.Models;
 using GestioneVeicoli.Data.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;

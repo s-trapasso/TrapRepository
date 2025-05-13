@@ -1,5 +1,3 @@
-using GestioneVeicoli.Data.Models;
-using GestioneVeicoli.Data.Services.VeicoloRepository;
 using GestioneVeicoli.ViewModels;
 
 namespace GestioneVeicoli.Views;

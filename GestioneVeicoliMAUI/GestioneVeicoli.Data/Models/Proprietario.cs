@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace GestioneVeicoli.Data.Models
 {
@@ -27,4 +22,4 @@ namespace GestioneVeicoli.Data.Models
         // Relazione con Veicolo (uno-a-molti)
         public ICollection<Veicolo> Veicoli { get; set; }
     }
- }
+}

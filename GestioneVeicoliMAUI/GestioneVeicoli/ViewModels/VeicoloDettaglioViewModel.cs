@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using System.Windows.Input;
 using GestioneVeicoli.Data.Models;
 using GestioneVeicoli.Data.Services.Interfaces;
 
@@ -26,7 +21,7 @@ namespace GestioneVeicoli.ViewModels
 
         private async Task SalvaVeicoloAsync()
         {
-            
+
             try
             {
                 // Salva le modifiche nel repository
@@ -50,7 +45,7 @@ namespace GestioneVeicoli.ViewModels
                 // Gestisci l'eccezione (es. mostra un messaggio di errore)
                 await App.Current.MainPage.DisplayAlert("Errore", $"Si è verificato un errore durante il salvataggio del veicolo\n Errore {ex.Message}.", "OK");
             }
-            
+
         }
     }
 }

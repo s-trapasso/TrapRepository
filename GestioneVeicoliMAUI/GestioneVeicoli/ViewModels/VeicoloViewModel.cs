@@ -1,19 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Input;
+﻿using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GestioneVeicoli.Log;
 using GestioneVeicoli.Data.Models;
-using GestioneVeicoli.Data.Services;
-using GestioneVeicoli.Views;
-using log4net.Repository.Hierarchy;
 using GestioneVeicoli.Data.Services.Interfaces;
+using GestioneVeicoli.Log;
 
 namespace GestioneVeicoli.ViewModels
 {
@@ -166,7 +156,7 @@ namespace GestioneVeicoli.ViewModels
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
         }
-                
+
         [RelayCommand]
         private async Task SelezionaVeicoloAsync(Veicolo veicolo)
         {

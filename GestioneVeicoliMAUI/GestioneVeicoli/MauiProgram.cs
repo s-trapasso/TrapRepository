@@ -1,24 +1,22 @@
 ﻿
 using System.Reflection;
-using GestioneVeicoli.Data;
 using GestioneVeicoli.Data.Data;
-using GestioneVeicoli.Log;
-using GestioneVeicoli.Data.Services;
+using GestioneVeicoli.Data.Services.Interfaces;
 using GestioneVeicoli.Data.Services.VeicoloRepository;
+using GestioneVeicoli.Log;
 using GestioneVeicoli.ViewModels;
 using GestioneVeicoli.Views;
 using log4net;
 using log4net.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using GestioneVeicoli.Data.Services.Interfaces;
 
 namespace GestioneVeicoli
 {
     public static class MauiProgram
     {
         public static IServiceProvider ServiceProvider { get; private set; }
-        
+
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();

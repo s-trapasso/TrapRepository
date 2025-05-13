@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using GestioneVeicoli.Data.Models;
+﻿using GestioneVeicoli.Data.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace GestioneVeicoli.Data.Data
 {
-    public class VeicoliDbContext: DbContext
+    public class VeicoliDbContext : DbContext
     {
         public VeicoliDbContext(DbContextOptions<VeicoliDbContext> options) : base(options)
         {
@@ -27,7 +22,7 @@ namespace GestioneVeicoli.Data.Data
             {
                 // Chiave primaria
                 entity.HasKey(v => v.Id);
-                
+
                 // Proprietà Targa
                 entity.Property(v => v.Targa)
                     .IsRequired()
@@ -49,7 +44,7 @@ namespace GestioneVeicoli.Data.Data
                     .HasMaxLength(4); // Anche se è un int, in database potrebbe essere varchar(4)
 
                 entity.Property(v => v.ProprietarioId);
-                    
+
 
                 entity.Property(v => v.Alimentazione)
                     .IsRequired(false)
@@ -60,7 +55,7 @@ namespace GestioneVeicoli.Data.Data
                 // Puoi aggiungere altri indici, vincoli, relazioni qui se necessario
                 // Esempio di indice unico sulla Targa:
                 entity.HasIndex(v => v.Targa).IsUnique();
-                 
+
             });
 
             // Se hai altre entità, configura anche quelle qui sotto
