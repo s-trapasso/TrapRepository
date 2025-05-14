@@ -1,15 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Shell
-    x:Class="GestioneVeicoli.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:local="clr-namespace:GestioneVeicoli"
-    Shell.FlyoutBehavior="Flyout"
-    Title="GestioneVeicoli">
+    xmlns:views="clr-namespace:GestioneVeicoli.Views"
+    x:Class="GestioneVeicoli.AppShell">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+    <!-- Menu Flyout -->
+    <FlyoutItem Title="Veicoli" Icon="ic_vehicle.png">
+        <ShellContent
+      Title="Lista Veicoli"
+      ContentTemplate="{DataTemplate views:VeicoliPage}"
+      Route="veicoli"/>
+    </FlyoutItem>
+
+    <FlyoutItem Title="Proprietari" Icon="ic_owner.png">
+        <ShellContent
+      Title="Lista Proprietari"
+      ContentTemplate="{DataTemplate views:ProprietarioPage}"
+      Route="proprietari"/>
+    </FlyoutItem>
+
+    <!--<FlyoutItem Title="Manutenzioni" Icon="ic_maintenance.png">
+        <ShellContent
+      Title="Manutenzioni"
+      ContentTemplate="{DataTemplate views:ManutenzionePage}"
+      Route="manutenzioni"/>
+    </FlyoutItem>-->
 
 </Shell>

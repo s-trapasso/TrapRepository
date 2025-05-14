@@ -7,10 +7,9 @@ using GestioneVeicoli.Log;
 
 namespace GestioneVeicoli.ViewModels
 {
-    public partial class VeicoloViewModel : ObservableObject //INotifyPropertyChanged
+    public partial class VeicoloViewModel : ObservableObject
     {
-        public readonly IVeicoliRepository _veicoloRepository;
-        public readonly IProprietarioRepository _proprietarioRepository;
+        private readonly IVeicoliOrchestrator _veicoliOrchestrator;
         public readonly ILoggingService _logger;
         public readonly NavigationService _navigationService;
 
@@ -23,44 +22,12 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         private Proprietario _proprietario = new Proprietario();
 
-        //#region COMMAND
-        //public ICommand CaricaCommand { get; }
-        //public ICommand AggiungiCommand { get; }
-        //public ICommand SelezionaCommand { get; }
-        //public ICommand EliminaCommand { get; }
-        //#endregion
-
-
-
-        //public Veicolo NewVeicolo
-        //{
-        //    get => _newVeicolo;
-        //    set
-        //    {
-        //        if (_newVeicolo != value)
-        //        {
-        //            _newVeicolo = value;
-        //            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(NewVeicolo)));
-        //        }
-        //    }
-        //}
-        public VeicoloViewModel(IVeicoliRepository veicoloRepository, IProprietarioRepository proprietarioRepository,
-            ILoggingServiceFactory loggingServiceFactory, NavigationService navigationService)
+        public VeicoloViewModel(IVeicoliOrchestrator veicoliOrchestrator, ILoggingServiceFactory loggingServiceFactory, NavigationService navigationService)
         {
-            _veicoloRepository = veicoloRepository;
-            _proprietarioRepository = proprietarioRepository;
+            _veicoliOrchestrator = veicoliOrchestrator;
             _logger = loggingServiceFactory.CreateLogger<VeicoloViewModel>();
             _navigationService = navigationService;
-            // Inizializza i comandi
             _ = CaricaVeicoliAsync();
-
-            //CaricaCommand = new Command(async () => await CaricaVeicoliAsync());
-            //AggiungiCommand = new Command(async () => await AggiungiVeicoloAsync());
-            //EliminaCommand = new Command<Veicolo>(async (veicolo) => await EliminaVeicoloAsync(veicolo));
-
-            //// Carica i veicoli all'avvio
-            //Task.Run(async () => await CaricaVeicoliAsync());
-
         }
 
         [RelayCommand]
@@ -69,7 +36,7 @@ namespace GestioneVeicoli.ViewModels
             try
             {
                 Veicoli.Clear();
-                var lista = await _veicoloRepository.GetVeicoliAsync();
+                var lista = await _veicoliOrchestrator.GetAllVeicoliAsync();
                 foreach (var v in lista)
                     Veicoli.Add(v);
                 _logger.Info($"Caricati {Veicoli.Count} veicoli");
@@ -86,7 +53,6 @@ namespace GestioneVeicoli.ViewModels
         {
             try
             {
-                // 1. Validazione campi obbligatori
                 if (string.IsNullOrWhiteSpace(NewVeicolo.Targa) ||
                     string.IsNullOrWhiteSpace(NewVeicolo.Marca) ||
                     string.IsNullOrWhiteSpace(NewVeicolo.Modello) ||
@@ -98,41 +64,14 @@ namespace GestioneVeicoli.ViewModels
                     return;
                 }
 
-                // 2. Controllo se il proprietario esiste già
-                var proprietarioEsistente = await _proprietarioRepository
-                    .GetProprietarioByDetailsAsync(Proprietario.Nome, Proprietario.Cognome, Proprietario.Indirizzo);
-
-                if (proprietarioEsistente != null)
-                {
-                    _logger.Info("Proprietario già esistente.");
-                    NewVeicolo.ProprietarioId = proprietarioEsistente.Id;
-                }
-                else
-                {
-                    await _proprietarioRepository.AddProprietarioAsync(Proprietario);
-                    NewVeicolo.ProprietarioId = Proprietario.Id;
-                }
-
-                // 3. Controllo se esiste già un veicolo con la stessa targa
-                var veicoloEsistente = await _veicoloRepository
-                    .GetVeicoloByTargaAsync(NewVeicolo.Targa);
-
-                if (veicoloEsistente != null)
-                {
-                    await App.Current.MainPage.DisplayAlert("Errore", "Veicolo già esistente con la stessa targa.", "OK");
-                    _logger.Info("Veicolo già esistente con la stessa targa.");
-                    return;
-                }
-
-                // 4. Inserimento nuovo veicolo
-                await _veicoloRepository.AddVeicoloAsync(NewVeicolo);
+                // Aggiungi veicolo con orchestrazione
+                await _veicoliOrchestrator.AddVeicoloAsync(NewVeicolo, Proprietario);
                 Veicoli.Add(NewVeicolo);
 
-                // 5. Reset modelli
                 NewVeicolo = new Veicolo();
                 Proprietario = new Proprietario();
 
-                _logger.Info("Nuovo veicolo e (eventualmente) nuovo proprietario aggiunti.");
+                _logger.Info("Nuovo veicolo e proprietario aggiunti.");
             }
             catch (Exception ex)
             {
@@ -147,7 +86,7 @@ namespace GestioneVeicoli.ViewModels
             try
             {
                 if (veicolo == null) return;
-                await _veicoloRepository.DeleteVeicoloAsync(veicolo.Id);
+                await _veicoliOrchestrator.DeleteVeicoloAsync(veicolo);
                 Veicoli.Remove(veicolo);
             }
             catch (Exception ex)

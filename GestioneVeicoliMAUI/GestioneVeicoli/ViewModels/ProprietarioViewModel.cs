@@ -7,47 +7,22 @@ using GestioneVeicoli.Log;
 
 namespace GestioneVeicoli.ViewModels
 {
-    public partial class ProprietarioViewModel : ObservableObject //INotifyPropertyChanged
+    public partial class ProprietarioViewModel : ObservableObject
     {
-        public readonly IProprietarioRepository _proprietarioRepository;
-        public readonly ILoggingService _logger;
-        public readonly NavigationService _navigationService;
+        private readonly IProprietarioRepository _proprietarioRepository;
+        private readonly ILoggingService _logger;
 
         [ObservableProperty]
-        public ObservableCollection<Proprietario> _proprietari = new ObservableCollection<Proprietario>();
+        private ObservableCollection<Proprietario> _proprietari = new ObservableCollection<Proprietario>();
 
         [ObservableProperty]
-        private Proprietario _newProprietario = new Proprietario();
+        private Proprietario _nuovoProprietario = new();
 
-        [ObservableProperty]
-        private bool isEditMode;
-
-        public ProprietarioViewModel(IProprietarioRepository proprietarioRepository,
-            ILoggingServiceFactory loggingServiceFactory,
-            NavigationService navigationService)
+        public ProprietarioViewModel(IProprietarioRepository proprietarioRepository, ILoggingServiceFactory loggingServiceFactory)
         {
             _proprietarioRepository = proprietarioRepository;
             _logger = loggingServiceFactory.CreateLogger<ProprietarioViewModel>();
-            _navigationService = navigationService;
-            // Inizializza i comandi
             _ = CaricaProprietariAsync();
-        }
-        /// <summary>
-        /// Inizializza il ViewModel per la modifica di un proprietario esistente.
-        /// </summary>
-        public void Initialize(Proprietario proprietario)
-        {
-            if (proprietario == null) return;
-
-            NewProprietario = new Proprietario
-            {
-                Id = proprietario.Id,
-                Nome = proprietario.Nome,
-                Cognome = proprietario.Cognome,
-                Indirizzo = proprietario.Indirizzo
-            };
-
-            IsEditMode = true;
         }
 
         [RelayCommand]
@@ -57,61 +32,39 @@ namespace GestioneVeicoli.ViewModels
             {
                 Proprietari.Clear();
                 var lista = await _proprietarioRepository.GetAllProprietariAsync();
-                foreach (var v in lista)
-                    Proprietari.Add(v);
+                foreach (var p in lista)
+                    Proprietari.Add(p);
                 _logger.Info($"Caricati {Proprietari.Count} proprietari");
             }
             catch (Exception ex)
             {
-                _logger.Error("Errore durante il caricamento dei proprietari", ex);
+                _logger.Error("Errore nel caricamento dei proprietari", ex);
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
         }
 
         [RelayCommand]
-        private async Task SalvaProprietarioAsync()
+        private async Task AggiungiProprietarioAsync()
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(NewProprietario.Nome) ||
-                    string.IsNullOrWhiteSpace(NewProprietario.Cognome) ||
-                    string.IsNullOrWhiteSpace(NewProprietario.Indirizzo))
+                if (string.IsNullOrWhiteSpace(NuovoProprietario.Nome) ||
+                    string.IsNullOrWhiteSpace(NuovoProprietario.Cognome) ||
+                    string.IsNullOrWhiteSpace(NuovoProprietario.Indirizzo))
                 {
                     await App.Current.MainPage.DisplayAlert("Errore", "Tutti i campi sono obbligatori.", "OK");
                     return;
                 }
 
-                if (IsEditMode)
-                {
-                    await _proprietarioRepository.UpdateProprietarioAsync(NewProprietario);
-                    _logger.Info($"Proprietario aggiornato con ID {NewProprietario.Id}");
-                }
-                else
-                {
-                    var proprietarioEsistente = await _proprietarioRepository
-                        .GetProprietarioByDetailsAsync(NewProprietario.Nome, NewProprietario.Cognome, NewProprietario.Indirizzo);
+                await _proprietarioRepository.AddProprietarioAsync(NuovoProprietario);
+                Proprietari.Add(NuovoProprietario);
+                _logger.Info("Proprietario aggiunto con successo");
 
-                    if (proprietarioEsistente != null)
-                    {
-                        _logger.Info("Proprietario già esistente. Operazione annullata.");
-                        await App.Current.MainPage.DisplayAlert("Attenzione", "Proprietario già esistente.", "OK");
-                        return;
-                    }
-
-                    await _proprietarioRepository.AddProprietarioAsync(NewProprietario);
-                    Proprietari.Add(NewProprietario);
-                    _logger.Info("Nuovo proprietario aggiunto.");
-                }
-
-                // Reset e ritorno
-                NewProprietario = new Proprietario();
-                IsEditMode = false;
-
-                await _navigationService.NavigateBackAsync();
+                NuovoProprietario = new Proprietario();
             }
             catch (Exception ex)
             {
-                _logger.Error("Errore durante il salvataggio del proprietario", ex);
+                _logger.Error("Errore durante l'aggiunta del proprietario", ex);
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
         }
@@ -121,15 +74,9 @@ namespace GestioneVeicoli.ViewModels
         {
             try
             {
-                if (proprietario == null)
-                    return;
-
-                bool conferma = await App.Current.MainPage.DisplayAlert("Conferma", "Eliminare il proprietario?", "Sì", "No");
-                if (!conferma) return;
-
+                if (proprietario == null) return;
                 await _proprietarioRepository.DeleteProprietarioAsync(proprietario.Id);
                 Proprietari.Remove(proprietario);
-                _logger.Info($"Proprietario ID {proprietario.Id} eliminato.");
             }
             catch (Exception ex)
             {

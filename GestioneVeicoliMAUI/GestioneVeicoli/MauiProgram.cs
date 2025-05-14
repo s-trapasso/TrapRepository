@@ -64,15 +64,24 @@ namespace GestioneVeicoli
         }
         private static void ConfiguraServizi(IServiceCollection services)
         {
+            //Orchestrator
+            services.AddScoped<IVeicoliOrchestrator, VeicoliOrchestrator>();
+
+            //Repository
             services.AddSingleton<IVeicoliRepository, VeicoliRepository>();
-            services.AddSingleton<VeicoloViewModel>();
-            services.AddTransient<VeicoloDettaglioViewModel>();
+            services.AddSingleton<IProprietarioRepository, ProprietarioRepository>();
+
+            //Pagine
             services.AddTransient<VeicoliPage>();
-            services.AddSingleton<NavigationService>(); // Registrazione del servizio di navigazione
+
+            // Registrazione del servizio di navigazione e log
+            services.AddSingleton<NavigationService>(); 
             services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
 
-            //Proprietario
-            services.AddSingleton<IProprietarioRepository, ProprietarioRepository>();
+            //ViewModels
+            
+            services.AddSingleton<VeicoloViewModel>();
+            services.AddTransient<VeicoloDettaglioViewModel>();
             services.AddSingleton<ProprietarioViewModel>();
         }
     }

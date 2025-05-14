@@ -7,7 +7,8 @@ namespace GestioneVeicoli
         public App(VeicoliPage veicoliPage)
         {
             InitializeComponent();
-            MainPage = new NavigationPage(veicoliPage);
+            //MainPage = new NavigationPage(veicoliPage);
+            MainPage = new AppShell();
         }
     }
 }

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:viewmodels="clr-namespace:GestioneVeicoli.ViewModels"
+             xmlns:vm="clr-namespace:GestioneVeicoli.ViewModels"
              x:Class="GestioneVeicoli.Views.ProprietarioPage"
-             x:DataType="viewmodels:ProprietarioViewModel"
-             Title="Proprietari">
+             Title="ProprietariPage">
 
     <ContentPage.ToolbarItems>
         <ToolbarItem Text="Aggiorna" Command="{Binding CaricaProprietariCommand}" />
@@ -17,9 +16,9 @@
             <Frame BorderColor="LightGray" Padding="10" CornerRadius="10">
                 <VerticalStackLayout Spacing="10">
                     <Label Text="Nuovo Proprietario" FontAttributes="Bold" FontSize="Medium" />
-                    <Entry Placeholder="Nome" Text="{Binding NewProprietario.Nome}" />
-                    <Entry Placeholder="Cognome" Text="{Binding NewProprietario.Cognome}" />
-                    <Entry Placeholder="Indirizzo" Text="{Binding NewProprietario.Indirizzo}" />
+                    <Entry Placeholder="Nome" Text="{Binding NuovoProprietario.Nome}" />
+                    <Entry Placeholder="Cognome" Text="{Binding NuovoProprietario.Cognome}" />
+                    <Entry Placeholder="Indirizzo" Text="{Binding NuovoProprietario.Indirizzo}" />
 
                     <Button Text="Aggiungi" Command="{Binding AggiungiProprietarioCommand}" />
                 </VerticalStackLayout>
@@ -38,10 +37,10 @@
                                 </VerticalStackLayout>
 
                                 <Button Text="Elimina"
-                                        Command="{Binding BindingContext.EliminaProprietarioCommand, Source={x:Reference Name=ProprietariPage}}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:ProprietarioViewModel}}, Path=EliminaProprietarioCommand}"
                                         CommandParameter="{Binding .}"
                                         BackgroundColor="Red"
-                                        TextColor="White"
+                                        
                                         CornerRadius="5"
                                         Grid.Column="1" />
                             </Grid>
