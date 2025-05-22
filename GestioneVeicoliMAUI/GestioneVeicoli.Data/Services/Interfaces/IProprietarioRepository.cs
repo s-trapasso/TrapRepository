@@ -10,7 +10,6 @@ namespace GestioneVeicoli.Data.Services.Interfaces
         Task UpdateProprietarioAsync(Proprietario proprietario);
         Task DeleteProprietarioAsync(int id);
         Task<Proprietario> GetProprietarioByDetailsAsync(string nome, string cognome, string indirizzo);
-        Task<Proprietario> GetProprietarioByNomeCognomeAsync(string nome, string cognome);
     }
 
 }
