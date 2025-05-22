@@ -85,6 +85,7 @@ namespace GestioneVeicoli.Data.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Alimentazione")
+                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
@@ -92,7 +93,7 @@ namespace GestioneVeicoli.Data.Migrations
                         .HasMaxLength(4)
                         .HasColumnType("int");
 
-                    b.Property<int?>("Km")
+                    b.Property<int>("Km")
                         .HasColumnType("int");
 
                     b.Property<string>("Marca")
@@ -105,7 +106,7 @@ namespace GestioneVeicoli.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<int>("ProprietarioId")
+                    b.Property<int?>("ProprietarioId")
                         .HasColumnType("int");
 
                     b.Property<string>("Targa")
@@ -136,13 +137,9 @@ namespace GestioneVeicoli.Data.Migrations
 
             modelBuilder.Entity("GestioneVeicoli.Data.Models.Veicolo", b =>
                 {
-                    b.HasOne("GestioneVeicoli.Data.Models.Proprietario", "Proprietario")
+                    b.HasOne("GestioneVeicoli.Data.Models.Proprietario", null)
                         .WithMany("Veicoli")
-                        .HasForeignKey("ProprietarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Proprietario");
+                        .HasForeignKey("ProprietarioId");
                 });
 
             modelBuilder.Entity("GestioneVeicoli.Data.Models.Proprietario", b =>
