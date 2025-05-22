@@ -11,7 +11,7 @@ namespace GestioneVeicoli.Data.Models
         private string _modello;
         private int _anno;
         private int? km;
-        private string alimentazione;
+        private AlimentazioneEnum? alimentazione;
         public event PropertyChangedEventHandler PropertyChanged;
 
         [Key]
@@ -85,7 +85,7 @@ namespace GestioneVeicoli.Data.Models
         }
 
         [MaxLength(100)]
-        public string Alimentazione
+        public AlimentazioneEnum? Alimentazione
         {
             get => alimentazione;
             set

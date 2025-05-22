@@ -49,12 +49,15 @@ namespace GestioneVeicoli.Data.Services.VeicoloRepository
                 await _context.SaveChangesAsync();
             }
         }
-
-
         public async Task<Proprietario> GetProprietarioByDetailsAsync(string nome, string cognome, string indirizzo)
         {
             return await _context.Proprietari
                 .FirstOrDefaultAsync(p => p.Nome == nome && p.Cognome == cognome && p.Indirizzo == indirizzo);
+        }
+        public async Task<Proprietario> GetProprietarioByNomeCognomeAsync(string nome, string cognome)
+        {
+            return await _context.Proprietari
+                .FirstOrDefaultAsync(p => p.Nome == nome && p.Cognome == cognome);
         }
     }
 }
