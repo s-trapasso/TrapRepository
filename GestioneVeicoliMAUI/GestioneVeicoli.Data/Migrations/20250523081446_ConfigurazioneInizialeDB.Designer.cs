@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GestioneVeicoli.Data.Migrations
 {
     [DbContext(typeof(VeicoliDbContext))]
-    [Migration("20250522094545_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250523081446_ConfigurazioneInizialeDB")]
+    partial class ConfigurazioneInizialeDB
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -87,9 +87,9 @@ namespace GestioneVeicoli.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Alimentazione")
+                    b.Property<int?>("Alimentazione")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("int");
 
                     b.Property<int>("Anno")
                         .HasMaxLength(4)

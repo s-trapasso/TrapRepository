@@ -84,9 +84,9 @@ namespace GestioneVeicoli.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Alimentazione")
+                    b.Property<int?>("Alimentazione")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("int");
 
                     b.Property<int>("Anno")
                         .HasMaxLength(4)

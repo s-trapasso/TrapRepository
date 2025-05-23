@@ -40,7 +40,7 @@ namespace GestioneVeicoli.Data.Models
                 if (_nome != value)
                 {
                     _nome = value;
-                    OnPropertyChanged(nameof(Id));
+                    OnPropertyChanged(nameof(Nome));
                 }
             }
         }
@@ -55,7 +55,7 @@ namespace GestioneVeicoli.Data.Models
                 if (_cognome != value)
                 {
                     _cognome = value;
-                    OnPropertyChanged(nameof(Id));
+                    OnPropertyChanged(nameof(Cognome));
                 }
             }
         }
@@ -70,7 +70,7 @@ namespace GestioneVeicoli.Data.Models
                 if (_indirizzo != value)
                 {
                     _indirizzo = value;
-                    OnPropertyChanged(nameof(Id));
+                    OnPropertyChanged(nameof(Indirizzo));
                 }
             }
         }

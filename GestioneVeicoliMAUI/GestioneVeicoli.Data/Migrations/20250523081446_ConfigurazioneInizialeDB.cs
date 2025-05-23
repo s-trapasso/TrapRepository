@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GestioneVeicoli.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class ConfigurazioneInizialeDB : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -36,7 +36,7 @@ namespace GestioneVeicoli.Data.Migrations
                     Marca = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Modello = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Anno = table.Column<int>(type: "int", maxLength: 4, nullable: false),
-                    Alimentazione = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Alimentazione = table.Column<int>(type: "int", maxLength: 100, nullable: true),
                     Km = table.Column<int>(type: "int", nullable: true),
                     ProprietarioId = table.Column<int>(type: "int", nullable: false)
                 },

@@ -8,66 +8,7 @@
              Title="Elenco Veicoli"
              BackgroundColor="#F2F2F2">
 
-    <!--<ScrollView>
-        <VerticalStackLayout Padding="20" Spacing="15">
-            --><!-- Form per aggiungere un nuovo veicolo --><!--
-            <Entry Placeholder="Targa" Text="{Binding NewVeicolo.Targa, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />
-            <Entry Placeholder="Alimentazione" Text="{Binding NewVeicolo.Alimentazione, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Chilometraggio" Text="{Binding NewVeicolo.Km, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric"></Entry>
-            <Entry Placeholder="Nome" Text="{Binding Proprietario.Nome, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Cognome" Text="{Binding Proprietario.Cognome, Converter={converters:UpperCaseConverter}}" />
-            <Entry Placeholder="Indirizzo" Text="{Binding Proprietario.Indirizzo, Converter={converters:UpperCaseConverter}}" />
-            <Button Text="Aggiungi Veicolo" Command="{Binding AggiungiCommand}" />
-
-            <CollectionView ItemsSource="{Binding Veicoli}" 
-                            SelectionMode="Single"
-                            Margin="0,20,0,0">
-                <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="models:Veicolo">
-                        <Border Stroke="#CCCCCC"
-                                StrokeThickness="1"
-                                BackgroundColor="White"
-                                Padding="15"
-                                Margin="5"
-                                StrokeShape="RoundRectangle 10">
-                            <Grid RowDefinitions="Auto,Auto"
-                                  ColumnDefinitions="*,Auto,Auto">
-                                --><!-- Dati del veicolo --><!--
-                                <VerticalStackLayout Grid.Column="0" Spacing="5">
-                                    <Label Text="{Binding Targa}" FontAttributes="Bold" FontSize="16" TextColor="Black" />
-                                    <Label Text="{Binding Marca}" FontSize="14" TextColor="DarkGray" />
-                                    <Label Text="{Binding Modello}" FontSize="14" TextColor="DarkGray" />
-                                    <Label Text="{Binding Proprietario.Nome}" FontSize="14" TextColor="DarkGray" />
-                                    
-                                    
-                                    --><!--<Label Text="{Binding Anno}" FontSize="14" TextColor="DarkGray" />
-                                    <Label Text="{Binding Alimentazione}" FontSize="14" TextColor="DarkGray" />
-                                    <Label Text="{Binding Km}" FontSize="14" TextColor="DarkGray" />--><!--
-                                </VerticalStackLayout>
-
-                                 --><!--Pulsante Modifica--><!-- 
-                                <Button Grid.Column="1"
-                                        Text="✏️"
-                                        BackgroundColor="Transparent"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VeicoloViewModel}}, Path=SelezionaVeicoloCommand}"
-                                        CommandParameter="{Binding .}" />
-                                
-                                --><!-- Pulsante Elimina --><!--
-                                <Button Grid.Column="2"
-                                        Text="🗑️"
-                                        BackgroundColor="Transparent"
-                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:VeicoloViewModel}}, Path=EliminaCommand}"
-                                        CommandParameter="{Binding .}" />
-                            </Grid>
-                        </Border>
-                    </DataTemplate>
-                </CollectionView.ItemTemplate>
-            </CollectionView>
-        </VerticalStackLayout>
-    </ScrollView>-->
+    
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="25">
 
