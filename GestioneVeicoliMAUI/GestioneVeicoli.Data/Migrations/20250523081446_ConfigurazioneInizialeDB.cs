@@ -1,16 +1,20 @@
-﻿using System;
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace GestioneVeicoli.Data.Migrations
 {
     /// <inheritdoc />
+<<<<<<<< HEAD:GestioneVeicoliMAUI/GestioneVeicoli.Data/Migrations/20250523081446_ConfigurazioneInizialeDB.cs
     public partial class ConfigurazioneInizialeDB : Migration
+========
+    public partial class AddManutenzioniTable : Migration
+>>>>>>>> 97f1ed32ec755e4335da9c302626af62cb7786f3:GestioneVeicoliMAUI/GestioneVeicoli.Data/Migrations/20250512141249_AddManutenzioniTable.cs
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+<<<<<<<< HEAD:GestioneVeicoliMAUI/GestioneVeicoli.Data/Migrations/20250523081446_ConfigurazioneInizialeDB.cs
             migrationBuilder.CreateTable(
                 name: "Proprietari",
                 columns: table => new
@@ -50,6 +54,13 @@ namespace GestioneVeicoli.Data.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
+========
+            migrationBuilder.AddColumn<int>(
+                name: "ProprietarioId",
+                table: "Veicoli",
+                type: "int",
+                nullable: true);
+>>>>>>>> 97f1ed32ec755e4335da9c302626af62cb7786f3:GestioneVeicoliMAUI/GestioneVeicoli.Data/Migrations/20250512141249_AddManutenzioniTable.cs
 
             migrationBuilder.CreateTable(
                 name: "Manutenzioni",
@@ -72,10 +83,20 @@ namespace GestioneVeicoli.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Manutenzioni_VeicoloId",
-                table: "Manutenzioni",
-                column: "VeicoloId");
+            migrationBuilder.CreateTable(
+                name: "Proprietari",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Nome = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Cognome = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Indirizzo = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Proprietari", x => x.Id);
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_Veicoli_ProprietarioId",
@@ -83,23 +104,38 @@ namespace GestioneVeicoli.Data.Migrations
                 column: "ProprietarioId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Veicoli_Targa",
+                name: "IX_Manutenzioni_VeicoloId",
+                table: "Manutenzioni",
+                column: "VeicoloId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Veicoli_Proprietari_ProprietarioId",
                 table: "Veicoli",
-                column: "Targa",
-                unique: true);
+                column: "ProprietarioId",
+                principalTable: "Proprietari",
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Veicoli_Proprietari_ProprietarioId",
+                table: "Veicoli");
+
             migrationBuilder.DropTable(
                 name: "Manutenzioni");
 
             migrationBuilder.DropTable(
-                name: "Veicoli");
-
-            migrationBuilder.DropTable(
                 name: "Proprietari");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Veicoli_ProprietarioId",
+                table: "Veicoli");
+
+            migrationBuilder.DropColumn(
+                name: "ProprietarioId",
+                table: "Veicoli");
         }
     }
 }
