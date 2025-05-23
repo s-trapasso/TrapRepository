@@ -9,7 +9,7 @@ namespace GestioneVeicoli.ViewModels
 {
     public partial class ProprietarioViewModel : ObservableObject
     {
-        private readonly IProprietarioRepository _proprietarioRepository;
+        private readonly IRepositoryManager _repositoryManager;
         private readonly ILoggingService _logger;
 
         [ObservableProperty]
@@ -18,9 +18,9 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         private Proprietario _nuovoProprietario = new();
 
-        public ProprietarioViewModel(IProprietarioRepository proprietarioRepository, ILoggingServiceFactory loggingServiceFactory)
+        public ProprietarioViewModel(IRepositoryManager repositoryManager, ILoggingServiceFactory loggingServiceFactory)
         {
-            _proprietarioRepository = proprietarioRepository;
+            _repositoryManager = repositoryManager;
             _logger = loggingServiceFactory.CreateLogger<ProprietarioViewModel>();
             _ = CaricaProprietariAsync();
         }
@@ -31,7 +31,7 @@ namespace GestioneVeicoli.ViewModels
             try
             {
                 Proprietari.Clear();
-                var lista = await _proprietarioRepository.GetAllProprietariAsync();
+                var lista = await _repositoryManager.Proprietari.GetAllProprietariAsync();
                 foreach (var p in lista)
                     Proprietari.Add(p);
                 _logger.Info($"Caricati {Proprietari.Count} proprietari");
@@ -56,7 +56,7 @@ namespace GestioneVeicoli.ViewModels
                     return;
                 }
 
-                await _proprietarioRepository.AddProprietarioAsync(NuovoProprietario);
+                await _repositoryManager.Proprietari.AddProprietarioAsync(NuovoProprietario);
                 Proprietari.Add(NuovoProprietario);
                 _logger.Info("Proprietario aggiunto con successo");
 
@@ -75,7 +75,7 @@ namespace GestioneVeicoli.ViewModels
             try
             {
                 if (proprietario == null) return;
-                await _proprietarioRepository.DeleteProprietarioAsync(proprietario.Id);
+                await _repositoryManager.Proprietari.DeleteProprietarioAsync(proprietario.Id);
                 Proprietari.Remove(proprietario);
             }
             catch (Exception ex)

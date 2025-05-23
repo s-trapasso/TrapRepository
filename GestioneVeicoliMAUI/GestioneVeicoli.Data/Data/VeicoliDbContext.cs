@@ -46,9 +46,14 @@ namespace GestioneVeicoli.Data.Data
                 entity.Property(v => v.ProprietarioId);
 
 
+                // Proprietà Alimentazione come enum salvato come stringa
                 entity.Property(v => v.Alimentazione)
-                    .IsRequired(false)
-                    .HasMaxLength(100);
+                    .HasConversion(
+                        v => v.ToString(),
+                        v => (AlimentazioneEnum)Enum.Parse(typeof(AlimentazioneEnum), v)
+                    )
+                    .HasMaxLength(100)
+                    .IsRequired(false);
 
                 entity.Property(v => v.Km)
                     .IsRequired(false);
