@@ -127,7 +127,8 @@ namespace GestioneVeicoli.ViewModels
                 _logger.Warn("Veicolo passato a SelezionaVeicoloAsync è null.");
                 return;
             }
-            await _navigationService.NavigateToDettaglioAsync(veicolo);
+            //await _navigationService.NavigateToDettaglioAsync(veicolo);
+            await Shell.Current.GoToAsync($"veicoloDettaglio?id={veicolo.Id}");
         }
 
         [RelayCommand]

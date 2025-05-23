@@ -12,6 +12,7 @@ using log4net.Config;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Syncfusion.Maui.Core.Hosting;
 
 namespace GestioneVeicoli
 {
@@ -41,6 +42,7 @@ namespace GestioneVeicoli
 
             builder
                 .UseMauiApp<App>()
+                .ConfigureSyncfusionCore()
                 .ConfigureFonts(fonts =>
                 {
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -50,18 +52,16 @@ namespace GestioneVeicoli
             // ✅ Configura servizi
             ConfiguraServizi(builder.Services);
 
-            // ✅ Crea un ServiceProvider temporaneo per il logging
-            var tempProvider = builder.Services.BuildServiceProvider();
-            var loggerFactory = tempProvider.GetRequiredService<ILoggingServiceFactory>();
-            var logger = loggerFactory.CreateLogger(typeof(MauiProgram));
-            logger.Info("Avvio configurazione dell'applicazione...");
+            //// ✅ Crea un ServiceProvider temporaneo per il logging
+            //var tempProvider = builder.Services.BuildServiceProvider();
+            //var loggerFactory = tempProvider.GetRequiredService<ILoggingServiceFactory>();
+            //var logger = loggerFactory.CreateLogger(typeof(MauiProgram));
+            //logger.Info("Avvio configurazione dell'applicazione...");
 
-            // Configurazione del database
-            logger.Info("Inizializzazione del database");
-            builder.Services.AddDbContext<VeicoliDbContext>(options =>
-                options.UseSqlServer("Server=DESKTOP-6DONDJT\\MSSQLSERVER_TRAP;Database=GestioneVeicoli;User Id=sa;Password=admintrap;Encrypt=False;"));
+
 
 #if DEBUG
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXpcc3RQRGRdWUV2WUZWYUA=");
             builder.Logging.AddDebug();
 #endif
 
@@ -71,6 +71,15 @@ namespace GestioneVeicoli
         }
         private static void ConfiguraServizi(IServiceCollection services)
         {
+            // Registrazione del servizio di navigazione e log
+            services.AddSingleton<NavigationService>();
+            services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
+
+            // ✅ Crea un ServiceProvider temporaneo per il logging
+            var tempProvider = services.BuildServiceProvider();
+            var loggerFactory = tempProvider.GetRequiredService<ILoggingServiceFactory>();
+            var logger = loggerFactory.CreateLogger(typeof(MauiProgram));
+            logger.Info("Avvio configurazione dell'applicazione...");
             // Registra la configurazione nel container DI
             var connectionString = config.GetConnectionString("DefaultConnection");
             services.AddDbContext<VeicoliDbContext>(options => options.UseSqlServer(connectionString));
@@ -84,9 +93,7 @@ namespace GestioneVeicoli
             //Pagine
             services.AddTransient<VeicoliPage>();
 
-            // Registrazione del servizio di navigazione e log
-            services.AddSingleton<NavigationService>();
-            services.AddSingleton<ILoggingServiceFactory, LoggingServiceFactory>();
+            
 
             //ViewModels
             services.AddScoped<VeicoloViewModel>();

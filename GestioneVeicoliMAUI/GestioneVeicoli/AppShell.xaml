@@ -5,26 +5,28 @@
     xmlns:views="clr-namespace:GestioneVeicoli.Views"
     x:Class="GestioneVeicoli.AppShell">
 
-    <!-- Menu Flyout -->
-    <FlyoutItem Title="Veicoli" Icon="ic_vehicle.png">
-        <ShellContent
-      Title="Lista Veicoli"
-      ContentTemplate="{DataTemplate views:VeicoliPage}"
-      Route="veicoli"/>
+    <!-- HOME -->
+    <FlyoutItem Title="Home" Icon="home.png" Route="home">
+        <ShellContent Title="Home"
+                      ContentTemplate="{DataTemplate views:MainTabbedPage}" />
     </FlyoutItem>
 
-    <FlyoutItem Title="Proprietari" Icon="ic_owner.png">
-        <ShellContent
-      Title="Lista Proprietari"
-      ContentTemplate="{DataTemplate views:ProprietarioPage}"
-      Route="proprietari"/>
+    <!-- VEICOLI -->
+    <FlyoutItem Title="Veicoli" Icon="car.png" Route="veicoli">
+        <ShellContent Title="Veicoli"
+                      ContentTemplate="{DataTemplate views:VeicoliPage}" />
     </FlyoutItem>
 
-    <!--<FlyoutItem Title="Manutenzioni" Icon="ic_maintenance.png">
-        <ShellContent
-      Title="Manutenzioni"
-      ContentTemplate="{DataTemplate views:ManutenzionePage}"
-      Route="manutenzioni"/>
-    </FlyoutItem>-->
+    <!-- PROPRIETARI -->
+    <FlyoutItem Title="Proprietari" Icon="user.png" Route="proprietari">
+        <ShellContent Title="Proprietari"
+                      ContentTemplate="{DataTemplate views:ProprietarioPage}" />
+    </FlyoutItem>
+
+    <!-- MANUTENZIONI -->
+    <FlyoutItem Title="Manutenzioni" Icon="wrench.png" Route="manutenzioni">
+        <ShellContent Title="Manutenzioni"
+                      ContentTemplate="{DataTemplate views:ManutenzioniPage}" />
+    </FlyoutItem>
 
 </Shell>

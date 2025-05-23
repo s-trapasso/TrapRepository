@@ -4,10 +4,9 @@ namespace GestioneVeicoli
 {
     public partial class App : Application
     {
-        public App(VeicoliPage veicoliPage)
+        public App()
         {
             InitializeComponent();
-            //MainPage = new NavigationPage(veicoliPage);
             MainPage = new AppShell();
         }
     }
