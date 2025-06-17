@@ -109,6 +109,8 @@ namespace GestioneVeicoli.Data.Models
                 }
             }
         }
+
+        public string MarcaModello => $"{Marca} {Modello}";
         // Relazione con Manutenzioni
         public ICollection<Manutenzione> Manutenzioni { get; set; }
         public int ProprietarioId { get; set; }  // chiave esterna

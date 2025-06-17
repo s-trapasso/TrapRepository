@@ -21,18 +21,33 @@
                     <Entry Placeholder="Marca" Text="{Binding NewVeicolo.Marca,Converter={converters:UpperCaseConverter}}" />
                     <Entry Placeholder="Modello" Text="{Binding NewVeicolo.Modello,Converter={converters:UpperCaseConverter}}" />
                     <Entry Placeholder="Anno" Text="{Binding NewVeicolo.Anno, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />
-                    
-                    <!--<Entry Placeholder="Alimentazione" Text="{Binding NewVeicolo.Alimentazione,Converter={converters:UpperCaseConverter}}" />-->
                     <Picker Title="Alimentazione" 
                             ItemsSource="{Binding AlimentazioniDisponibili}"
                             SelectedItem="{Binding NewVeicolo.Alimentazione, Mode=TwoWay}"></Picker>
-                    
                     <Entry Placeholder="Km" Text="{Binding NewVeicolo.Km,Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />
 
-                    <Label Text="Dati Proprietario" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0" />
-                    <Entry Placeholder="Nome" Text="{Binding Proprietario.Nome,Converter={converters:UpperCaseConverter}}" />
-                    <Entry Placeholder="Cognome" Text="{Binding Proprietario.Cognome,Converter={converters:UpperCaseConverter}}" />
-                    <Entry Placeholder="Indirizzo" Text="{Binding Proprietario.Indirizzo,Converter={converters:UpperCaseConverter}}" />
+
+                    <!-- Picker Elenco di proprietari disponibili-->
+                    <Picker Title="Proprietario"
+                            ItemsSource="{Binding Proprietari}"
+                            SelectedItem="{Binding SelectedProprietario, Mode=TwoWay}" 
+                            ItemDisplayBinding="{Binding NomeCognome}" />
+
+                    <!-- Form nuovo proprietario: visibile SOLO se SelectedProprietario == null -->
+                    <StackLayout>
+                        <StackLayout.Triggers>
+                            <DataTrigger TargetType="StackLayout"
+                                         Binding="{Binding MostraFormNuovoProprietario}"
+                                         Value="False">
+                                <Setter Property="IsVisible" Value="False" />
+                            </DataTrigger>
+                        </StackLayout.Triggers>
+
+                        <Label Text="Dati Proprietario" FontAttributes="Bold" FontSize="16" Margin="0,10,0,0" />
+                        <Entry Placeholder="Nome" Text="{Binding Proprietario.Nome,Converter={converters:UpperCaseConverter}}" />
+                        <Entry Placeholder="Cognome" Text="{Binding Proprietario.Cognome,Converter={converters:UpperCaseConverter}}" />
+                        <Entry Placeholder="Indirizzo" Text="{Binding Proprietario.Indirizzo,Converter={converters:UpperCaseConverter}}" />
+                    </StackLayout>
 
                     <Button Text="💾 Salva Veicolo" Command="{Binding AggiungiCommand}" />
                 </VerticalStackLayout>

@@ -60,8 +60,7 @@ namespace GestioneVeicoli
 
 
 
-#if DEBUG
-            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXpcc3RQRGRdWUV2WUZWYUA=");
+#if DEBUG            
             builder.Logging.AddDebug();
 #endif
 
@@ -80,25 +79,30 @@ namespace GestioneVeicoli
             var loggerFactory = tempProvider.GetRequiredService<ILoggingServiceFactory>();
             var logger = loggerFactory.CreateLogger(typeof(MauiProgram));
             logger.Info("Avvio configurazione dell'applicazione...");
+            
             // Registra la configurazione nel container DI
             var connectionString = config.GetConnectionString("DefaultConnection");
             services.AddDbContext<VeicoliDbContext>(options => options.UseSqlServer(connectionString));
-            //Repository
+
+            //Registrazione Licenza Syncfusion
+            var keyLicense = config["SyncfusionLicenseKey:LicenseKey"];
+            Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense(keyLicense);
+
+            // Repository
             services.AddScoped<IVeicoliRepository, VeicoliRepository>();
             services.AddScoped<IProprietarioRepository, ProprietarioRepository>();
             services.AddScoped<IManutenzioneRepository, ManutenzioneRepository>();
-
             services.AddScoped<IRepositoryManager, RepositoryManager>();
+
+            // ViewModels
+            services.AddScoped<DashboardViewModel>();
+            services.AddScoped<VeicoloViewModel>();
+            services.AddScoped<ProprietarioViewModel>();
+            services.AddScoped<ManutenzioneViewModel>();
 
             //Pagine
             services.AddTransient<VeicoliPage>();
 
-            
-
-            //ViewModels
-            services.AddScoped<VeicoloViewModel>();
-            services.AddScoped<ProprietarioViewModel>();
-            services.AddScoped<ManutenzioneViewModel>();
         }
     }
 }

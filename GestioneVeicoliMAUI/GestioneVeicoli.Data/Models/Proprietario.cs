@@ -74,7 +74,8 @@ namespace GestioneVeicoli.Data.Models
                 }
             }
         }
-
+        public string NomeCognome => $"{Nome} {Cognome}";
+        
         // Relazione con Veicolo (uno-a-molti)
         public ICollection<Veicolo> Veicoli { get; set; }
 

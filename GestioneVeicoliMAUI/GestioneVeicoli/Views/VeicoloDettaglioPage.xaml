@@ -18,7 +18,7 @@
         <Entry Text="{Binding Veicolo.Anno}" />
         
         <Label Text="Alimentazione:" FontAttributes="Bold" />
-        <Entry Text="{Binding Veicolo.Alimentazione,Converter={converters:UpperCaseConverter}}" />
+        <Label Text="{Binding Veicolo.Alimentazione,Converter={converters:UpperCaseConverter}}" />
 
         <Label Text="KM:" FontAttributes="Bold" />
         <Entry Text="{Binding Veicolo.Km, Mode=TwoWay, Converter={converters:IntToStringConverter}}" Keyboard="Numeric" />

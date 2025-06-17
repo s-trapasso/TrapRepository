@@ -11,6 +11,11 @@
 
             <Entry Placeholder="Tipo intervento"
                    Text="{Binding NuovaManutenzione.TipoIntervento}" />
+            <!-- Picker veicoli -->
+            <Picker Title="Seleziona veicolo"
+                    ItemsSource="{Binding Veicoli}"
+                    ItemDisplayBinding="{Binding MarcaModello}" 
+                    SelectedItem="{Binding VeicoloSelezionato}" />
 
             <DatePicker Date="{Binding NuovaManutenzione.Data}" />
 

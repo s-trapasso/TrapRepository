@@ -12,4 +12,13 @@ public partial class VeicoliPage : ContentPage
         BindingContext = viewModel;
         _VeicoloViewModel = viewModel;
     }
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (BindingContext is VeicoloViewModel viewModel)
+        {
+            _ = viewModel.LoadDataAsync();
+        }
+    }
 }

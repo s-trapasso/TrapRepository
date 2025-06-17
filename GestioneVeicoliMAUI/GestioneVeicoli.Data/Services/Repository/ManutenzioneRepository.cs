@@ -52,5 +52,12 @@ namespace GestioneVeicoli.Data.Services.Repository
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<List<Manutenzione>> GetAllManutenzioniAsync()
+        {
+            return await _context.Manutenzioni
+                 .OrderByDescending(m => m.Data)
+                 .ToListAsync();
+        }
     }
 }

@@ -6,9 +6,9 @@
     x:Class="GestioneVeicoli.AppShell">
 
     <!-- HOME -->
-    <FlyoutItem Title="Home" Icon="home.png" Route="home">
-        <ShellContent Title="Home"
-                      ContentTemplate="{DataTemplate views:MainTabbedPage}" />
+    <FlyoutItem Title="Dashboard Veicoli" Icon="home.png" Route="home">
+        <ShellContent Title="Dashboard Veicoli"
+                      ContentTemplate="{DataTemplate views:DashboardPage}" />
     </FlyoutItem>
 
     <!-- VEICOLI -->

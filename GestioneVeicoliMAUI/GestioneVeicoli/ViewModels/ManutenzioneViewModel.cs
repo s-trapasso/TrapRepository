@@ -9,6 +9,7 @@ using CommunityToolkit.Mvvm.Input;
 using GestioneVeicoli.Data.Models;
 using GestioneVeicoli.Data.Services.Interfaces;
 using GestioneVeicoli.Log;
+using Syncfusion.Maui.DataSource.Extensions;
 
 namespace GestioneVeicoli.ViewModels
 {
@@ -18,18 +19,28 @@ namespace GestioneVeicoli.ViewModels
        
         private readonly ILoggingService _logger;
 
+        #region PROPRIETA'
         [ObservableProperty]
-        private ObservableCollection<Manutenzione> manutenzioni = new();
+        private ObservableCollection<Manutenzione> _manutenzioni = new();
 
         [ObservableProperty]
         private Manutenzione nuovaManutenzione = new();
 
         private int veicoloId;
 
+        [ObservableProperty]
+        private ObservableCollection<Veicolo> _veicoli = new();
+
+        [ObservableProperty]
+        private Veicolo veicoloSelezionato;
+        [ObservableProperty]
+        private ObservableCollection<Proprietario> _proprietari = new();
+        #endregion
         public ManutenzioneViewModel(IRepositoryManager repositoryManager, ILoggingServiceFactory loggerFactory)
         {
             _repositoryManager = repositoryManager;
             _logger = loggerFactory.CreateLogger<ManutenzioneViewModel>();
+            _ = LoadDataAsync();
         }
 
         public void SetVeicoloId(int id)
@@ -37,7 +48,19 @@ namespace GestioneVeicoli.ViewModels
             veicoloId = id;
             NuovaManutenzione = new Manutenzione { VeicoloId = id, Data = DateTime.Today };
             _ = CaricaManutenzioniAsync();
+            
         }
+
+        partial void OnVeicoloSelezionatoChanged(Veicolo oldValue, Veicolo newValue)
+        {
+            if (newValue != null)
+            {
+                veicoloId = newValue.Id;
+                _ = CaricaManutenzioniAsync();
+                NuovaManutenzione = new Manutenzione { VeicoloId = veicoloId, Data = DateTime.Today };
+            }
+        }
+
 
         [RelayCommand]
         private async Task CaricaManutenzioniAsync()
@@ -98,6 +121,13 @@ namespace GestioneVeicoli.ViewModels
                 _logger.Error("Errore durante l'eliminazione della manutenzione", ex);
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
+        }
+        public async Task LoadDataAsync()
+        {
+            var result = await _repositoryManager.CaricaDatiInizialiAsync();
+            Proprietari = new ObservableCollection<Proprietario>(result.proprietari);
+            Veicoli = new ObservableCollection<Veicolo>(result.veicoli);
+            Manutenzioni = new ObservableCollection<Manutenzione>(result.manutenzioni);
         }
     }
 

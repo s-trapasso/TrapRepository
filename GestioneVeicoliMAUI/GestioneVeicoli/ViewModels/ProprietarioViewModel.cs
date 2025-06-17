@@ -12,36 +12,23 @@ namespace GestioneVeicoli.ViewModels
         private readonly IRepositoryManager _repositoryManager;
         private readonly ILoggingService _logger;
 
+        #region PROPRIETA'
+        [ObservableProperty]
+        private ObservableCollection<Veicolo> _veicoli = new ObservableCollection<Veicolo>();
         [ObservableProperty]
         private ObservableCollection<Proprietario> _proprietari = new ObservableCollection<Proprietario>();
-
+        [ObservableProperty]
+        private ObservableCollection<Manutenzione> _manutenzioni = new ObservableCollection<Manutenzione>();
         [ObservableProperty]
         private Proprietario _nuovoProprietario = new();
-
+        #endregion
         public ProprietarioViewModel(IRepositoryManager repositoryManager, ILoggingServiceFactory loggingServiceFactory)
         {
             _repositoryManager = repositoryManager;
             _logger = loggingServiceFactory.CreateLogger<ProprietarioViewModel>();
-            _ = CaricaProprietariAsync();
+            _ = LoadDataAsync();
         }
 
-        [RelayCommand]
-        private async Task CaricaProprietariAsync()
-        {
-            try
-            {
-                Proprietari.Clear();
-                var lista = await _repositoryManager.Proprietari.GetAllProprietariAsync();
-                foreach (var p in lista)
-                    Proprietari.Add(p);
-                _logger.Info($"Caricati {Proprietari.Count} proprietari");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("Errore nel caricamento dei proprietari", ex);
-                await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
-            }
-        }
 
         [RelayCommand]
         private async Task AggiungiProprietarioAsync()
@@ -83,6 +70,14 @@ namespace GestioneVeicoli.ViewModels
                 _logger.Error("Errore durante l'eliminazione del proprietario", ex);
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
+        }
+
+        public async Task LoadDataAsync()
+        {
+            var result = await _repositoryManager.CaricaDatiInizialiAsync();
+            Proprietari = new ObservableCollection<Proprietario>(result.proprietari);
+            Veicoli = new ObservableCollection<Veicolo>(result.veicoli);
+            Manutenzioni = new ObservableCollection<Manutenzione>(result.manutenzioni);
         }
     }
 }

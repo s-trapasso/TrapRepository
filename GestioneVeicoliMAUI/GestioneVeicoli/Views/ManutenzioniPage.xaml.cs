@@ -11,4 +11,13 @@ public partial class ManutenzioniPage : ContentPage
         BindingContext = viewModel;
         _manutenzioniViewModel = viewModel;
     }
+    protected override async void OnAppearing()
+    {
+        base.OnAppearing();
+
+        if (BindingContext is ManutenzioneViewModel viewModel)
+        {
+            _ = viewModel.LoadDataAsync();
+        }
+    }
 }

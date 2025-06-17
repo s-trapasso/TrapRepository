@@ -12,7 +12,9 @@ namespace GestioneVeicoli.ViewModels
         private readonly IRepositoryManager _repositoryManager;
         public readonly ILoggingService _logger;
         public readonly NavigationService _navigationService;
+        public bool DatiCaricati { get; private set; } = false;
 
+        #region PROPRIETÀ
         [ObservableProperty]
         public ObservableCollection<Veicolo> _veicoli = new ObservableCollection<Veicolo>();
 
@@ -22,33 +24,29 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         private Proprietario _proprietario = new Proprietario();
 
+        [ObservableProperty]
+        public ObservableCollection<Proprietario> proprietari = new ObservableCollection<Proprietario>();
+
+        [ObservableProperty]
+        private Proprietario selectedProprietario;
+        [ObservableProperty]
+        public ObservableCollection<Manutenzione> manutenzioni = new ObservableCollection<Manutenzione>();
+        #endregion
+        public bool MostraFormNuovoProprietario => SelectedProprietario == null;
+        partial void OnSelectedProprietarioChanged(Proprietario value)
+        {
+            OnPropertyChanged(nameof(MostraFormNuovoProprietario));
+        }
+
         public List<AlimentazioneEnum> AlimentazioniDisponibili { get; } = Enum.GetValues(typeof(AlimentazioneEnum)).Cast<AlimentazioneEnum>().ToList();
         public VeicoloViewModel(IRepositoryManager repositoryManager, ILoggingServiceFactory loggingServiceFactory, NavigationService navigationService)
         {
             _repositoryManager = repositoryManager;
             _logger = loggingServiceFactory.CreateLogger<VeicoloViewModel>();
             _navigationService = navigationService;
-            _ = CaricaVeicoliAsync();
         }
 
-        [RelayCommand]
-        private async Task CaricaVeicoliAsync()
-        {
-            try
-            {
-                Veicoli.Clear();
-                var lista = await _repositoryManager.Veicoli.GetVeicoliAsync();
-                foreach (var v in lista)
-                    Veicoli.Add(v);
-                _logger.Info($"Caricati {Veicoli.Count} veicoli");
-            }
-            catch (Exception ex)
-            {
-                _logger.Error("Errore durante il caricamento dei veicoli", ex);
-                await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
-            }
-        }
-
+        #region Command Aggiungi Veicolo / Proprietario
         [RelayCommand]
         private async Task AggiungiAsync()
         {
@@ -56,16 +54,23 @@ namespace GestioneVeicoli.ViewModels
             {
                 if (string.IsNullOrWhiteSpace(NewVeicolo.Targa) ||
                     string.IsNullOrWhiteSpace(NewVeicolo.Marca) ||
-                    string.IsNullOrWhiteSpace(NewVeicolo.Modello) ||
-                    string.IsNullOrWhiteSpace(Proprietario.Nome) ||
-                    string.IsNullOrWhiteSpace(Proprietario.Cognome) ||
-                    string.IsNullOrWhiteSpace(Proprietario.Indirizzo))
+                    string.IsNullOrWhiteSpace(NewVeicolo.Modello))
                 {
-                    await App.Current.MainPage.DisplayAlert("Errore", "Tutti i campi sono obbligatori.", "OK");
+                    await App.Current.MainPage.DisplayAlert("Errore", "I campi del veicolo sono obbligatori.", "OK");
                     return;
                 }
 
-                //Controlla se il veicolo esiste già
+                bool nuovoProprietarioValido = Proprietario != null &&
+                    !string.IsNullOrWhiteSpace(Proprietario.Nome) &&
+                    !string.IsNullOrWhiteSpace(Proprietario.Cognome) &&
+                    !string.IsNullOrWhiteSpace(Proprietario.Indirizzo);
+
+                if (SelectedProprietario == null && !nuovoProprietarioValido)
+                {
+                    await App.Current.MainPage.DisplayAlert("Errore", "Seleziona un proprietario esistente o inseriscine uno nuovo.", "OK");
+                    return;
+                }
+
                 var veicoloEsistente = await _repositoryManager.Veicoli.GetVeicoloByTargaAsync(NewVeicolo.Targa);
                 if (veicoloEsistente != null)
                 {
@@ -73,36 +78,50 @@ namespace GestioneVeicoli.ViewModels
                     return;
                 }
 
-                //Controlla se il proprietario esiste già
-                var proprietarioEsistente = await _repositoryManager.Proprietari.GetProprietarioByNomeCognomeAsync(Proprietario.Nome, Proprietario.Cognome);
-                if (proprietarioEsistente != null)
+                if (SelectedProprietario != null)
                 {
-                    await App.Current.MainPage.DisplayAlert("Errore", "Il proprietario esiste già.\nVeicolo nuovo salvato", "OK");
-                    Proprietario = proprietarioEsistente;
-                    NewVeicolo.ProprietarioId = Proprietario.Id;
+                    NewVeicolo.ProprietarioId = SelectedProprietario.Id;
                 }
                 else
                 {
-                    // Aggiungi nuovo proprietario
-                    await _repositoryManager.Proprietari.AddProprietarioAsync(Proprietario);
-                    NewVeicolo.ProprietarioId = Proprietario.Id;
+                    var proprietarioEsistente = await _repositoryManager.Proprietari
+                        .GetProprietarioByNomeCognomeAsync(Proprietario.Nome, Proprietario.Cognome);
+
+                    if (proprietarioEsistente != null)
+                    {
+                        await App.Current.MainPage.DisplayAlert("Info", "Il proprietario esiste già. Verrà associato al veicolo.", "OK");
+                        NewVeicolo.ProprietarioId = proprietarioEsistente.Id;
+                    }
+                    else
+                    {
+                        await _repositoryManager.Proprietari.AddProprietarioAsync(Proprietario);
+                        NewVeicolo.ProprietarioId = Proprietario.Id;
+                        await _repositoryManager.Proprietari.GetAllProprietariAsync();
+                    }
                 }
-                //Salva il veicolo
+
                 await _repositoryManager.Veicoli.AddVeicoloAsync(NewVeicolo);
-                Veicoli.Add(NewVeicolo);
+
+                // Ricarica la lista veicoli dal DB per avere dati aggiornati (es. ID)
+                // Ricarica la lista proprietari per aggiornare il picker
+                await LoadDataAsync();
+
+                
 
                 NewVeicolo = new Veicolo();
                 Proprietario = new Proprietario();
-
+                SelectedProprietario = null;
                 _logger.Info("Nuovo veicolo e proprietario aggiunti.");
+                
             }
             catch (Exception ex)
             {
                 _logger.Error("Errore durante l'aggiunta del veicolo", ex);
-                await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
+                await App.Current.MainPage.DisplayAlert("Errore", "Si è verificato un errore durante il salvataggio.", "OK");
             }
         }
-
+        #endregion
+        #region Elimina Veicolo
         [RelayCommand]
         private async Task EliminaAsync(Veicolo veicolo)
         {
@@ -118,7 +137,8 @@ namespace GestioneVeicoli.ViewModels
                 await App.Current.MainPage.DisplayAlert("Errore", ex.Message, "OK");
             }
         }
-
+        #endregion
+         
         [RelayCommand]
         private async Task SelezionaVeicoloAsync(Veicolo veicolo)
         {
@@ -127,7 +147,6 @@ namespace GestioneVeicoli.ViewModels
                 _logger.Warn("Veicolo passato a SelezionaVeicoloAsync è null.");
                 return;
             }
-            //await _navigationService.NavigateToDettaglioAsync(veicolo);
             await Shell.Current.GoToAsync($"veicoloDettaglio?id={veicolo.Id}");
         }
 
@@ -140,6 +159,13 @@ namespace GestioneVeicoli.ViewModels
                 return;
             }
             await _navigationService.NavigateToDettaglioAsync(veicolo);
+        }
+        public async Task LoadDataAsync()
+        {
+            var result = await _repositoryManager.CaricaDatiInizialiAsync();
+            Proprietari = new ObservableCollection<Proprietario>(result.proprietari);
+            Veicoli = new ObservableCollection<Veicolo>(result.veicoli);
+            Manutenzioni = new ObservableCollection<Manutenzione>(result.manutenzioni);
         }
     }
 }

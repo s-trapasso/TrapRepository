@@ -13,5 +13,6 @@ namespace GestioneVeicoli.Data.Services.Interfaces
         Task AddAsync(Manutenzione manutenzione);
         Task UpdateAsync(Manutenzione manutenzione);
         Task DeleteAsync(int id);
+        Task<List<Manutenzione>> GetAllManutenzioniAsync();
     }
 }
