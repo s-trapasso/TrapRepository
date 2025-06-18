@@ -18,7 +18,7 @@
             <sf:SfCardView Grid.Row="0" Grid.Column="0">
                 <VerticalStackLayout Padding="15">
                     <Label Text="Veicoli totali" FontAttributes="Bold" FontSize="16"/>
-                    <Label Text="{Binding TotaleVeicoli}" FontSize="28" HorizontalOptions="Center"/>
+                    <Label Text="{Binding Veicoli.Count}" FontSize="28" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </sf:SfCardView>
 
@@ -26,7 +26,7 @@
             <sf:SfCardView Grid.Row="0" Grid.Column="1">
                 <VerticalStackLayout Padding="15">
                     <Label Text="Manutenzioni" FontAttributes="Bold" FontSize="16"/>
-                    <Label Text="{Binding TotaleManutenzioni}" FontSize="28" HorizontalOptions="Center"/>
+                    <Label Text="{Binding Manutenzioni.Count}" FontSize="28" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </sf:SfCardView>
 
@@ -43,7 +43,7 @@
             <sf:SfCardView Grid.Row="1" Grid.Column="1">
                 <VerticalStackLayout Padding="15">
                     <Label Text="Proprietari" FontAttributes="Bold" FontSize="16"/>
-                    <Label Text="{Binding TotaleProprietari}" FontSize="28" HorizontalOptions="Center"/>
+                    <Label Text="{Binding Proprietari.Count}" FontSize="28" HorizontalOptions="Center"/>
                 </VerticalStackLayout>
             </sf:SfCardView>
         </Grid>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GestioneVeicoli.Data.Models;
@@ -32,7 +33,17 @@ namespace GestioneVeicoli.ViewModels
         [ObservableProperty]
         public ObservableCollection<Manutenzione> manutenzioni = new ObservableCollection<Manutenzione>();
         #endregion
-        public bool MostraFormNuovoProprietario => SelectedProprietario == null;
+        private bool _mostraFormNuovoProprietario;
+        public bool MostraFormNuovoProprietario
+        {
+            get => _mostraFormNuovoProprietario;
+            set
+            {
+                _mostraFormNuovoProprietario = value;
+                OnPropertyChanged();
+            }
+        }
+
         partial void OnSelectedProprietarioChanged(Proprietario value)
         {
             OnPropertyChanged(nameof(MostraFormNuovoProprietario));
@@ -160,12 +171,23 @@ namespace GestioneVeicoli.ViewModels
             }
             await _navigationService.NavigateToDettaglioAsync(veicolo);
         }
+
+        [RelayCommand]
+        public void  MostraFormProprietarioCommand() 
+        {
+            SelectedProprietario = null;
+            MostraFormNuovoProprietario = true;
+        }
         public async Task LoadDataAsync()
         {
             var result = await _repositoryManager.CaricaDatiInizialiAsync();
+            Proprietari.Add(new Proprietario { Id = 0, Nome = "--Seleziona un nome--" });
             Proprietari = new ObservableCollection<Proprietario>(result.proprietari);
+            
             Veicoli = new ObservableCollection<Veicolo>(result.veicoli);
             Manutenzioni = new ObservableCollection<Manutenzione>(result.manutenzioni);
+
+            MostraFormNuovoProprietario = !(Proprietari?.Any() ?? false);
         }
     }
 }

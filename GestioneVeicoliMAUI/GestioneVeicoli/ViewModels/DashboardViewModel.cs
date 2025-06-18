@@ -62,6 +62,7 @@ namespace GestioneVeicoli.ViewModels
             Proprietari = new ObservableCollection<Proprietario>(result.proprietari);
             Veicoli = new ObservableCollection<Veicolo>(result.veicoli);
             Manutenzioni = new ObservableCollection<Manutenzione>(result.manutenzioni);
+            prossimaManutenzioneData = Manutenzioni.Where(m => m.Data > DateTime.Today).OrderBy(m => m.Data).Select(m => (DateTime?)m.Data).FirstOrDefault();
         }
     }
 }

@@ -3,11 +3,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:vm="clr-namespace:GestioneVeicoli.ViewModels"
              x:Class="GestioneVeicoli.Views.ProprietarioPage"
-             Title="ProprietariPage">
+             Title="ELENCO INTESTATARI VEICOLI">
 
-    <ContentPage.ToolbarItems>
+    <!--<ContentPage.ToolbarItems>
         <ToolbarItem Text="Aggiorna" Command="{Binding CaricaProprietariCommand}" />
-    </ContentPage.ToolbarItems>
+    </ContentPage.ToolbarItems>-->
 
     <ScrollView>
         <VerticalStackLayout Padding="20" Spacing="20">
