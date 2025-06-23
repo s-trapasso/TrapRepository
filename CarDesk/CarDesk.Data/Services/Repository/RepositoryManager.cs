@@ -28,10 +28,11 @@ namespace CarDesk.Data.Services.Repository
 
         public async Task<(List<Proprietario> proprietari, List<Veicolo> veicoli, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync()
         {
-            var manutenzioni = await Manutenzioni.GetAllManutenzioniAsync();
-            var proprietari = await Proprietari.GetAllProprietariAsync();
-            var veicoli = await Veicoli.GetVeicoliAsync();
-            return (proprietari, veicoli, manutenzioni);
+            var manutenzioniTask = Manutenzioni.GetAllManutenzioniAsync();
+            var proprietariTask = Proprietari.GetAllProprietariAsync();
+            var veicoliTask = Veicoli.GetVeicoliAsync();
+            await Task.WhenAll(manutenzioniTask, proprietariTask, veicoliTask);
+            return (proprietariTask.Result, veicoliTask.Result, manutenzioniTask.Result);
         }
     }
 }

@@ -14,18 +14,10 @@ namespace CarDesk.Data.Data
         public CarDeskDbContext CreateDbContext(string[] args)
         {
 
-            //1. Carica le configurazioni dal file appSettings.json
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
-                .Build();
-
-            // 2. Recupera la stringa di connessione
-            var connectionString = configuration.GetConnectionString("CarDeskDBDev");
-
-            // 3. Configura il DbContext
             var optionsBuilder = new DbContextOptionsBuilder<CarDeskDbContext>();
-            optionsBuilder.UseSqlServer(connectionString);
+
+            // Sostituisci la connection string con quella reale
+            optionsBuilder.UseSqlServer("Server=DESKTOP-6DONDJT\\MSSQLSERVER_TRAP;Database=CarDesk;User Id=sa;Password=admintrap;Encrypt=False;");
 
             return new CarDeskDbContext(optionsBuilder.Options);
         }
