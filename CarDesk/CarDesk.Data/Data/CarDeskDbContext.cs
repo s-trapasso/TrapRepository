@@ -41,16 +41,19 @@ namespace CarDesk.Data.Data
                 // Proprietà Anno
                 entity.Property(v => v.Anno)
                     .IsRequired();
-                    
 
-                entity.Property(v => v.ProprietarioId);
+
+                entity.HasOne(v => v.Proprietario)
+                      .WithMany(p => p.Veicoli)
+                      .HasForeignKey(v => v.ProprietarioId)
+                      .OnDelete(DeleteBehavior.Restrict);
 
 
                 // Proprietà Alimentazione come enum salvato come stringa
                 entity.Property(v => v.Alimentazione)
                     .HasConversion(
                         v => v.ToString(),
-                        v => (AlimentazioneEnum)Enum.Parse(typeof(AlimentazioneEnum), v)
+                        v => (AlimentazioneEnum)Enum.Parse(typeof(AlimentazioneEnum), v,true)
                     )
                     .HasMaxLength(100)
                     .IsRequired(false);

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using CarDesk.Data.Data;
 using CarDesk.Data.Models;
 using CarDesk.Data.Services.Interfaces;
-using CarDesk.Data.Services.VeicoloRepository;
+
 
 namespace CarDesk.Data.Services.Repository
 {
@@ -26,13 +26,12 @@ namespace CarDesk.Data.Services.Repository
             Manutenzioni = new ManutenzioneRepository(_context);
         }
 
-        public async Task<(List<Proprietario> proprietari, List<Veicolo> veicoli, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync()
+        public async Task<(List<Veicolo> veicoli, List<Proprietario> proprietari, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync()
         {
-            var manutenzioniTask = Manutenzioni.GetAllManutenzioniAsync();
-            var proprietariTask = Proprietari.GetAllProprietariAsync();
-            var veicoliTask = Veicoli.GetVeicoliAsync();
-            await Task.WhenAll(manutenzioniTask, proprietariTask, veicoliTask);
-            return (proprietariTask.Result, veicoliTask.Result, manutenzioniTask.Result);
+            var manutenzioniTask = await Manutenzioni.GetAllManutenzioniAsync();
+            var proprietariTask = await Proprietari.GetAllProprietariAsync();
+            var veicoliTask = await Veicoli.GetVeicoliAsync();
+            return (veicoliTask, proprietariTask, manutenzioniTask);
         }
     }
 }

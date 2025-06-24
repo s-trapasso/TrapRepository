@@ -1,7 +1,7 @@
 ﻿using CarDesk.Data.Data;
+using CarDesk.Data.Services;
 using CarDesk.Data.Services.Interfaces;
 using CarDesk.Data.Services.Repository;
-using CarDesk.Data.Services.VeicoloRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -10,6 +10,7 @@ namespace CarDesk
 {
     public static class MauiProgram
     {
+        public static IConfiguration config { get; private set; }
         public static MauiApp CreateMauiApp()
         {
             var builder = MauiApp.CreateBuilder();
@@ -21,22 +22,32 @@ namespace CarDesk
                 });
 
             builder.Services.AddMauiBlazorWebView();
-            builder.Configuration.AddJsonFile("appSettings.json", optional: false, reloadOnChange: true);
+            var configBuilder = new ConfigurationBuilder()
+                .SetBasePath(AppContext.BaseDirectory) // Usa la cartella dell'eseguibile
+                .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true);
 
-            var connectionString = builder.Configuration.GetConnectionString("CarDeskDBDev");
-            builder.Services.AddDbContext<CarDeskDbContext>(options => options.UseSqlServer(connectionString));
+            config = configBuilder.Build();
+            ConfigurazioneServizi(builder.Services);
 
-            // Repository
-            builder.Services.AddScoped<IVeicoliRepository, VeicoliRepository>();
-            builder.Services.AddScoped<IProprietarioRepository, ProprietarioRepository>();
-            builder.Services.AddScoped<IManutenzioneRepository, ManutenzioneRepository>();
-            builder.Services.AddScoped<IRepositoryManager, RepositoryManager>();
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
 
             return builder.Build();
+        }
+
+        private static void ConfigurazioneServizi(IServiceCollection services)
+        {
+            // Configurazione del contesto del database
+            var connectionString = config.GetConnectionString("CarDeskDBDev");
+            services.AddDbContext<CarDeskDbContext>(options => options.UseSqlServer(connectionString));
+            
+            // Configurazione dei servizi aggiuntivi se necessario
+            services.AddScoped<IVeicoliRepository, VeicoliRepository>();
+            services.AddScoped<IProprietarioRepository, ProprietarioRepository>();
+            services.AddScoped<IManutenzioneRepository, ManutenzioneRepository>();
+            services.AddScoped<IRepositoryManager, RepositoryManager>();
         }
     }
 }

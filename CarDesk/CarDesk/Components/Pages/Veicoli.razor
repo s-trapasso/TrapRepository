@@ -1,0 +1,56 @@
+﻿@page "/veicoli"
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+
+<h3>Elenco Veicoli</h3>
+
+@if (veicoli == null)
+{
+    <p><em>Caricamento...</em></p>
+}
+else if (veicoli.Count == 0)
+{
+    <p>Nessun veicolo trovato.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Targa</th>
+                <th>Marca</th>
+                <th>Modello</th>
+                <th>Anno</th>
+                <th>Alimentazione</th>
+                <th>Intestatario</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var v in veicoli)
+            {
+                <tr>
+                    <td>@v.Targa</td>
+                    <td>@v.Marca</td>
+                    <td>@v.Modello</td>
+                    <td>@v.Anno</td>
+                    <td>@v.Alimentazione.ToString()</td>
+                    <td>@v.Proprietario?.Nome @v.Proprietario?.Cognome</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<CarDesk.Data.Models.Veicolo>? veicoli;
+	private List<CarDesk.Data.Models.Proprietario>? proprietari;
+	private List<CarDesk.Data.Models.Manutenzione>? manutenzioni;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var (veicoliCaricati, proprietariCaricati,manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
+        
+        veicoli = veicoliCaricati;
+		proprietari = proprietariCaricati;
+		manutenzioni = manutenzioniCaricate;
+    }
+}

@@ -3,7 +3,7 @@ using CarDesk.Data.Models;
 using CarDesk.Data.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDesk.Data.Services.VeicoloRepository
+namespace CarDesk.Data.Services
 {
     public class VeicoliRepository : IVeicoliRepository
     {

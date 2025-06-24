@@ -3,7 +3,7 @@ using CarDesk.Data.Models;
 using CarDesk.Data.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarDesk.Data.Services.VeicoloRepository
+namespace CarDesk.Data.Services
 {
     public class ProprietarioRepository : IProprietarioRepository
     {
@@ -12,10 +12,6 @@ namespace CarDesk.Data.Services.VeicoloRepository
         public ProprietarioRepository(CarDeskDbContext context)
         {
             _context = context;
-        }
-
-        public ProprietarioRepository()
-        {
         }
 
         public async Task AddProprietarioAsync(Proprietario proprietario)

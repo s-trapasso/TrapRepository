@@ -14,6 +14,6 @@ namespace CarDesk.Data.Services.Interfaces
 
         IManutenzioneRepository Manutenzioni { get; }
         // Aggiungeremo Manutenzioni, Scadenze, ecc. in seguito
-        Task<(List<Proprietario> proprietari, List<Veicolo> veicoli, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync();
+        Task<(List<Veicolo> veicoli, List<Proprietario> proprietari, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync();
     }
 }
