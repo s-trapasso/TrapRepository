@@ -2,23 +2,36 @@
 using CarDesk.Data.Models;
 using CarDesk.Data.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CarDesk.Data.Services
 {
     public class VeicoliRepository : IVeicoliRepository
     {
         private readonly CarDeskDbContext _context;
+        private readonly ILoggingService<VeicoliRepository> _logger;
 
-        public VeicoliRepository(CarDeskDbContext context)
+        public VeicoliRepository(CarDeskDbContext context, ILoggingService<VeicoliRepository> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // CREATE
         public async Task AddVeicoloAsync(Veicolo veicolo)
         {
-            await _context.Veicoli.AddAsync(veicolo);
-            await _context.SaveChangesAsync();
+            _logger.LogInformation("Inserimento nuovo veicolo: {Targa}", veicolo.Targa);
+            try
+            {
+                await _context.Veicoli.AddAsync(veicolo);
+                await _context.SaveChangesAsync();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex,"Errore durante l'inserimento del veicolo: {Targa}", veicolo.Targa);
+                throw; // Rilancia l'eccezione per gestirla a livello superiore
+            }
+           
         }
 
         // READ

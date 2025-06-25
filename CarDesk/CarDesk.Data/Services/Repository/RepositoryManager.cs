@@ -6,32 +6,43 @@ using System.Threading.Tasks;
 using CarDesk.Data.Data;
 using CarDesk.Data.Models;
 using CarDesk.Data.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 
 
 namespace CarDesk.Data.Services.Repository
 {
     public class RepositoryManager : IRepositoryManager
     {
-        private readonly CarDeskDbContext _context;
+        //private readonly CarDeskDbContext _context;
+        private readonly ILoggingService<RepositoryManager> _logger;
 
         public IVeicoliRepository Veicoli { get; }
         public IProprietarioRepository Proprietari { get; }
         public IManutenzioneRepository Manutenzioni { get; }
 
-        public RepositoryManager(CarDeskDbContext context)
+        public RepositoryManager(
+            IVeicoliRepository veicoli,
+            IProprietarioRepository proprietari,
+            IManutenzioneRepository manutenzioni,
+            ILoggingService<RepositoryManager> logger)
         {
-            _context = context;
-            Veicoli = new VeicoliRepository(_context);
-            Proprietari = new ProprietarioRepository(_context);
-            Manutenzioni = new ManutenzioneRepository(_context);
-        }
+            Veicoli = veicoli;
+            Proprietari = proprietari;
+            Manutenzioni = manutenzioni;
+            _logger = logger;
 
+            _logger.LogInformation("RepositoryManager creato");
+        }
         public async Task<(List<Veicolo> veicoli, List<Proprietario> proprietari, List<Manutenzione> manutenzioni)> CaricaDatiInizialiAsync()
         {
+            _logger.LogInformation("Caricamento dati iniziali...");
             var manutenzioniTask = await Manutenzioni.GetAllManutenzioniAsync();
             var proprietariTask = await Proprietari.GetAllProprietariAsync();
             var veicoliTask = await Veicoli.GetVeicoliAsync();
-            return (veicoliTask, proprietariTask, manutenzioniTask);
+
+            _logger.LogInformation("Caricati : {VeicoliCount} veicoli, {ProprietariCount} proprietari, {ManutenzioniCount} manutenzioni", veicoliTask.Count,proprietariTask.Count,manutenzioniTask.Count);
+
+                return (veicoliTask, proprietariTask, manutenzioniTask);
         }
     }
 }
