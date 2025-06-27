@@ -76,7 +76,7 @@ public static class MauiProgram
 
         // DbContext
         var connectionString = Config.GetConnectionString("CarDeskDBDev");
-        services.AddDbContext<CarDeskDbContext>(opt => opt.UseSqlServer(connectionString));
+        services.AddDbContextFactory<CarDeskDbContext>(opt => opt.UseSqlServer(connectionString));
 
         // Repository & manager
         services.AddScoped<IVeicoliRepository, VeicoliRepository>();

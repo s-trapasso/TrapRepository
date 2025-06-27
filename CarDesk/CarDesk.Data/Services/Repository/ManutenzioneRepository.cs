@@ -12,52 +12,62 @@ namespace CarDesk.Data.Services.Repository
 {
     public class ManutenzioneRepository : IManutenzioneRepository
     {
-        private readonly CarDeskDbContext _context;
-
-        public ManutenzioneRepository(CarDeskDbContext context)
+        
+        private readonly IDbContextFactory<CarDeskDbContext> _contextFactory;
+        private readonly ILoggingService<ManutenzioneRepository> _logger;
+        public ManutenzioneRepository(IDbContextFactory<CarDeskDbContext> contextFactory, ILoggingService<ManutenzioneRepository> logger)
         {
-            _context = context;
+            _contextFactory = contextFactory;
+            _logger = logger;
+        }
+
+        /* ---------- CREATE ---------- */
+        public async Task AddAsync(Manutenzione manutenzione)
+        {
+            await using var ctx = _contextFactory.CreateDbContext();
+            await ctx.Manutenzioni.AddAsync(manutenzione);
+            await ctx.SaveChangesAsync();
+        }
+
+        /* ---------- READ ---------- */
+        public async Task<List<Manutenzione>> GetAllManutenzioniAsync()
+        {
+            await using var ctx = _contextFactory.CreateDbContext();
+            return await ctx.Manutenzioni
+                 .OrderByDescending(m => m.Data)
+                 .AsNoTracking()
+                 .ToListAsync();
+        }
+
+        /* ---------- UPDATE ---------- */
+        public async Task UpdateAsync(Manutenzione manutenzione)
+        {
+            await using var ctx = _contextFactory.CreateDbContext();
+            ctx.Manutenzioni.Update(manutenzione);
+            await ctx.SaveChangesAsync();
+        }
+
+        /* ---------- DELETE ---------- */
+        public async Task DeleteAsync(int id)
+        {
+            await using var ctx = _contextFactory.CreateDbContext();
+            var entity = await ctx.Manutenzioni.FindAsync(id);
+            if (entity != null)
+            {
+                ctx.Manutenzioni.Remove(entity);
+                await ctx.SaveChangesAsync();
+            }
         }
 
         public async Task<List<Manutenzione>> GetByVeicoloIdAsync(int veicoloId)
         {
-            //using var _context = new VeicoliDb_context(_connectionString);
-            return await _context.Manutenzioni
+            await using var ctx = _contextFactory.CreateDbContext();
+            return await ctx.Manutenzioni
                 .Where(m => m.VeicoloId == veicoloId)
                 .OrderByDescending(m => m.Data)
+                .AsNoTracking()
                 .ToListAsync();
         }
 
-        public async Task AddAsync(Manutenzione manutenzione)
-        {
-            //using var _context = new VeicoliDb_context(_connectionString);
-            await _context.Manutenzioni.AddAsync(manutenzione);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Manutenzione manutenzione)
-        {
-            //using var _context = new VeicoliDb_context(_connectionString);
-            _context.Manutenzioni.Update(manutenzione);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            //using var _context = new VeicoliDb_context(_connectionString);
-            var entity = await _context.Manutenzioni.FindAsync(id);
-            if (entity != null)
-            {
-                _context.Manutenzioni.Remove(entity);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        public async Task<List<Manutenzione>> GetAllManutenzioniAsync()
-        {
-            return await _context.Manutenzioni
-                 .OrderByDescending(m => m.Data)
-                 .ToListAsync();
-        }
     }
 }

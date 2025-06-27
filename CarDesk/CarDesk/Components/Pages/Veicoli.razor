@@ -1,7 +1,11 @@
 ﻿@page "/veicoli"
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject NavigationManager Nav
 
 <h3>Elenco Veicoli</h3>
+
+<button class="btn btn-primary" @onclick="@(()=> Nav.NavigateTo("/veicoli/nuovo"))">Nuovo Veicolo</button>
+
 
 @if (veicoli == null)
 {
@@ -34,6 +38,10 @@ else
                     <td>@v.Anno</td>
                     <td>@v.Alimentazione.ToString()</td>
                     <td>@v.Proprietario?.Nome @v.Proprietario?.Cognome</td>
+                    <td>
+                       <button class="btn btn-primary"  
+                                @onclick='() => Nav.NavigateTo($"/veicoli/edit/{v.Id}")'>Modifica Veicolo</button>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -42,15 +50,15 @@ else
 
 @code {
     private List<CarDesk.Data.Models.Veicolo>? veicoli;
-	private List<CarDesk.Data.Models.Proprietario>? proprietari;
-	private List<CarDesk.Data.Models.Manutenzione>? manutenzioni;
+    private List<CarDesk.Data.Models.Proprietario>? proprietari;
+    private List<CarDesk.Data.Models.Manutenzione>? manutenzioni;
 
     protected override async Task OnInitializedAsync()
     {
         var (veicoliCaricati, proprietariCaricati,manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
-        
+
         veicoli = veicoliCaricati;
-		proprietari = proprietariCaricati;
-		manutenzioni = manutenzioniCaricate;
+        proprietari = proprietariCaricati;
+        manutenzioni = manutenzioniCaricate;
     }
 }

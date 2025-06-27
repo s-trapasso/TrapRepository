@@ -8,8 +8,8 @@ namespace CarDesk.Data.Services.Interfaces
         Task AddVeicoloAsync(Veicolo veicolo);
         Task UpdateVeicoloAsync(Veicolo veicolo);
         Task DeleteVeicoloAsync(int id);
-        //Task<Veicolo> GetVeicoloByIdAsync(int? id);
-        Task<Veicolo> GetVeicoloByTargaAsync(string targa);
+        Task<Veicolo?> GetVeicoloByIdAsync(int? id);
+        Task<Veicolo?> GetVeicoloByTargaAsync(string targa);
 
     }
 

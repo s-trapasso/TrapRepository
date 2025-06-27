@@ -1,0 +1,26 @@
+﻿@page "/veicoli/nuovo"
+@page "/veicoli/edit/{Id:int}"
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject NavigationManager Nav
+@namespace CarDesk.Components.Forms
+
+<h3>VeicoliEdit Page</h3>
+
+<VeicoliForm VeicoloIniziale="model" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista"></VeicoliForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private Veicolo model = new();     // nuovo per default
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)               // modalità modifica
+            model = await RepositoryManager.Veicoli.GetVeicoloByIdAsync(Id.Value) ?? new Veicolo();
+    }
+
+    Task RitornaAllaLista()
+    {
+        Nav.NavigateTo("/veicoli", true);
+        return Task.CompletedTask;
+    }
+}
