@@ -3,11 +3,11 @@
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<VeicoliForm> Log
 
-
 <EditForm Model="Veicolo" OnValidSubmit="SalvaAsync">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
+    <!-- === CAMPI VEICOLO =================================================== -->
     <div class="mb-2">
         <label class="form-label">Targa</label>
         <InputText class="form-control" @bind-Value="Veicolo.Targa" />
@@ -30,92 +30,164 @@
 
     <div class="mb-2">
         <label class="form-label">Alimentazione</label>
-        <InputSelect class="form-select" @bind-Value="Veicolo.Alimentazione">
+        <InputSelect class="form-select" @bind-Value="Veicolo.Alimentazione" TValue="AlimentazioneEnum?">
+            <option value="">-- Seleziona --</option>   @* placeholder *@
             @foreach (var tipo in Enum.GetValues<AlimentazioneEnum>())
             {
-                <option value="@tipo">@tipo</option>
+                    <option value="@tipo">@tipo</option>
             }
         </InputSelect>
     </div>
 
+    <!-- === PROPRIETARIO ==================================================== -->
     <div class="mb-3">
         <label class="form-label">Proprietario</label>
-        <InputSelect class="form-select" @bind-Value="Veicolo.ProprietarioId" @onchange="OnProprietarioChanged">
-            <option value="-1">-- Seleziona --</option>
-            @foreach (var p in proprietari)
-            {
-                <option value="@p.Id">@p.Nome @p.Cognome</option>
-            }
-            <option value="0">Nuovo proprietario</option>
+        <InputSelect class="form-select" @bind-Value="ProprietarioIdSelezionato">
+                    <option value="-1">-- Seleziona --</option>
+                            @foreach (var p in proprietari)
+                            {
+                            <option value="@p.Id">@p.Nome @p.Cognome</option>
+                            }
+                    <option value="0">Nuovo proprietario</option>
         </InputSelect>
     </div>
 
+    @* === FORM INLINE PER NUOVO PROPRIETARIO ============================== *@
     @if (isNuovoProprietario)
     {
-        <div class="border p-3 rounded bg-light">
-            <h6>Nuovo proprietario</h6>
-            <ProprietariForm ProprietarioIniziale="nuovoProprietario" OnSalvato="OnProprietarioCreato" OnAnnulla="AnnullaProprietario" />
-        </div>
+            <div class="border rounded p-3 bg-light mb-3">
+                <h6 class="mb-3">Nuovo proprietario</h6>
+
+                <ProprietariForm Proprietario="nuovoProprietario"
+                                 OnSalvato="OnProprietarioCreato"
+                                 OnAnnulla="AnnullaProprietario" />
+            </div>
     }
 
+    <!-- === BOTTONI ========================================================= -->
     <div class="d-flex gap-2 mt-4">
-        <button type="submit" class="btn btn-primary">Salva</button>
+        <button type="submit"  class="btn btn-primary">Salva</button>
         <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
+        @* Mostra “Elimina” soltanto se il veicolo esiste già *@
+        @if (Veicolo.Id != 0)
+        {
+            <button type="button"
+                    class="btn btn-danger ms-auto"
+                    @onclick="MostraConfermaElimina">
+                Elimina
+            </button>
+        }
     </div>
+    @* === MODAL DI CONFERMA ================================================ *@
+    @if (confermaElimina)
+    {
+        <div class="modal fade show d-block" style="background:#00000080;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                    </div>
+                    <div class="modal-body">
+                        Vuoi davvero eliminare il veicolo <strong>@Veicolo.Targa</strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                        <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </EditForm>
 
 @code {
-    // == PARAMETRI == //
+    /* ---------- PARAMETRI DAL PADRE -------------------------- */
     [Parameter] public Veicolo Veicolo { get; set; } = new();
     [Parameter] public EventCallback OnSalvato { get; set; }
     [Parameter] public EventCallback OnAnnulla { get; set; }
 
-    // === DATI DI SUPPORTO ===
+    /* ---------- DATI DI SUPPORTO ----------------------------- */
     private List<Proprietario> proprietari = new();
-
     private bool isNuovoProprietario;
     private Proprietario nuovoProprietario = new();
+    private bool confermaElimina;
 
+    void MostraConfermaElimina() => confermaElimina = true;
+    void ChiudiModal() => confermaElimina = false;
+
+    /* ---------- CICLO VITA ----------------------------------- */
     protected override async Task OnInitializedAsync()
     {
         proprietari = await RepositoryManager.Proprietari.GetAllProprietariAsync();
-    }
 
-    // ---------- Gestione proprietario ----------
-    private void OnProprietarioChanged(ChangeEventArgs e)
-    {
-        var val = int.Parse(e.Value!.ToString()!);
-
-        if (val == 0)              // “Nuovo proprietario”
+        // Se l'Id del proprietario è 0 o minore di 0 (-1 = “nessuno selezionato”)
+        if (Veicolo.ProprietarioId <= 0)
         {
             isNuovoProprietario = true;
             nuovoProprietario = new Proprietario();
-            Veicolo.ProprietarioId = 0;
         }
         else
+        {
+            isNuovoProprietario = false;
+        }
+    }
+
+    /* ---------- EVENTI UI ------------------------------------ */
+    void OnProprietarioChanged(ChangeEventArgs e)
+    {
+        var val = int.Parse(e.Value!.ToString()!);
+
+        if (val == 0)            /* utente ha scelto “Nuovo proprietario”   */
+        {
+            isNuovoProprietario = true;
+            nuovoProprietario = new Proprietario();
+            Veicolo.ProprietarioId = 0;   // per validare il campo
+        }
+        else                     /* proprietario esistente selezionato      */
         {
             isNuovoProprietario = false;
             Veicolo.ProprietarioId = val;
         }
     }
 
-    private async Task OnProprietarioCreato(Proprietario p)
+    async Task OnProprietarioCreato(Proprietario p)
     {
-        await RepositoryManager.Proprietari.AddProprietarioAsync(p);
+        // salva già nel db (avviene dentro ProprietariForm) e ricarica lista
         proprietari = await RepositoryManager.Proprietari.GetAllProprietariAsync();
+
         Veicolo.ProprietarioId = p.Id;
         isNuovoProprietario = false;
     }
 
-    private void AnnullaProprietario()
+    void AnnullaProprietario()
     {
         isNuovoProprietario = false;
         Veicolo.ProprietarioId = -1;
     }
 
-    // ---------- Salvataggio ----------
-    private async Task SalvaAsync()
+    // ---- proprietà wrapper ----
+    private int ProprietarioIdSelezionato
     {
+        get => Veicolo.ProprietarioId;
+        set
+        {
+            Veicolo.ProprietarioId = value;
+
+            if (value == 0)                      // “Nuovo proprietario”
+            {
+                isNuovoProprietario = true;
+                nuovoProprietario = new Proprietario();
+            }
+            else                                 // proprietario esistente
+            {
+                isNuovoProprietario = false;
+            }
+        }
+    }
+    /* ---------- SALVATAGGIO VEICOLO -------------------------- */
+    async Task SalvaAsync()
+    {
+        Log.LogInformation("Alimentazione selezionata: {Alim}", Veicolo.Alimentazione);
         try
         {
             if (Veicolo.Id == 0)
@@ -129,6 +201,23 @@
         catch (Exception ex)
         {
             Log.LogError(ex, "Errore salvataggio veicolo {Targa}", Veicolo.Targa);
+        }
+    }
+
+    /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
+    async Task EliminaAsync()
+    {
+        try
+        {
+            await RepositoryManager.Veicoli.DeleteVeicoloAsync(Veicolo.Id);
+            Log.LogInformation("Eliminato veicolo {Targa}", Veicolo.Targa);
+            confermaElimina = false;
+            await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore eliminazione veicolo {Targa}", Veicolo.Targa);
+            confermaElimina = false;
         }
     }
 }

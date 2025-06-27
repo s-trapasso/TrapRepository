@@ -1,66 +1,49 @@
 ﻿@using CarDesk.Data.Models
-@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@using CarDesk.Data.Services.Interfaces
+@inject IRepositoryManager Repo
+@inject ILoggingService<ProprietariForm> Log
 
-@if (Visible)
-{
-    <!-- Backdrop -->
-    <div class="modal-backdrop"></div>
+<EditForm Model="Proprietario" OnValidSubmit="SalvaAsync">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
 
-    <!-- Finestra -->
-    <div class="modal-dialog">
-        <EditForm Model="Nuovo" OnValidSubmit="Salva">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <!-- Nome -->
-            <div class="mb-3">
-                <label class="form-label">Nome</label>
-                <InputText class="form-control" @bind-Value="Nuovo.Nome" />
-            </div>
-
-            <!-- Cognome -->
-            <div class="mb-3">
-                <label class="form-label">Cognome</label>
-                <InputText class="form-control" @bind-Value="Nuovo.Cognome" />
-            </div>
-
-            <!-- Azioni -->
-            <div class="d-flex gap-2 justify-content-end">
-                <button type="button"
-                        class="btn btn-secondary"
-                        @onclick="Annulla">
-                    Annulla
-                </button>
-                <button type="submit" class="btn btn-primary">
-                    Salva
-                </button>
-            </div>
-        </EditForm>
+    <div class="mb-2">
+        <label class="form-label">Nome</label>
+        <InputText class="form-control" @bind-Value="Proprietario.Nome" />
     </div>
-}
+
+    <div class="mb-2">
+        <label class="form-label">Cognome</label>
+        <InputText class="form-control" @bind-Value="Proprietario.Cognome" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Cognome</label>
+        <InputText class="form-control" @bind-Value="Proprietario.Indirizzo" />
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+        <button type="submit"  class="btn btn-primary">Salva</button>
+        <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
+    </div>
+</EditForm>
 
 @code {
-    /*--------- Parametri ---------*/
-    [Parameter] public bool Visible { get; set; }
-    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
-    [Parameter] public EventCallback<Proprietario> OnSaved { get; set; }
+    [Parameter] public Proprietario Proprietario { get; set; } = new();
+    [Parameter] public EventCallback<Proprietario> OnSalvato { get; set; }
+    [Parameter] public EventCallback OnAnnulla { get; set; }
 
-
-    /*--------- Stato interno ---------*/
-    Proprietario Nuovo = new();
-
-    /*--------- Metodi ---------*/
-    async Task Salva()
+    async Task SalvaAsync()
     {
-        await RepositoryManager.Proprietari.AddProprietarioAsync(Nuovo);
-
-        // restituisci il proprietario creato al caller
-        await OnSaved.InvokeAsync(Nuovo);
-
-        // reset e chiusura
-        Nuovo = new();
-        await VisibleChanged.InvokeAsync(false);
+        try
+        {
+            await Repo.Proprietari.AddProprietarioAsync(Proprietario);
+            Log.LogInformation("Creato proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            await OnSalvato.InvokeAsync(Proprietario);
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore creazione proprietario");
+        }
     }
-
-    async Task Annulla() => await VisibleChanged.InvokeAsync(false);
 }
