@@ -6,7 +6,7 @@
 
 <h3>VeicoliEdit Page</h3>
 
-<VeicoliForm VeicoloIniziale="model" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista"></VeicoliForm>
+<VeicoliForm Veicolo="model" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista" @key="model.Id"></VeicoliForm>
 
 @code {
     [Parameter] public int? Id { get; set; }

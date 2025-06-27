@@ -1,0 +1,66 @@
+﻿@using CarDesk.Data.Models
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+
+@if (Visible)
+{
+    <!-- Backdrop -->
+    <div class="modal-backdrop"></div>
+
+    <!-- Finestra -->
+    <div class="modal-dialog">
+        <EditForm Model="Nuovo" OnValidSubmit="Salva">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Nome -->
+            <div class="mb-3">
+                <label class="form-label">Nome</label>
+                <InputText class="form-control" @bind-Value="Nuovo.Nome" />
+            </div>
+
+            <!-- Cognome -->
+            <div class="mb-3">
+                <label class="form-label">Cognome</label>
+                <InputText class="form-control" @bind-Value="Nuovo.Cognome" />
+            </div>
+
+            <!-- Azioni -->
+            <div class="d-flex gap-2 justify-content-end">
+                <button type="button"
+                        class="btn btn-secondary"
+                        @onclick="Annulla">
+                    Annulla
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Salva
+                </button>
+            </div>
+        </EditForm>
+    </div>
+}
+
+@code {
+    /*--------- Parametri ---------*/
+    [Parameter] public bool Visible { get; set; }
+    [Parameter] public EventCallback<bool> VisibleChanged { get; set; }
+    [Parameter] public EventCallback<Proprietario> OnSaved { get; set; }
+
+
+    /*--------- Stato interno ---------*/
+    Proprietario Nuovo = new();
+
+    /*--------- Metodi ---------*/
+    async Task Salva()
+    {
+        await RepositoryManager.Proprietari.AddProprietarioAsync(Nuovo);
+
+        // restituisci il proprietario creato al caller
+        await OnSaved.InvokeAsync(Nuovo);
+
+        // reset e chiusura
+        Nuovo = new();
+        await VisibleChanged.InvokeAsync(false);
+    }
+
+    async Task Annulla() => await VisibleChanged.InvokeAsync(false);
+}
