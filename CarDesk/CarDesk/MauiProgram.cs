@@ -5,6 +5,7 @@ using CarDesk.Data.Services.Repository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 using Serilog;
 using Serilog.Events;
 
@@ -59,7 +60,8 @@ public static class MauiProgram
 
         /* ---------- 5.  Servizi DI ---------- */
         builder.Services.AddMauiBlazorWebView();
-
+        builder.Services.AddLocalization();
+        builder.Services.AddMudServices();
         ConfiguraServizi(builder.Services);
 
 #if DEBUG
