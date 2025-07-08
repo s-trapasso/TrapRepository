@@ -85,5 +85,6 @@ public static class MauiProgram
         services.AddScoped<IProprietarioRepository, ProprietarioRepository>();
         services.AddScoped<IManutenzioneRepository, ManutenzioneRepository>();
         services.AddScoped<IRepositoryManager, RepositoryManager>();
+        services.AddHttpClient<OpenMeteoService>();
     }
 }

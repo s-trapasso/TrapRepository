@@ -6,7 +6,7 @@ namespace CarDesk.Data.Services.Interfaces
     {
         Task AddProprietarioAsync(Proprietario proprietario);
         Task<List<Proprietario>> GetAllProprietariAsync();
-        Task<Proprietario?> GetByIdAsync(int id);
+        Task<Proprietario?> GetProprietarioByIdAsync(int? id);
         Task UpdateProprietarioAsync(Proprietario proprietario);
         Task DeleteProprietarioAsync(int id);
         Task<Proprietario?> GetProprietarioByDetailsAsync(string nome, string cognome, string indirizzo);

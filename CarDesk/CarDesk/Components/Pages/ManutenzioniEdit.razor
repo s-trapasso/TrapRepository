@@ -1,0 +1,38 @@
+﻿@page "/manutenzioni/nuovo/{vehicleId:int?}"
+@page "/manutenzioni/edit/{Id:int}"
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject NavigationManager Nav
+@namespace CarDesk.Components.Forms
+
+<h3>ManutenzioniEdit Page</h3>
+
+<ManutenzioniForm Manutenzione="model" SelectedVehicleId="vehicleId" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista" @key="model.Id"></ManutenzioniForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    [Parameter] public int? vehicleId { get; set; }
+    private Manutenzione model = new();     // nuovo per default
+    private bool isNew => Id is null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (isNew)
+        {
+            model.Data = DateTime.Today;
+            if(vehicleId > 0)
+            {
+                model.VeicoloId = vehicleId.Value; // se è un nuovo intervento, imposto il veicolo se passato come parametro
+            }
+        }
+        else
+        {
+			model = await RepositoryManager.Manutenzioni.GetManutenzioneByIdAsync(Id.Value) ?? new Manutenzione();
+        }
+    }
+
+    Task RitornaAllaLista()
+    {
+        Nav.NavigateTo("/manutenzioni", true);
+        return Task.CompletedTask;
+    }
+}

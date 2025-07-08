@@ -48,10 +48,12 @@ namespace CarDesk.Data.Services
                 await ctx.SaveChangesAsync();
             }
         }
-        public async Task<Proprietario?> GetByIdAsync(int id)
+        public async Task<Proprietario?> GetProprietarioByIdAsync(int? id)
         {
             await using var ctx = _contextFactory.CreateDbContext();
-            return await ctx.Proprietari.FindAsync(id);
+            return await ctx.Proprietari
+                .AsNoTracking()
+                .FirstOrDefaultAsync(p => p.Id == id);
         }
         public async Task<Proprietario?> GetProprietarioByDetailsAsync(string nome, string cognome, string indirizzo)
         {

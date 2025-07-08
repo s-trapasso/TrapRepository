@@ -22,7 +22,7 @@ namespace CarDesk.Data.Services.Repository
         }
 
         /* ---------- CREATE ---------- */
-        public async Task AddAsync(Manutenzione manutenzione)
+        public async Task AddManutenzioneAsync(Manutenzione manutenzione)
         {
             await using var ctx = _contextFactory.CreateDbContext();
             await ctx.Manutenzioni.AddAsync(manutenzione);
@@ -34,13 +34,14 @@ namespace CarDesk.Data.Services.Repository
         {
             await using var ctx = _contextFactory.CreateDbContext();
             return await ctx.Manutenzioni
+                 .Include(v => v.Veicolo)
                  .OrderByDescending(m => m.Data)
                  .AsNoTracking()
                  .ToListAsync();
         }
 
         /* ---------- UPDATE ---------- */
-        public async Task UpdateAsync(Manutenzione manutenzione)
+        public async Task UpdateManutenzioneAsync(Manutenzione manutenzione)
         {
             await using var ctx = _contextFactory.CreateDbContext();
             ctx.Manutenzioni.Update(manutenzione);
@@ -48,7 +49,7 @@ namespace CarDesk.Data.Services.Repository
         }
 
         /* ---------- DELETE ---------- */
-        public async Task DeleteAsync(int id)
+        public async Task DeleteManutenzioneAsync(int id)
         {
             await using var ctx = _contextFactory.CreateDbContext();
             var entity = await ctx.Manutenzioni.FindAsync(id);
@@ -67,6 +68,13 @@ namespace CarDesk.Data.Services.Repository
                 .OrderByDescending(m => m.Data)
                 .AsNoTracking()
                 .ToListAsync();
+        }
+        public async Task<Manutenzione?> GetManutenzioneByIdAsync(int? id)
+        {
+            await using var ctx = _contextFactory.CreateDbContext();
+            return await ctx.Manutenzioni
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Id == id);
         }
 
     }

@@ -4,6 +4,7 @@ using CarDesk.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarDesk.Data.Migrations
 {
     [DbContext(typeof(CarDeskDbContext))]
-    partial class CarDeskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250704150638_AddCostoToManutenzione")]
+    partial class AddCostoToManutenzione
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

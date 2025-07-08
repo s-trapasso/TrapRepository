@@ -1,0 +1,26 @@
+﻿@page "/proprietari/nuovo"
+@page "/proprietari/edit/{Id:int}"
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject NavigationManager Nav
+@namespace CarDesk.Components.Forms
+
+<h3>ProprietariEdit Page</h3>
+
+<ProprietariForm Proprietario="model" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista" @key="model.Id"></ProprietariForm>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+    private Proprietario model = new();     // nuovo per default
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id.HasValue)               // modalità modifica
+            model = await RepositoryManager.Proprietari.GetProprietarioByIdAsync(Id.Value) ?? new Proprietario();
+    }
+
+    Task RitornaAllaLista()
+    {
+        Nav.NavigateTo("/proprietari", true);
+        return Task.CompletedTask;
+    }
+}

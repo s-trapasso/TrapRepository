@@ -1,6 +1,144 @@
 ﻿@page "/manutenzioni"
-<h3>Manutenzioni</h3>
+@inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject NavigationManager Nav
+
+@if(veicoli?.Count > 0)
+{
+    <div class="mb-3">
+        <label class="form-label">Veicolo</label>
+        <InputSelect class="form-select"
+        @bind-Value="VeicoloIdSelezionato">
+            <option value="-1">-- Seleziona --</option>
+            @foreach (var v in veicoli)
+            {
+                <option value="@v.Id">@v.Targa (@v.Marca @v.Modello)</option>
+            }
+            <option value="0">Nuovo veicolo…</option>
+        </InputSelect>
+    </div>
+}
+else
+{
+    <div>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+            Nessun veicolo registrato. <a href="/veicoli/nuovo">Aggiungine uno</a>
+            per poter inserire una manutenzione
+        </MudAlert>
+    </div>
+}
+<button class="btn btn-primary mb-3"
+        disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
+        @onclick='@(() => Nav.NavigateTo(
+            $"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))'>
+    Nuovo intervento
+</button>
+
+<!-- === Elenco manutenzioni filtrato ================================ -->
+@if(manutenzioniFiltrate  is null)
+{
+    <p><em>Caricamento...</em></p>
+}
+else if(VeicoloIdSelezionatoBacking > 0 && manutenzioniFiltrate.Count == 0)
+{
+    <p>Nessun intervento trovato per il veicolo selezionato</p>
+}
+else if (manutenzioniFiltrate.Count > 0)
+{
+    <h3>Elenco Interventi di manutenzione</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Tipo di intervento</th>
+                <th>Data intervento</th>
+                <th>Targa del veicolo</th>
+                <th>Costo (€)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var m in manutenzioniFiltrate)
+            {
+                <tr>
+                    <td>@m.TipoIntervento</td>
+                    <td>@m.Data.ToString("dd/MM/yyyy")</td>
+                    <td>@m.Veicolo?.Targa</td>
+                    <td>@m.Costo</td>
+                    <td>
+                        <button class="btn btn-primary"
+                        @onclick='() => Nav.NavigateTo($"/manutenzioni/edit/{m.Id}")'>
+                            Modifica
+                        </button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
 
 
-Welcome to Manutenzioni Page.
+@code {
+    /* ------- dati caricati all’avvio -------------------- */
+    private List<Veicolo>? veicoli;
+    private List<Proprietario>? proprietari;
+    private List<Manutenzione>? manutenzioni;
 
+    /* ---------- DATI DI SUPPORTO ----------------------------- */
+    private List<Manutenzione>? manutenzioniFiltrate;
+    private int VeicoloSelezionato = -1;
+
+    [Parameter] public Veicolo Veicolo { get; set; } = new();
+    private bool isNuovoProprietario;
+    private Proprietario nuovoProprietario = new();
+    private bool confermaElimina;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var (veicoliCaricati, proprietariCaricati, manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
+
+        veicoli = veicoliCaricati;
+        proprietari = proprietariCaricati;
+        manutenzioni = manutenzioniCaricate;
+
+        //Se esiste almeno un veicolo, seleziona il primo
+        if (veicoli?.Count > 0)
+        {
+            VeicoloSelezionato = veicoli.First().Id;
+            FiltraManutenzioni();
+        }
+        else
+        {
+            manutenzioniFiltrate = [];
+        }
+    }
+    /* ------- cambia filtro quando l’utente sceglie un veicolo -------- */
+    private int VeicoloIdSelezionatoBacking;
+    private int VeicoloIdSelezionato
+    {
+        get => VeicoloIdSelezionatoBacking;
+        set
+        {
+            if (value == 0)
+            {
+                Nav.NavigateTo("/veicoli/nuovo");
+                FiltraManutenzioni();
+                StateHasChanged();
+            }
+			else
+			{
+				VeicoloIdSelezionatoBacking = value;
+				FiltraManutenzioni();
+			}
+        }
+    }
+    private void FiltraManutenzioni()
+    {
+        if(VeicoloIdSelezionatoBacking <= 0 || manutenzioni is null)
+        {
+            manutenzioniFiltrate = manutenzioni ?? [];
+        }
+        else
+        {
+			manutenzioniFiltrate = manutenzioni.Where(m => m.VeicoloId == VeicoloIdSelezionatoBacking).ToList();
+        }
+    }
+
+}

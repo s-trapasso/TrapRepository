@@ -1,7 +1,9 @@
 ﻿@page "/"
+@using CarDesk.Data.Models.Weather
 @using MudBlazor
 @inject NavigationManager Navigation
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
+@inject CarDesk.Data.Services.OpenMeteoService MeteoService
 @using CarDesk.Data.Models
 
 <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
@@ -42,36 +44,35 @@
                 </MudItem>
             }
         </MudGrid>
-
+        @* ====== METEO CARD ====== *@
+        @* @if (weather is not null)
+        {
+            <MudItem xs="12" sm="6" lg="3">
+                <MudPaper Elevation="6"
+                          Rounded="true"
+                          Class="pa-4 hover-lift kpi-card"
+                          Style="min-height:160px">
+                    <MudStack Spacing="1" JustifyContent="Center">
+                        <MudText Typo="Typo.subtitle1">Meteo</MudText>
+                        <MudText Typo="Typo.h4">@weather.TemperatureC&nbsp;°C</MudText>
+                        <MudText Typo="Typo.body2">@weather.Condition</MudText>
+                        <MudText Typo="Typo.caption">💨 @weather.WindSpeedKmh km/h</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        } *@
         @* ====== CHART ====== *@
         @* <MudPaper Class="pa-4 mt-6" Elevation="6" Rounded="true">
             <MudText Typo="Typo.h6" Class="mb-2">Costo manutenzioni (ultimi 6 mesi)</MudText>
             <MudChart ChartType="ChartType.Bar"
                       Labels="@CostLabels"
-                      Datasets="@CostDatasets"
+                      Datasets="@CostSeries"
                       Animate="true" />
         </MudPaper> *@
     }
 </MudContainer>
 
-<style>
-    .hover-lift {
-        transition: transform .2s ease-in-out;
-    }
 
-        .hover-lift:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 24px rgba(0,0,0,.15);
-        }
-
-    .kpi-card {
-        transition: background .3s ease;
-    }
-
-        .kpi-card:hover {
-            background: rgba(0,0,0,.03);
-        }
-</style>
 
 @code {
     /* ---------- MODELLI ---------- */
@@ -87,6 +88,7 @@
     /* ---------- STATE ---------- */
     private bool isLoading = true;
     private List<KpiCard> KpiCards = new();
+    private WeatherInfo? weather;
 
     /* ---------- DATI DAL REPO ---------- */
     private List<Veicolo>? veicoli;
@@ -94,14 +96,18 @@
     private List<Manutenzione>? manutenzioni;
 
     // /* ---------- CHART DATA ---------- */
-    // private string[] CostLabels = Array.Empty<string>();
-    // private MudBlazor.ChartDataset<double>[] CostDatasets = Array.Empty<MudBlazor.ChartDataset<double>>();
+    private string[] CostLabels = Array.Empty<string>();
+    private List<ChartSeries> CostSeries = new();
 
     /* ---------- CICLO VITA ---------- */
     protected override async Task OnInitializedAsync()
     {
         await CaricaDatiAsync();
         CreaKpiCards();
+
+        // >>> nuovo: carico il meteo (Torino di esempio)
+        // weather = await MeteoService.GetCurrentWeatherAsync(45.07, 7.69);
+        
         PreparaChart();
         isLoading = false;
     }
@@ -151,35 +157,36 @@
 
     private void PreparaChart()
     {
-        // // Costi manutenzione ultimi 6 mesi (esempio mock se non hai dati)
-        // var dataByMonth = manutenzioni?
-        //     .Where(m => m.Data >= DateTime.Today.AddMonths(-6))
-        //     .GroupBy(m => new { m.Data.Year, m.Data.Month })
-        //     .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
-        //     .Select(g => new
-        //     {
-        //         Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
-        //         Totale = g.Sum(m => m.Costo)  // presuppone prop Costo
-        //     }).ToList() ?? new();
+        // Costi manutenzione ultimi 6 mesi (esempio mock se non hai dati)
+        var dataByMonth = manutenzioni?
+       .Where(m => m.Data >= DateTime.Today.AddMonths(-6))
+       .GroupBy(m => new { m.Data.Year, m.Data.Month })
+       .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
+       .Select(g => new
+       {
+           Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
+           Totale = g.Sum(m => (double)m.Costo)          // cast decimal→double
+       }).ToList() ?? new();
 
-        // // se non hai manutenzioni, mock
-        // if (!dataByMonth.Any())
-        // {
-        //     dataByMonth = Enumerable.Range(0, 6)
-        //         .Select(i => new { Label = DateTime.Today.AddMonths(-5 + i).ToString("MMM"), Totale = 0d })
-        //         .ToList();
-        // }
+        // se non hai manutenzioni, mock
+        if (!dataByMonth.Any())
+        {
+            dataByMonth = Enumerable.Range(0, 6)
+            .Select(i => new
+            {
+                Label = DateTime.Today.AddMonths(-5 + i).ToString("MMM"),
+                Totale = 0d
+            }).ToList();
+        }
 
-        // CostLabels = dataByMonth.Select(x => x.Label).ToArray();
-        // CostDatasets = new[]
-        // {
-        //     new MudBlazor.ChartDataset<double>
-        //     {
-        //         Label = "€",
-        //         Data  = dataByMonth.Select(x => x.Totale).ToArray(),
-        //         BackgroundColor = new[] { Colors.Blue.Darken2 }
-        //     }
-        // };
+        CostLabels = dataByMonth.Select(x => x.Label).ToArray();
+        CostSeries = [
+        new ChartSeries
+        {
+            Name = "Spesa €",
+            Data = dataByMonth.Select(x => x.Totale).ToArray()
+        }
+        ];
     }
 
     private void NavigateToCard(string label)

@@ -1,6 +1,6 @@
 ﻿@using CarDesk.Data.Models
 @using CarDesk.Data.Services.Interfaces
-@inject IRepositoryManager Repo
+@inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ProprietariForm> Log
 
 <EditForm Model="Proprietario" OnValidSubmit="SalvaAsync">
@@ -18,32 +18,96 @@
     </div>
 
     <div class="mb-2">
-        <label class="form-label">Cognome</label>
+        <label class="form-label">Indirizzo</label>
         <InputText class="form-control" @bind-Value="Proprietario.Indirizzo" />
     </div>
 
-    <div class="d-flex gap-2 mt-3">
+    <!-- === BOTTONI ========================================================= -->
+    <div class="d-flex gap-2 mt-4">
         <button type="submit"  class="btn btn-primary">Salva</button>
         <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
+        @* Mostra “Elimina” soltanto se il veicolo esiste già *@
+        @if (Proprietario.Id != 0)
+        {
+                <button type="button"
+                        class="btn btn-danger ms-auto"
+                        @onclick="MostraConfermaElimina">
+                    Elimina
+                </button>
+        }
     </div>
+    @* === MODAL DI CONFERMA ================================================ *@
+    @if (confermaElimina)
+    {
+            <div class="modal fade show d-block" style="background:#00000080;">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                        </div>
+                        <div class="modal-body">
+                                Vuoi davvero eliminare? <strong>@Proprietario.Nome - @Proprietario.Cognome</strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                            <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    }
 </EditForm>
 
 @code {
+    
+
+    /* ---------- PARAMETRI DAL PADRE -------------------------- */
     [Parameter] public Proprietario Proprietario { get; set; } = new();
     [Parameter] public EventCallback<Proprietario> OnSalvato { get; set; }
     [Parameter] public EventCallback OnAnnulla { get; set; }
 
+    /* ---------- DATI DI SUPPORTO ----------------------------- */
+    private List<Proprietario> proprietari = new();
+    private bool isNuovoProprietario;
+    private Proprietario nuovoProprietario = new();
+    private bool confermaElimina;
+
+    void MostraConfermaElimina() => confermaElimina = true;
+    void ChiudiModal() => confermaElimina = false;
+   
+    /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
-    {
+    {   
         try
         {
-            await Repo.Proprietari.AddProprietarioAsync(Proprietario);
-            Log.LogInformation("Creato proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            if (Proprietario.Id == 0)
+                await RepositoryManager.Proprietari.AddProprietarioAsync(Proprietario);
+            else
+                await RepositoryManager.Proprietari.UpdateProprietarioAsync(Proprietario);
+
+            Log.LogInformation("Salvato proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
             await OnSalvato.InvokeAsync(Proprietario);
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, "Errore creazione proprietario");
+            Log.LogError(ex, "Errore salvataggio proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+        }
+    }
+
+    /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
+    async Task EliminaAsync()
+    {
+        try
+        {
+            await RepositoryManager.Proprietari.DeleteProprietarioAsync(Proprietario.Id);
+            Log.LogInformation("Eliminato veicolo proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            confermaElimina = false;
+            await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore eliminazione proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            confermaElimina = false;
         }
     }
 }
