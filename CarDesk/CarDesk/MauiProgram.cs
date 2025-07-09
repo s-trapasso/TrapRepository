@@ -1,4 +1,5 @@
 ﻿using CarDesk.Data.Data;
+using CarDesk.Data.Models;
 using CarDesk.Data.Services;
 using CarDesk.Data.Services.Interfaces;
 using CarDesk.Data.Services.Repository;
@@ -81,9 +82,7 @@ public static class MauiProgram
         services.AddDbContextFactory<CarDeskDbContext>(opt => opt.UseSqlServer(connectionString));
 
         // Repository & manager
-        services.AddScoped<IVeicoliRepository, VeicoliRepository>();
-        services.AddScoped<IProprietarioRepository, ProprietarioRepository>();
-        services.AddScoped<IManutenzioneRepository, ManutenzioneRepository>();
+        services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
         services.AddScoped<IRepositoryManager, RepositoryManager>();
         services.AddHttpClient<OpenMeteoService>();
     }

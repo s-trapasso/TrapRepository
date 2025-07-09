@@ -81,9 +81,9 @@
         try
         {
             if (Proprietario.Id == 0)
-                await RepositoryManager.Proprietari.AddProprietarioAsync(Proprietario);
+                await RepositoryManager.For<Proprietario>().AddAsync(Proprietario);
             else
-                await RepositoryManager.Proprietari.UpdateProprietarioAsync(Proprietario);
+                await RepositoryManager.For<Proprietario>().UpdateAsync(Proprietario);
 
             Log.LogInformation("Salvato proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
             await OnSalvato.InvokeAsync(Proprietario);
@@ -99,7 +99,7 @@
     {
         try
         {
-            await RepositoryManager.Proprietari.DeleteProprietarioAsync(Proprietario.Id);
+            await RepositoryManager.For<Proprietario>().DeleteAsync(Proprietario.Id);
             Log.LogInformation("Eliminato veicolo proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
             confermaElimina = false;
             await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista

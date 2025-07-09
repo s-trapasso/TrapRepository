@@ -115,10 +115,10 @@
     /* ---------- METODI ---------- */
     private async Task CaricaDatiAsync()
     {
-        var (v, p, m) = await RepositoryManager.CaricaDatiInizialiAsync();
-        veicoli = v;
-        proprietari = p;
-        manutenzioni = m;
+        var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
+        veicoli = datiIniziali.Veicoli;
+        proprietari = datiIniziali.Proprietari;
+		manutenzioni = datiIniziali.Manutenzioni;
     }
 
     private void CreaKpiCards()

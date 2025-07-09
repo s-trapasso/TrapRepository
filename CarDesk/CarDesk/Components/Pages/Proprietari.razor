@@ -53,10 +53,10 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var (veicoliCaricati, proprietariCaricati, manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
+        var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
 
-        veicoli = veicoliCaricati;
-        proprietari = proprietariCaricati;
-        manutenzioni = manutenzioniCaricate;
+        veicoli = datiIniziali.Veicoli;
+        proprietari = datiIniziali.Proprietari;
+        manutenzioni = datiIniziali.Manutenzioni;
     }
 }

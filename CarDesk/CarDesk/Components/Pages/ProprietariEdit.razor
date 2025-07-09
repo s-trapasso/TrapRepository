@@ -15,7 +15,7 @@
     protected override async Task OnInitializedAsync()
     {
         if (Id.HasValue)               // modalità modifica
-            model = await RepositoryManager.Proprietari.GetProprietarioByIdAsync(Id.Value) ?? new Proprietario();
+		    model = await RepositoryManager.For<Proprietario>().GetByIdAsync(Id.Value) ?? new Proprietario();
     }
 
     Task RitornaAllaLista()

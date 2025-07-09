@@ -1,6 +1,7 @@
 ﻿@page "/veicoli"
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
+@inject ILoggingService<Veicoli> Log
 
 <h3>Elenco Veicoli</h3>
 
@@ -27,7 +28,10 @@ else
                 <th>Modello</th>
                 <th>Anno</th>
                 <th>Alimentazione</th>
+                <th>Chilometraggio</th>
                 <th>Intestatario</th>
+                <th></th> @* Modifica *@
+                <th></th> @* Elimina *@
             </tr>
         </thead>
         <tbody>
@@ -39,28 +43,94 @@ else
                     <td>@v.Modello</td>
                     <td>@v.Anno</td>
                     <td>@v.Alimentazione.ToString()</td>
+                    <td>@v.Km</td>
                     <td>@v.Proprietario?.Nome @v.Proprietario?.Cognome</td>
                     <td>
-                       <button class="btn btn-primary"  
-                                @onclick='() => Nav.NavigateTo($"/veicoli/edit/{v.Id}")'>Modifica Veicolo</button>
+                        <button class="btn btn-primary"  
+                        @onclick='() => Nav.NavigateTo($"/veicoli/edit/{v.Id}")'>Modifica Veicolo</button>
+                    </td>
+                    <td>
+                        <MudButton Color="Color.Error"
+                        Variant="Variant.Filled"
+                        OnClick="() => MostraConfermaElimina(v)">Elimina Veicolo
+                        </MudButton>
                     </td>
                 </tr>
             }
         </tbody>
     </table>
 }
+@* =========== MODAL UNICO =========== *@
+@if (confermaElimina && veicoloSelezionato is not null)
+{
+    <div class="modal fade show d-block" style="background:#00000080;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                </div>
+                <div class="modal-body">
+                    Vuoi davvero eliminare il veicolo
+                    <strong>@veicoloSelezionato.Targa</strong>?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
-    private List<CarDesk.Data.Models.Veicolo>? veicoli;
-    private List<CarDesk.Data.Models.Proprietario>? proprietari;
-    private List<CarDesk.Data.Models.Manutenzione>? manutenzioni;
+    private List<Veicolo>? veicoli = new();
+    private List<Proprietario>? proprietari;
+    private List<Manutenzione>? manutenzioni;
+
+    private bool confermaElimina;
+    private Veicolo? veicoloSelezionato;
+
 
     protected override async Task OnInitializedAsync()
     {
-        var (veicoliCaricati, proprietariCaricati,manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
+        var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
 
-        veicoli = veicoliCaricati;
-        proprietari = proprietariCaricati;
-        manutenzioni = manutenzioniCaricate;
+        veicoli = datiIniziali.Veicoli;
+        proprietari = datiIniziali.Proprietari;
+        manutenzioni = datiIniziali.Manutenzioni;
+    }
+    /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
+    void MostraConfermaElimina(Veicolo veicolo)
+    {
+        veicoloSelezionato = veicolo;
+        confermaElimina = true;
+    }
+    void ChiudiModal()
+    {
+        confermaElimina = false;
+        veicoloSelezionato = null;
+    }
+
+    async Task EliminaAsync()
+    {
+        if (veicoloSelezionato is null) return;
+
+        try
+        {
+            await RepositoryManager.For<Veicolo>().DeleteAsync(veicoloSelezionato.Id);
+            veicoli.Remove(veicoloSelezionato);
+            Log.LogInformation("Eliminato veicolo {Targa}", veicoloSelezionato.Targa);
+            confermaElimina = false;
+
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore eliminazione veicolo {Targa}", veicoloSelezionato.Targa);
+            confermaElimina = false;
+        }
+        finally
+        {
+            ChiudiModal();
+        }
     }
 }

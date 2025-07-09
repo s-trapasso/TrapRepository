@@ -9,6 +9,14 @@
     <ValidationSummary />
 
     <!-- === CAMPI MANUTENZIONE =================================================== -->
+    @* Mostra i dettagli del veicolo selezionato, solo se presente *@
+    @if (VeicoloCorrente is not null)
+    {
+        <div class="mb-2">
+            <label class="form-label">Targa selezionata</label>
+            <input class="form-control" value="@VeicoloCorrente.Targa" readonly />
+        </div>
+    }
     <div class="mb-2">
         <label class="form-label">Tipo di intervento</label>
         <InputText class="form-control" @bind-Value="Manutenzione.TipoIntervento" />
@@ -18,15 +26,6 @@
         <label class="form-label">Data intervento</label>
         <InputDate @bind-Value="Manutenzione.Data" class="form-control" @bind-Value:format="yyyy-MM-dd" />
     </div>
-
-    @* Mostra i dettagli del veicolo selezionato, solo se presente *@
-    @if (VeicoloCorrente is not null)
-    {
-        <div class="mb-2">
-            <label class="form-label">Targa selezionata</label>
-            <input class="form-control" value="@VeicoloCorrente.Targa" readonly />
-        </div>
-    }
 
     <div class="mb-2">
         <label class="form-label">Costo (€)</label>
@@ -92,7 +91,7 @@
     /* ---------- CICLO VITA ----------------------------------- */
     protected override async Task OnInitializedAsync()
     {
-        veicoli = await RepositoryManager.Veicoli.GetVeicoliAsync();
+        veicoli = await RepositoryManager.For<Veicolo>().GetAllAsync();
     }
     protected override void OnParametersSet()
     {
@@ -108,9 +107,9 @@
         try
         {
             if (Manutenzione.Id == 0)
-                await RepositoryManager.Manutenzioni.AddManutenzioneAsync(Manutenzione);
+                await RepositoryManager.For<Manutenzione>().AddAsync(Manutenzione);
             else
-                await RepositoryManager.Manutenzioni.UpdateManutenzioneAsync(Manutenzione);
+                await RepositoryManager.For<Manutenzione>().UpdateAsync(Manutenzione);
 
             Log.LogInformation("Salvato intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
             await OnSalvato.InvokeAsync();
@@ -126,7 +125,7 @@
     {
         try
         {
-            await RepositoryManager.Manutenzioni.DeleteManutenzioneAsync(Manutenzione.Id);
+            await RepositoryManager.For<Manutenzione>().DeleteAsync(Manutenzione.Id);
             Log.LogInformation("Eliminato intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
             confermaElimina = false;
             await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista

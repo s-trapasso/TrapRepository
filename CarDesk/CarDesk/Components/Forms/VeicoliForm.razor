@@ -38,7 +38,10 @@
             }
         </InputSelect>
     </div>
-
+    <div class="mb-2">
+        <label class="form-label">Chilometraggio</label>
+        <InputNumber class="form-control" @bind-Value="Veicolo.Km" />
+    </div>
     <!-- === PROPRIETARIO ==================================================== -->
     <div class="mb-3">
         <label class="form-label">Proprietario</label>
@@ -118,7 +121,7 @@
     /* ---------- CICLO VITA ----------------------------------- */
     protected override async Task OnInitializedAsync()
     {
-        proprietari = await RepositoryManager.Proprietari.GetAllProprietariAsync();
+        proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
 
         // Se l'Id del proprietario è 0 o minore di 0 (-1 = “nessuno selezionato”)
         if (Veicolo.ProprietarioId <= 0)
@@ -153,7 +156,7 @@
     async Task OnProprietarioCreato(Proprietario p)
     {
         // salva già nel db (avviene dentro ProprietariForm) e ricarica lista
-        proprietari = await RepositoryManager.Proprietari.GetAllProprietariAsync();
+        proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
 
         Veicolo.ProprietarioId = p.Id;
         isNuovoProprietario = false;
@@ -191,9 +194,9 @@
         try
         {
             if (Veicolo.Id == 0)
-                await RepositoryManager.Veicoli.AddVeicoloAsync(Veicolo);
+				await RepositoryManager.For<Veicolo>().AddAsync(Veicolo);
             else
-                await RepositoryManager.Veicoli.UpdateVeicoloAsync(Veicolo);
+                await RepositoryManager.For<Veicolo>().UpdateAsync(Veicolo);
 
             Log.LogInformation("Salvato veicolo {Targa}", Veicolo.Targa);
             await OnSalvato.InvokeAsync();
@@ -209,7 +212,7 @@
     {
         try
         {
-            await RepositoryManager.Veicoli.DeleteVeicoloAsync(Veicolo.Id);
+            await RepositoryManager.For<Veicolo>().DeleteAsync(Veicolo.Id);
             Log.LogInformation("Eliminato veicolo {Targa}", Veicolo.Targa);
             confermaElimina = false;
             await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista

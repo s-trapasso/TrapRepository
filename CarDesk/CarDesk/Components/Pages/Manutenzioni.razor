@@ -1,6 +1,7 @@
 ﻿@page "/manutenzioni"
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
+@inject ILoggingService<Manutenzione> Log
 
 @if(veicoli?.Count > 0)
 {
@@ -21,7 +22,7 @@ else
 {
     <div>
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-            Nessun veicolo registrato. <a href="/veicoli/nuovo">Aggiungine uno</a>
+            Nessun veicolo registrato. <b><a href="/veicoli/nuovo">Aggiungine uno</a></b>
             per poter inserire una manutenzione
         </MudAlert>
     </div>
@@ -52,6 +53,8 @@ else if (manutenzioniFiltrate.Count > 0)
                 <th>Data intervento</th>
                 <th>Targa del veicolo</th>
                 <th>Costo (€)</th>
+                <th></th> @* Modifica *@
+                <th></th> @* Elimina *@
             </tr>
         </thead>
         <tbody>
@@ -68,12 +71,39 @@ else if (manutenzioniFiltrate.Count > 0)
                             Modifica
                         </button>
                     </td>
+                    <td>
+                        <MudButton Color="Color.Error"
+                                   Variant="Variant.Filled"
+                                   OnClick="() => MostraConfermaElimina(m)">
+                            Elimina Intervento
+                        </MudButton>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
-
+@* =========== MODAL UNICO =========== *@
+@if (confermaElimina && manutenzioneSelezionata is not null)
+{
+    <div class="modal fade show d-block" style="background:#00000080;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                </div>
+                <div class="modal-body">
+                    Vuoi davvero eliminare l'intervento selezionato, per il veicolo
+                    <strong>@manutenzioneSelezionata.Veicolo.Targa</strong>?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     /* ------- dati caricati all’avvio -------------------- */
@@ -84,6 +114,7 @@ else if (manutenzioniFiltrate.Count > 0)
     /* ---------- DATI DI SUPPORTO ----------------------------- */
     private List<Manutenzione>? manutenzioniFiltrate;
     private int VeicoloSelezionato = -1;
+	private Manutenzione? manutenzioneSelezionata;
 
     [Parameter] public Veicolo Veicolo { get; set; } = new();
     private bool isNuovoProprietario;
@@ -92,11 +123,11 @@ else if (manutenzioniFiltrate.Count > 0)
 
     protected override async Task OnInitializedAsync()
     {
-        var (veicoliCaricati, proprietariCaricati, manutenzioniCaricate) = await RepositoryManager.CaricaDatiInizialiAsync();
+        var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
 
-        veicoli = veicoliCaricati;
-        proprietari = proprietariCaricati;
-        manutenzioni = manutenzioniCaricate;
+        veicoli = datiIniziali.Veicoli;
+        proprietari = datiIniziali.Proprietari;
+        manutenzioni = datiIniziali.Manutenzioni;
 
         //Se esiste almeno un veicolo, seleziona il primo
         if (veicoli?.Count > 0)
@@ -110,7 +141,7 @@ else if (manutenzioniFiltrate.Count > 0)
         }
     }
     /* ------- cambia filtro quando l’utente sceglie un veicolo -------- */
-    private int VeicoloIdSelezionatoBacking;
+    private int VeicoloIdSelezionatoBacking = -1;
     private int VeicoloIdSelezionato
     {
         get => VeicoloIdSelezionatoBacking;
@@ -140,5 +171,38 @@ else if (manutenzioniFiltrate.Count > 0)
 			manutenzioniFiltrate = manutenzioni.Where(m => m.VeicoloId == VeicoloIdSelezionatoBacking).ToList();
         }
     }
+    /* ---------- ELIMINAZIONE DELLA MANUTENZIONE ---------- */
+    void MostraConfermaElimina(Manutenzione manutenzione)
+    {
+        manutenzioneSelezionata = manutenzione;
+        confermaElimina = true;
+    }
+    void ChiudiModal()
+    {
+        confermaElimina = false;
+        manutenzioneSelezionata = null;
+    }
 
+    async Task EliminaAsync()
+    {
+        if (manutenzioneSelezionata is null) return;
+
+        try
+        {
+            await RepositoryManager.For<Manutenzione>().DeleteAsync(manutenzioneSelezionata.Id);
+            manutenzioni.Remove(manutenzioneSelezionata);
+            Log.LogInformation("Eliminata manutenzione su veicolo {Targa}", manutenzioneSelezionata.Veicolo.Targa);
+            confermaElimina = false;
+
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore eliminazione manutenzione su veicolo {Targa}", manutenzioneSelezionata.Veicolo.Targa);
+            confermaElimina = false;
+        }
+        finally
+        {
+            ChiudiModal();
+        }
+    }
 }
