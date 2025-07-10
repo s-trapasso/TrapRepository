@@ -1,6 +1,7 @@
 ﻿@page "/proprietari"
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
+@inject ILoggingService<Proprietari> Log
 
 <h3>Elenco Proprietari</h3>
 
@@ -25,6 +26,8 @@ else
                 <th>Nome</th>
                 <th>Cognome</th>
                 <th>Indirizzo</th>
+                <th></th> @* Modifica *@
+                <th></th> @* Elimina *@
             </tr>
         </thead>
         <tbody>
@@ -40,16 +43,45 @@ else
                             Modifica
                         </button>
                     </td>
+                    <td>
+                        <MudButton Color="Color.Error"
+                                   Variant="Variant.Filled"
+                                   OnClick="() => MostraConfermaElimina(p)">
+                            Elimina Proprietario
+                        </MudButton>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
 }
-
+@* =========== MODAL UNICO =========== *@
+@if (confermaElimina && proprietarioSelezionato is not null)
+{
+    <div class="modal fade show d-block" style="background:#00000080;">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                </div>
+                <div class="modal-body">
+                    Vuoi davvero eliminare<strong>@proprietarioSelezionato.Nome @proprietarioSelezionato.Cognome</strong>?
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 @code {
-    private List<CarDesk.Data.Models.Veicolo>? veicoli;
-    private List<CarDesk.Data.Models.Proprietario>? proprietari;
-    private List<CarDesk.Data.Models.Manutenzione>? manutenzioni;
+    private List<Veicolo>? veicoli;
+    private List<Proprietario>? proprietari;
+    private List<Manutenzione>? manutenzioni;
+    private bool confermaElimina;
+    private Proprietario? proprietarioSelezionato;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -58,5 +90,40 @@ else
         veicoli = datiIniziali.Veicoli;
         proprietari = datiIniziali.Proprietari;
         manutenzioni = datiIniziali.Manutenzioni;
+    }
+
+    /* ---------- ELIMINAZIONE DELLA MANUTENZIONE ---------- */
+    void MostraConfermaElimina(Proprietario proprietario)
+    {
+        proprietarioSelezionato = proprietario;
+        confermaElimina = true;
+    }
+    void ChiudiModal()
+    {
+        confermaElimina = false;
+        proprietarioSelezionato = null;
+    }
+
+    async Task EliminaAsync()
+    {
+        if (proprietarioSelezionato is null) return;
+
+        try
+        {
+            await RepositoryManager.For<Proprietario>().DeleteAsync(proprietarioSelezionato.Id);
+            proprietari.Remove(proprietarioSelezionato);
+            Log.LogInformation("Eliminato proprietario {0}{1}", proprietarioSelezionato.Nome, proprietarioSelezionato.Cognome);
+            confermaElimina = false;
+
+        }
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore eliminazione proprietario {0}{1}", proprietarioSelezionato.Nome, proprietarioSelezionato.Cognome);
+            confermaElimina = false;
+        }
+        finally
+        {
+            ChiudiModal();
+        }
     }
 }

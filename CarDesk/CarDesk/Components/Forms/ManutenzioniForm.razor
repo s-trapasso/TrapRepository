@@ -111,12 +111,12 @@
             else
                 await RepositoryManager.For<Manutenzione>().UpdateAsync(Manutenzione);
 
-            Log.LogInformation("Salvato intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
+            Log.LogInformation("Salvato intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
             await OnSalvato.InvokeAsync();
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, "Errore salvataggio intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
+            Log.LogError(ex, "Errore salvataggio intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
         }
     }
 
@@ -126,13 +126,13 @@
         try
         {
             await RepositoryManager.For<Manutenzione>().DeleteAsync(Manutenzione.Id);
-            Log.LogInformation("Eliminato intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
+            Log.LogInformation("Eliminato intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
             confermaElimina = false;
             await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, "Errore eliminazione intervento riferito al veicolo {Targa}", VeicoloCorrente?.Targa);
+            Log.LogError(ex, "Errore eliminazione intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
             confermaElimina = false;
         }
     }

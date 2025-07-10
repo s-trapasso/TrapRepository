@@ -85,12 +85,12 @@
             else
                 await RepositoryManager.For<Proprietario>().UpdateAsync(Proprietario);
 
-            Log.LogInformation("Salvato proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            Log.LogInformation("Salvato proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
             await OnSalvato.InvokeAsync(Proprietario);
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, "Errore salvataggio proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            Log.LogError(ex, "Errore salvataggio proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
         }
     }
 
@@ -100,13 +100,13 @@
         try
         {
             await RepositoryManager.For<Proprietario>().DeleteAsync(Proprietario.Id);
-            Log.LogInformation("Eliminato veicolo proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            Log.LogInformation("Eliminato veicolo proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
             confermaElimina = false;
             await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
         }
         catch (Exception ex)
         {
-            Log.LogError(ex, "Errore eliminazione proprietario {Nome} {Cognome}", Proprietario.Nome, Proprietario.Cognome);
+            Log.LogError(ex, "Errore eliminazione proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
             confermaElimina = false;
         }
     }
