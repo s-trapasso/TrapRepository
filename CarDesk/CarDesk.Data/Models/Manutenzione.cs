@@ -4,58 +4,27 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CarDesk.Data.Models
 {
-    public class Manutenzione : INotifyPropertyChanged
+    public class Manutenzione 
     {
-        private int _id;
-        private string _tipoIntervento;
-        private DateTime _data;
-        private Veicolo? _veicolo;
-        private decimal _costo;
-        public event PropertyChangedEventHandler? PropertyChanged;
+       
 
         [Key]
-        public int Id
-        {
-            get => _id;
-            set => SetField(ref _id, value);
-        }
-
-        [Required, MaxLength(100)]
-        public string TipoIntervento 
-        { 
-            get => _tipoIntervento;
-            set => SetField(ref _tipoIntervento,value);
-        }
+        public int Id { get; set; }
 
         [Required]
-        public DateTime Data
-        {
-            get => _data;
-            set => SetField(ref _data, value);
-        }
-        
+        public DateTime Data { get; set; }
+
         [Column(TypeName = "decimal(10,2)")]
-        public decimal Costo
-        {
-            get => _costo;
-            set => SetField(ref _costo, value);
-        }
+        public decimal Costo { get; set; }
 
         [Required]
         public int VeicoloId { get; set; }
 
         public Veicolo? Veicolo { get; set; }
 
-        
+        // Navigation Properties
+        public ICollection<VoceIntervento> VociIntervento { get; set; } = new List<VoceIntervento>();
 
-        protected void OnPropertyChanged(string propertyName) =>
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        protected bool SetField<T>(ref T field, T value, string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
-            OnPropertyChanged(propertyName ?? string.Empty);
-            return true;
-        }
+        public decimal CostoTotale => VociIntervento?.Sum(v => v.Costo) ?? 0;
     }
 }

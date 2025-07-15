@@ -35,7 +35,7 @@ namespace CarDesk.Data.Services.Repository
 
             var veicoliTask = For<Veicolo>().GetAllAsync(q => q.Include(v => v.Proprietario));
             var proprietariTask = For<Proprietario>().GetAllAsync();
-            var manutenzioniTask = For<Manutenzione>().GetAllAsync(q => q.Include(m => m.Veicolo));
+            var manutenzioniTask = For<Manutenzione>().GetAllAsync(q => q.Include(m => m.Veicolo).Include(m => m.VociIntervento));
 
 
             await Task.WhenAll(veicoliTask, proprietariTask, manutenzioniTask);

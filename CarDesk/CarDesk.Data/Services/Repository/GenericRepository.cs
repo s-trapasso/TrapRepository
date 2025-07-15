@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using CarDesk.Data.Data;
 using CarDesk.Data.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace CarDesk.Data.Services.Repository
 {
@@ -54,19 +55,17 @@ namespace CarDesk.Data.Services.Repository
         }
 
         /* ---------- READ (BY ID) ---------- */
-        public async Task<T?> GetByIdAsync(
-            int id,
-            Func<IQueryable<T>, IQueryable<T>>? include = null)
+        public async Task<T?> GetByIdAsync(int id,Func<IQueryable<T>, IQueryable<T>>? include = null)
         {
             await using var ctx = _contextFactory.CreateDbContext();
 
-            // se non devo includere navigation property, FindAsync è più veloce
-            if (include is null)
-                return await ctx.Set<T>().FindAsync(id);
+            IQueryable<T> query = ctx.Set<T>().AsNoTracking();
 
-            // altrimenti costruisco la query con Include
-            IQueryable<T> query = include(ctx.Set<T>());
-            // NB: se tutte le entità hanno "Id" PK int, puoi usare e => EF.Property<int>(e,"Id")==id
+            if (include is not null)
+            {
+                query = include(query);
+            }
+
             return await query.FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == id);
         }
 

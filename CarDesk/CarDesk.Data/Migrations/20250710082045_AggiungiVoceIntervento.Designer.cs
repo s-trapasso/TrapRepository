@@ -4,6 +4,7 @@ using CarDesk.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarDesk.Data.Migrations
 {
     [DbContext(typeof(CarDeskDbContext))]
-    partial class CarDeskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250710082045_AggiungiVoceIntervento")]
+    partial class AggiungiVoceIntervento
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -36,6 +39,11 @@ namespace CarDesk.Data.Migrations
                     b.Property<DateTime>("Data")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("TipoIntervento")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<int>("VeicoloId")
                         .HasColumnType("int");
 
@@ -43,7 +51,7 @@ namespace CarDesk.Data.Migrations
 
                     b.HasIndex("VeicoloId");
 
-                    b.ToTable("Manutenzioni", (string)null);
+                    b.ToTable("Manutenzioni");
                 });
 
             modelBuilder.Entity("CarDesk.Data.Models.Proprietario", b =>
@@ -71,7 +79,7 @@ namespace CarDesk.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Proprietari", (string)null);
+                    b.ToTable("Proprietari");
                 });
 
             modelBuilder.Entity("CarDesk.Data.Models.Veicolo", b =>
@@ -117,7 +125,7 @@ namespace CarDesk.Data.Migrations
                     b.HasIndex("Targa")
                         .IsUnique();
 
-                    b.ToTable("Veicoli", (string)null);
+                    b.ToTable("Veicoli");
                 });
 
             modelBuilder.Entity("CarDesk.Data.Models.VoceIntervento", b =>
@@ -143,7 +151,7 @@ namespace CarDesk.Data.Migrations
 
                     b.HasIndex("ManutenzioneId");
 
-                    b.ToTable("VoceIntervento", (string)null);
+                    b.ToTable("VoceIntervento");
                 });
 
             modelBuilder.Entity("CarDesk.Data.Models.Manutenzione", b =>

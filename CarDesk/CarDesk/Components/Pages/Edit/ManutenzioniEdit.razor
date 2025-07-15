@@ -26,7 +26,7 @@
         }
         else
         {
-            model = await RepositoryManager.For<Manutenzione>().GetByIdAsync(Id.Value) ?? new Manutenzione();
+            model = await RepositoryManager.For<Manutenzione>().GetByIdAsync(Id.Value, query => query.Include(m => m.VociIntervento)) ?? new Manutenzione();
         }
     }
 

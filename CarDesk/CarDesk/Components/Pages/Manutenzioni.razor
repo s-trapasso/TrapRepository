@@ -28,8 +28,8 @@ else
     </div>
 }
 <button class="btn btn-primary mb-3"
-        disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
-        @onclick='@(() => Nav.NavigateTo(
+disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
+@onclick='@(() => Nav.NavigateTo(
             $"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))'>
     Nuovo intervento
 </button>
@@ -49,34 +49,22 @@ else if (manutenzioniFiltrate.Count > 0)
     <table class="table">
         <thead>
             <tr>
-                <th>Tipo di intervento</th>
                 <th>Data intervento</th>
                 <th>Targa del veicolo</th>
-                <th>Costo (€)</th>
-                <th></th> @* Modifica *@
-                <th></th> @* Elimina *@
+                <th>Costo Totale(€)</th>
+                
             </tr>
         </thead>
         <tbody>
             @foreach (var m in manutenzioniFiltrate)
             {
                 <tr>
-                    <td>@m.TipoIntervento</td>
                     <td>@m.Data.ToString("dd/MM/yyyy")</td>
                     <td>@m.Veicolo?.Targa</td>
-                    <td>@m.Costo</td>
+                    <td>@m.CostoTotale</td>
                     <td>
-                        <button class="btn btn-primary"
-                        @onclick='() => Nav.NavigateTo($"/manutenzioni/edit/{m.Id}")'>
-                            Modifica
-                        </button>
-                    </td>
-                    <td>
-                        <MudButton Color="Color.Error"
-                                   Variant="Variant.Filled"
-                                   OnClick="() => MostraConfermaElimina(m)">
-                            Elimina Intervento
-                        </MudButton>
+                        <MudButton Variant="Variant.Filled" OnClick="() => GoToModifica(m.Id)"> Modifica Intervento </MudButton>
+                        <MudButton Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => MostraConfermaElimina(m)"> Elimina Intervento </MudButton>
                     </td>
                 </tr>
             }
@@ -114,11 +102,7 @@ else if (manutenzioniFiltrate.Count > 0)
     /* ---------- DATI DI SUPPORTO ----------------------------- */
     private List<Manutenzione>? manutenzioniFiltrate;
     private int VeicoloSelezionato = -1;
-	private Manutenzione? manutenzioneSelezionata;
-
-    [Parameter] public Veicolo Veicolo { get; set; } = new();
-    private bool isNuovoProprietario;
-    private Proprietario nuovoProprietario = new();
+    private Manutenzione? manutenzioneSelezionata;
     private bool confermaElimina;
 
     protected override async Task OnInitializedAsync()
@@ -127,7 +111,12 @@ else if (manutenzioniFiltrate.Count > 0)
 
         veicoli = datiIniziali.Veicoli;
         proprietari = datiIniziali.Proprietari;
-        manutenzioni = datiIniziali.Manutenzioni;
+        manutenzioni = datiIniziali.Manutenzioni
+                                    .Select(m =>
+                                    {
+                                        m.VociIntervento = m.VociIntervento ?? [];
+                                        return m;
+                                    }).ToList();
 
         //Se esiste almeno un veicolo, seleziona il primo
         if (veicoli?.Count > 0)
@@ -204,5 +193,10 @@ else if (manutenzioniFiltrate.Count > 0)
         {
             ChiudiModal();
         }
+    }
+    /* ---------- MODIFICA DELLA MANUTENZIONE ---------- */
+	void GoToModifica(int manutenzioneId)
+	{
+		Nav.NavigateTo($"/manutenzioni/edit/{manutenzioneId}");
     }
 }

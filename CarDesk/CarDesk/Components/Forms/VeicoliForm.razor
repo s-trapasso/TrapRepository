@@ -45,7 +45,7 @@
     <!-- === PROPRIETARIO ==================================================== -->
     <div class="mb-3">
         <label class="form-label">Proprietario</label>
-        <InputSelect class="form-select" @bind-Value="ProprietarioIdSelezionato">
+        <InputSelect class="form-select" @bind-Value="ProprietarioIdSelezionato" @onchange="OnProprietarioChanged">
             <option value="-1">-- Seleziona --</option>
             @foreach (var p in proprietari)
             {
@@ -58,12 +58,27 @@
     @* === FORM INLINE PER NUOVO PROPRIETARIO ============================== *@
     @if (isNuovoProprietario)
     {
-        <div class="border rounded p-3 bg-light mb-3">
+        @* <div class="border rounded p-3 bg-light mb-3">
             <h6 class="mb-3">Nuovo proprietario</h6>
 
             <ProprietariForm Proprietario="nuovoProprietario"
             OnSalvato="OnProprietarioCreato"
             OnAnnulla="AnnullaProprietario" />
+        </div> *@
+        <div class="modal fade show d-block" style="background:#00000080;">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Nuovo Proprietario</h5>
+                        <button type="button" class="btn-close" @onclick="AnnullaProprietario"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ProprietariForm Proprietario="nuovoProprietario"
+                                         OnSalvato="OnProprietarioCreato"
+                                         OnAnnulla="AnnullaProprietario" />
+                    </div>
+                </div>
+            </div>
         </div>
     }
 
@@ -123,16 +138,8 @@
     {
         proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
 
-        // // Se l'Id del proprietario è 0 o minore di 0 (-1 = “nessuno selezionato”)
-        // if (Veicolo.ProprietarioId <= 0)
-        // {
-        //     isNuovoProprietario = true;
-        //     nuovoProprietario = new Proprietario();
-        // }
-        // else
-        // {
-        //     isNuovoProprietario = false;
-        // }
+        ProprietarioIdSelezionato = Veicolo.ProprietarioId > 0 ? Veicolo.ProprietarioId : -1;
+
     }
 
     /* ---------- EVENTI UI ------------------------------------ */
@@ -159,6 +166,7 @@
         proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
 
         Veicolo.ProprietarioId = p.Id;
+        ProprietarioIdSelezionato = p.Id;
         isNuovoProprietario = false;
     }
 
@@ -166,6 +174,7 @@
     {
         isNuovoProprietario = false;
         Veicolo.ProprietarioId = -1;
+		ProprietarioIdSelezionato = -1; // Nessuno selezionato
     }
 
     // ---- proprietà wrapper ----
@@ -181,10 +190,17 @@
             {
                 isNuovoProprietario = true;
                 nuovoProprietario = new Proprietario();
+                Veicolo.ProprietarioId = 0;
             }
-            else                                 // proprietario esistente
+            else if (value > 0)                  // proprietario esistente selezionato
             {
                 isNuovoProprietario = false;
+                Veicolo.ProprietarioId = value;
+            }
+            else                                 // Nessuno selezionato
+            {
+                isNuovoProprietario = false;
+                Veicolo.ProprietarioId = -1;
             }
         }
     }
