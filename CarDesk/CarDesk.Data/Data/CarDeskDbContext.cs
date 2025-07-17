@@ -14,6 +14,7 @@ namespace CarDesk.Data.Data
         public DbSet<Manutenzione> Manutenzioni { get; set; }
         //public DbSet<Officina> Officine { get; set; }
         public DbSet<VoceIntervento> VoceIntervento { get; set; }
+        public DbSet<Scadenza> Scadenze { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -97,21 +98,29 @@ namespace CarDesk.Data.Data
                 // Proprietà Indirizzo
                 entity.Property(p => p.Indirizzo).IsRequired().HasMaxLength(100);
 
-                ////Proprietà DataNascita
-                //entity.Property(p => p.DataNascita).IsRequired();
+                //Proprietà DataNascita
+                entity.Property(p => p.DataNascita).IsRequired();
 
-                //// Proprietà LuogoNascita
-                //entity.Property(p => p.LuogoNascita).IsRequired().HasMaxLength(100);
+                // Proprietà LuogoNascita
+                entity.Property(p => p.LuogoNascita).IsRequired().HasMaxLength(100);
 
-                //// Proprietà Sesso
-                //entity.Property(p => p.Sesso).IsRequired().HasMaxLength(1);
+                // Proprietà Sesso
+                entity.Property(p => p.Sesso).IsRequired().HasMaxLength(1);
 
-                //// Proprietà CodiceFiscale
-                //entity.Property(p => p.CodiceFiscale).IsRequired().HasMaxLength(16);
+                // ❗ Vincolo di unicità su CodiceFiscale
+                entity.HasIndex(p => p.CodiceFiscale).IsUnique();
 
-                //// Vincolo di Unicità sul Codice Fiscale
-                //entity.HasMany(p => p.Veicoli).WithOne(v => v.Proprietario)
-                //      .HasForeignKey(v => v.ProprietarioId).OnDelete(DeleteBehavior.Cascade); // oppure Restrict se vuoi impedire la cancellazione
+                // Relazione con Veicoli
+                entity.HasMany(p => p.Veicoli)
+                      .WithOne(v => v.Proprietario)
+                      .HasForeignKey(v => v.ProprietarioId)
+                      .OnDelete(DeleteBehavior.Cascade); // oppure Restrict
+
+                // Patente
+                entity.Property(p => p.NumeroPatente).HasMaxLength(20);
+                entity.Property(p => p.DataRilascioPatente);
+                entity.Property(p => p.DataScadenzaPatente);
+                entity.Property(p => p.CategoriaPatente).HasMaxLength(10);
 
             });
             // Configurazione per l'entità VociIntervento
@@ -132,6 +141,32 @@ namespace CarDesk.Data.Data
                     .HasForeignKey(v => v.ManutenzioneId)
                     .OnDelete(DeleteBehavior.Cascade); // se vuoi che eliminando manutenzione si eliminino le voci
             });
+
+            // Configurazione per l'entità Scadenza
+            modelBuilder.Entity<Scadenza>(entity =>
+            {
+                entity.HasKey(s => s.Id);
+
+                entity.Property(s => s.Tipo)
+                    .IsRequired()
+                    .HasConversion(
+                        v => v.ToString(),
+                        v => (TipoScadenza)Enum.Parse(typeof(TipoScadenza), v, true)
+                    )
+                    .HasMaxLength(50);
+
+                entity.Property(s => s.DataScadenza)
+                    .IsRequired();
+
+                entity.Property(s => s.Descrizione)
+                    .HasMaxLength(200);
+
+                entity.HasOne(s => s.Veicolo)
+                      .WithMany(v => v.Scadenze)
+                      .HasForeignKey(s => s.VeicoloId)
+                      .OnDelete(DeleteBehavior.Cascade);
+            });
+
         }
     }
 }

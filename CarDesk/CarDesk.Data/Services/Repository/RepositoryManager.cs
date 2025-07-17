@@ -33,7 +33,7 @@ namespace CarDesk.Data.Services.Repository
         {
             _logger.LogInformation("Caricamento dati iniziali...");
 
-            var veicoliTask = For<Veicolo>().GetAllAsync(q => q.Include(v => v.Proprietario));
+            var veicoliTask = For<Veicolo>().GetAllAsync(q => q.Include(v => v.Proprietario).Include(s => s.Scadenze));
             var proprietariTask = For<Proprietario>().GetAllAsync();
             var manutenzioniTask = For<Manutenzione>().GetAllAsync(q => q.Include(m => m.Veicolo).Include(m => m.VociIntervento));
 

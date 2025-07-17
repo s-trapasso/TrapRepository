@@ -4,6 +4,7 @@ using CarDesk.Data.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarDesk.Data.Migrations
 {
     [DbContext(typeof(CarDeskDbContext))]
-    partial class CarDeskDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250715093258_AggiuntaUnicitaCodiceFiscale")]
+    partial class AggiuntaUnicitaCodiceFiscale
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,10 +57,6 @@ namespace CarDesk.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("CategoriaPatente")
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
                     b.Property<string>("CodiceFiscale")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -69,12 +68,6 @@ namespace CarDesk.Data.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime>("DataNascita")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataRilascioPatente")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("DataScadenzaPatente")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Indirizzo")
@@ -92,11 +85,6 @@ namespace CarDesk.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<string>("NumeroPatente")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
                     b.Property<string>("Sesso")
                         .IsRequired()
                         .HasMaxLength(1)
@@ -108,42 +96,6 @@ namespace CarDesk.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("Proprietari");
-                });
-
-            modelBuilder.Entity("CarDesk.Data.Models.Scadenza", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("DataScadenza")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Descrizione")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("GiorniPreavviso")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("NotificaAttiva")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Tipo")
-                        .HasColumnType("int");
-
-                    b.Property<int>("VeicoloId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VeicoloId");
-
-                    b.ToTable("Scadenze");
                 });
 
             modelBuilder.Entity("CarDesk.Data.Models.Veicolo", b =>
@@ -229,17 +181,6 @@ namespace CarDesk.Data.Migrations
                     b.Navigation("Veicolo");
                 });
 
-            modelBuilder.Entity("CarDesk.Data.Models.Scadenza", b =>
-                {
-                    b.HasOne("CarDesk.Data.Models.Veicolo", "Veicolo")
-                        .WithMany("Scadenze")
-                        .HasForeignKey("VeicoloId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Veicolo");
-                });
-
             modelBuilder.Entity("CarDesk.Data.Models.Veicolo", b =>
                 {
                     b.HasOne("CarDesk.Data.Models.Proprietario", "Proprietario")
@@ -275,8 +216,6 @@ namespace CarDesk.Data.Migrations
             modelBuilder.Entity("CarDesk.Data.Models.Veicolo", b =>
                 {
                     b.Navigation("Manutenzioni");
-
-                    b.Navigation("Scadenze");
                 });
 #pragma warning restore 612, 618
         }

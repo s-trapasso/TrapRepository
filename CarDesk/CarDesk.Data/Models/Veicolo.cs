@@ -32,5 +32,7 @@ namespace CarDesk.Data.Models
         public int ProprietarioId { get; set; }
 
         public Proprietario Proprietario { get; set; }
+
+        public ICollection<Scadenza> Scadenze { get; set; } = new List<Scadenza>();
     }
 }

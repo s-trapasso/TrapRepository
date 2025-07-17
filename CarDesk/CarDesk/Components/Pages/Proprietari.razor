@@ -26,6 +26,12 @@ else
                 <th>Nome</th>
                 <th>Cognome</th>
                 <th>Indirizzo</th>
+                <th>Data di nascita</th>
+                <th>Luogo di nascita</th>
+                <th>Codice Fiscale</th>
+                <th>N° Patente</th>
+                <th>Data di rilascio</th>
+                <th>Data di scadenza</th>
                 <th></th> @* Modifica *@
                 <th></th> @* Elimina *@
             </tr>
@@ -37,6 +43,12 @@ else
                     <td>@p.Nome</td>
                     <td>@p.Cognome</td>
                     <td>@p.Indirizzo</td>
+                    <td>@p.DataNascita.ToString("dd/MM/yyyy")</td>
+                    <td>@p.LuogoNascita</td>
+                    <td>@p.CodiceFiscale</td>
+                    <td>@p.NumeroPatente</td>
+                    <td>@p.DataRilascioPatente.ToString("dd/MM/yyyy")</td>
+                    <td>@p.DataScadenzaPatente.ToString("dd/MM/yyyy")</td>
                     <td>
                         <button class="btn btn-primary"
                                 @onclick='() => Nav.NavigateTo($"/proprietari/edit/{p.Id}")'>

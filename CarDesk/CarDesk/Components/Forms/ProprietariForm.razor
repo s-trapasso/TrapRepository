@@ -1,12 +1,14 @@
 ﻿@using CarDesk.Data.Models
 @using CarDesk.Data.Services.Interfaces
+@using CodiceFiscaleLib
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ProprietariForm> Log
+
 
 <EditForm Model="Proprietario" OnValidSubmit="SalvaAsync">
     <DataAnnotationsValidator />
     <ValidationSummary />
-
+    <!-- === DATI PROPRIETARIO ========================================================= -->
     <div class="mb-2">
         <label class="form-label">Nome</label>
         <InputText class="form-control" @bind-Value="Proprietario.Nome" />
@@ -22,44 +24,86 @@
         <InputText class="form-control" @bind-Value="Proprietario.Indirizzo" />
     </div>
 
+    <div class="mb-2">
+        <label class="form-label">Data di nascita</label>
+        <InputDate class="form-control" @bind-Value="Proprietario.DataNascita" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Luogo di nascita</label>
+        <InputText class="form-control" @bind-Value="Proprietario.LuogoNascita" />
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Sesso</label>
+        <InputSelect class="form-select" @bind-Value="Proprietario.Sesso">
+            <option value="">Seleziona...</option>
+            <option value="M">Maschio</option>
+            <option value="F">Femmina</option>
+        </InputSelect>
+    </div>
+    <div class="mb-2">
+        <label class="form-label">Codice Fiscale</label>
+        <InputText @bind-Value="Proprietario.CodiceFiscale" readonly
+                    class=@($"form-control {(codiceFiscaleErrore != null ? "invalid" : "")}") 
+                    title="@codiceFiscaleErrore" />
+    </div>
+    <button type="button" class="btn btn-info mb-3" @onclick="CalcolaCodiceFiscale">
+        Calcola Codice Fiscale
+    </button>
+    <!-- === PATENTE ========================================================= -->
+    <div class="mb-2">
+        <label class="form-label">Numero Patente</label>
+        <InputText class="form-control" @bind-Value="Proprietario.NumeroPatente" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Data rilascio patente</label>
+        <InputDate class="form-control" @bind-Value="Proprietario.DataRilascioPatente" />
+    </div>
+
+    <div class="mb-2">
+        <label class="form-label">Data scadenza patente</label>
+        <InputDate class="form-control" @bind-Value="Proprietario.DataScadenzaPatente" />
+    </div>
+
     <!-- === BOTTONI ========================================================= -->
-    <div class="d-flex gap-2 mt-4">
+    <div class="d-flex gap-2 ms-auto">
         <button type="submit"  class="btn btn-primary">Salva</button>
         <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
         @* Mostra “Elimina” soltanto se il veicolo esiste già *@
         @if (Proprietario.Id != 0)
         {
-                <button type="button"
-                        class="btn btn-danger ms-auto"
-                        @onclick="MostraConfermaElimina">
-                    Elimina
-                </button>
+            <button type="button"
+            class="btn btn-danger ms-auto"
+            @onclick="MostraConfermaElimina">
+                Elimina
+            </button>
         }
     </div>
     @* === MODAL DI CONFERMA ================================================ *@
     @if (confermaElimina)
     {
-            <div class="modal fade show d-block" style="background:#00000080;">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                        </div>
-                        <div class="modal-body">
-                                Vuoi davvero eliminare? <strong>@Proprietario.Nome - @Proprietario.Cognome</strong>?
-                        </div>
-                        <div class="modal-footer">
-                            <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                            <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
-                        </div>
+        <div class="modal fade show d-block" style="background:#00000080;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-danger">Conferma eliminazione</h5>
+                    </div>
+                    <div class="modal-body">
+                        Vuoi davvero eliminare? <strong>@Proprietario.Nome - @Proprietario.Cognome</strong>?
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
+                        <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
                     </div>
                 </div>
             </div>
+        </div>
     }
 </EditForm>
 
 @code {
-    
+
 
     /* ---------- PARAMETRI DAL PADRE -------------------------- */
     [Parameter] public Proprietario Proprietario { get; set; } = new();
@@ -71,10 +115,10 @@
     private bool isNuovoProprietario;
     private Proprietario nuovoProprietario = new();
     private bool confermaElimina;
-
+    private string? codiceFiscaleErrore;
     void MostraConfermaElimina() => confermaElimina = true;
     void ChiudiModal() => confermaElimina = false;
-   
+
     /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
     {   
@@ -110,4 +154,27 @@
             confermaElimina = false;
         }
     }
+    private void CalcolaCodiceFiscale()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Proprietario.Nome) ||
+                        string.IsNullOrWhiteSpace(Proprietario.Cognome) ||
+                        Proprietario.DataNascita == default ||
+                        string.IsNullOrWhiteSpace(Proprietario.LuogoNascita) ||
+                        string.IsNullOrWhiteSpace(Proprietario.Sesso.ToString()))
+            {
+                Log.LogWarning("Dati insufficienti per calcolare il codice fiscale.");
+                return;
+            }
+            char sessoChar = !string.IsNullOrWhiteSpace(Proprietario.Sesso) ? Proprietario.Sesso[0] : 'M'; // Default a 'M' se non specificato)
+            Proprietario.CodiceFiscale = CodiceFiscaleLib.Helpers.EncodingHelper.Encode(Proprietario.Cognome, Proprietario.Nome, sessoChar, Proprietario.DataNascita, Proprietario.LuogoNascita);
+            codiceFiscaleErrore = null;
+        }
+		catch (Exception ex)
+		{
+			Log.LogError(ex, "Errore calcolo codice fiscale per proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+			codiceFiscaleErrore = ex.Message;
+		}
+	}
 }
