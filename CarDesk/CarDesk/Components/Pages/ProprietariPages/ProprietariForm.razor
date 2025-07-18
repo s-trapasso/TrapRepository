@@ -47,7 +47,7 @@
                     class=@($"form-control {(codiceFiscaleErrore != null ? "invalid" : "")}") 
                     title="@codiceFiscaleErrore" />
     </div>
-    <button type="button" class="btn btn-info mb-3" @onclick="CalcolaCodiceFiscale">
+    <button type="button" class="btn btn-info mb-3" @onclick="CalcolaCodiceFiscale"  disabled="@(!DatiCompletiPerCodiceFiscale())">
         Calcola Codice Fiscale
     </button>
     <!-- === PATENTE ========================================================= -->
@@ -154,6 +154,17 @@
             confermaElimina = false;
         }
     }
+
+
+    //---------GESTIONE DATI PER CALCOLO CODICE FISCALE-----------//
+    
+    //----VERIFICA SE I DATI PER IL CALCOLO DEL CODICE FISCALE SONO VALIDI E PRESENTI
+    private bool DatiCompletiPerCodiceFiscale() =>  !string.IsNullOrWhiteSpace(Proprietario.Nome) &&
+                                                    !string.IsNullOrWhiteSpace(Proprietario.Cognome) &&
+                                                    Proprietario.DataNascita != default &&
+                                                    !string.IsNullOrWhiteSpace(Proprietario.LuogoNascita) &&
+                                                    !string.IsNullOrWhiteSpace(Proprietario.Sesso);
+    
     private void CalcolaCodiceFiscale()
     {
         try

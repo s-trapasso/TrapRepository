@@ -88,8 +88,4 @@
       </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Components\Pages\Nuova cartella\" />
-    </ItemGroup>
-
 </Project>
