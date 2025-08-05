@@ -3,23 +3,22 @@
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ManutenzioniForm> Log
 @inject NavigationManager Nav
+@inject IDialogService DialogService
 
-<EditForm Model="Manutenzione" OnValidSubmit="SalvaAsync">
-	<DataAnnotationsValidator />
-	<ValidationSummary />
 
+<MudForm @ref="mudForm" Model="Manutenzione">
+	<MudPaper Class="pa-4" Elevation="1">
 	<!-- === CAMPI MANUTENZIONE =================================================== -->
 	@* Mostra i dettagli del veicolo selezionato, solo se presente *@
+	<!-- Targa veicolo -->
 	@if (VeicoloCorrente is not null)
 	{
-		<div class="mb-2">
-			<label class="form-label">Targa selezionata</label>
-			<input class="form-control" value="@VeicoloCorrente.Targa" readonly />
-		</div>
+		<MudTextField T="string" Label="Targa selezionata" Value="@VeicoloCorrente.Targa" ReadOnly="true" />
 	}
-	<h5 class="mt-4">Voci Intervento</h5>
 
-	@* <MudTable Items="Manutenzione.VociIntervento" Dense="true" Hover="true" Elevation="0">
+	<MudText Typo="Typo.h6" Class="mt-4 mb-2">Voci Intervento</MudText>
+
+	<MudTable Items="Manutenzione.VociIntervento" Dense="true" Hover="true" Elevation="0">
 		<HeaderContent>
 			<MudTh>Descrizione</MudTh>
 			<MudTh>Prezzo (€)</MudTh>
@@ -32,84 +31,40 @@
 				<MudNumericField T="decimal?" @bind-Value="voce.Costo" Immediate="true" Placeholder="€" Dense="true" Adornment="Adornment.End" AdornmentText="€"/>
 			</MudTd>
 			<MudTd Class="text-end">
-				<MudButton Color="Color.Error" Size="Size.Small" OnClick="() => RimuoviVoceAsync(voce)">
+					<MudButton Color="Color.Error" Size="Size.Small" Disabled="@(!mudForm.IsValid || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => ConfermaEliminazioneVoceAsync(voce)">
 					<MudIcon Icon="@Icons.Material.Filled.Delete" Class="me-1" />Elimina voce
 				</MudButton>
 			</MudTd>
 		</RowTemplate>
-	</MudTable> *@
-
-	
-	<table class="table table-striped">
-		<thead>
-			<tr>
-				<th>Descrizione</th>
-				<th>Prezzo (€)</th>
-				<th>Azioni</th>
-			</tr>
-		</thead>
-		<tbody>
-			@foreach (var voce in Manutenzione.VociIntervento)
-			{
-				<tr>
-					<td>
-						<InputText @bind-Value="voce.Descrizione" class="form-control" placeholder="Descrizione" />
-					</td>
-					<td>
-						<InputNumber @bind-Value="voce.Costo" class="form-control" placeholder="Prezzo" />
-					</td>
-					<td>
-						<button class="btn btn-danger btn-sm" @onclick="() => RimuoviVoceAsync(voce)">
-							🗑️ Elimina voce
-						</button>
-					</td>
-				</tr>
-			}
-		</tbody>
-	</table>
-	<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" OnClick="AggiungiVoce">
+	</MudTable>
+	<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
+				   Disabled="@(!mudForm.IsValid || !VoceInterventoValida || !PrimaVoceValida )" OnClick="AggiungiVoce">
 		Aggiungi Voce Intervento
 	</MudButton>
+	<!-- Bottoni -->
+		<MudDivider Class="my-4" />
+		<MudStack Direction="Row" Spacing="2">
+			<MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Button"
+					   Disabled="@(!mudForm.IsValid || Manutenzione.VeicoloId <=0 || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => SalvaAsync()">
+				Salva voce
+			</MudButton>
+			
+			<MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => OnAnnulla.InvokeAsync()">
+				Annulla
+			</MudButton>
+		</MudStack>
+		<MudDialog>
+			<DialogContent>
+				<MudText Typo="Typo.h6">@Message</MudText>
+			</DialogContent>
+			<DialogActions>
+				<MudButton OnClick="() => MudDialog.Cancel()" Color="Color.Default">Annulla</MudButton>
+				<MudButton OnClick="() => MudDialog.Close(DialogResult.Ok(true))" Color="Color.Error">Conferma</MudButton>
+			</DialogActions>
+		</MudDialog>
+	</MudPaper>
+</MudForm>
 
-
-
-	<!-- === BOTTONI ========================================================= -->
-	<div class="d-flex gap-2 mt-4">
-		<button type="submit" class="btn btn-primary" disabled="@(Manutenzione.VeicoloId <=0)">Salva</button>
-		@* <MudButton Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" IconColor="Color.Secondary" Size="Size.Large" Disabled=@(Manutenzione.VeicoloId <=0)>Save</MudButton> *@
-		<button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
-		@* Mostra “Elimina” soltanto se il record manutenzione esiste già *@
-		@if (Manutenzione?.Id > 0)
-		{
-			<button type="button"
-			class="btn btn-danger ms-auto"
-			@onclick="MostraConfermaElimina">
-				Elimina tutti gli interventi
-			</button>
-		}
-	</div>
-
-	<!-- === MODAL DI CONFERMA ================================================ -->
-	@if (confermaElimina)
-	{
-		<div class="modal fade show d-block" style="background:#00000080;">
-			<div class="modal-dialog">
-				<div class="modal-content">
-					<div class="modal-header">
-						<h5 class="modal-title text-danger">Conferma eliminazione</h5>
-					</div>
-					<div class="modal-body">
-						Vuoi davvero eliminare tutte gli interventi per il veicolo <strong>@VeicoloCorrente.Targa</strong>?
-					</div>
-					<div class="modal-footer">
-						<button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-						<button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	}
-</EditForm>
 
 @code {
 	/* ---------- PARAMETRI DAL PADRE -------------------------- */
@@ -119,21 +74,35 @@
 	[Parameter] public EventCallback OnAnnulla { get; set; }
 	[Parameter] public int? SelectedVehicleId { get; set; }   // <— nuovo
 	[Parameter] public List<VoceIntervento> listaVoceIntervento { get; set; }
-
+	[Parameter] public string Message { get; set; }
+	[CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+	MudForm mudForm;
 	/* ---------- DATI DI SUPPORTO ----------------------------- */
 	private List<Veicolo> veicoli = new();
-	private bool confermaElimina;
 
+	void Conferma() => MudDialog.Close(DialogResult.Ok(true));
+	void Annulla() => MudDialog.Cancel();
+
+	private bool PrimaVoceValida =>	Manutenzione.VociIntervento.FirstOrDefault() is { } prima &&
+									!string.IsNullOrWhiteSpace(prima.Descrizione) &&
+									prima.Costo.HasValue &&
+									prima.Costo.Value > 0;
+	private bool VoceInterventoValida => Manutenzione.VociIntervento != null && Manutenzione.VociIntervento.Count > 0 && Manutenzione.VociIntervento.All(v => !string.IsNullOrWhiteSpace(v.Descrizione) && v.Costo.HasValue && v.Costo.Value > 0);
 	// === Proprietà calcolata: veicolo attualmente selezionato ===
 	private Veicolo? VeicoloCorrente => veicoli.FirstOrDefault(v => v.Id == Manutenzione.VeicoloId);
-
-	void MostraConfermaElimina() => confermaElimina = true;
-	void ChiudiModal() => confermaElimina = false;
 
 	/* ---------- CICLO VITA ----------------------------------- */
 	protected override async Task OnInitializedAsync()
 	{
 		veicoli = await RepositoryManager.For<Veicolo>().GetAllAsync();		
+		if(Manutenzione.VociIntervento == null)
+		{
+			Manutenzione.VociIntervento = new List<VoceIntervento>();
+		}
+		if (Manutenzione.VociIntervento.Count == 0)
+		{
+			Manutenzione.VociIntervento.Add(new VoceIntervento());
+		}
 	}
 	protected override void OnParametersSet()
 	{
@@ -161,6 +130,11 @@
 			// Chiamata al repository per eliminare dal DB
 			await RepositoryManager.For<VoceIntervento>().DeleteAsync(voce.Id);
 			Manutenzione.VociIntervento.Remove(voce);
+			if(Manutenzione.VociIntervento.Count == 0)
+			{
+				await RepositoryManager.For<Manutenzione>().DeleteAsync(Manutenzione.Id);
+				await OnSalvato.InvokeAsync();
+			}
 		}
 	}
 	/* ---------- SALVATAGGIO MANUTENZIONE -------------------------- */
@@ -182,23 +156,6 @@
 		}
 	}
 
-	/* ---------- ELIMINAZIONE MANUTENZIONE ---------- */
-	async Task EliminaAsync()
-	{
-		try
-		{
-			await RepositoryManager.For<Manutenzione>().DeleteAsync(Manutenzione.Id);
-			Log.LogInformation("Eliminato intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
-			confermaElimina = false;
-			await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
-		}
-		catch (Exception ex)
-		{
-			Log.LogError(ex, "Errore eliminazione intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
-			confermaElimina = false;
-		}
-	}
-
 	// ---- veicolo wrapper ----
 	private int _veicoloSelezionato = -1;
 	private int VeicoloIdSelezionato
@@ -213,6 +170,41 @@
 				Nav.NavigateTo("/veicoli/nuovo", true);
 			}
 
+		}
+	}
+	// async Task MostraConfermaElimina()
+	// {
+	// 	var parameters = new DialogParameters
+	// 	{
+	// 		["Message"] = $"Vuoi davvero eliminare tutte le voci per il veicolo {VeicoloCorrente?.Targa}?"
+	// 	};
+
+	// 	IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters);
+	// 	var result = await dialog.Result;
+
+	// 	if (!result.Canceled)
+	// 	{
+	// 		await EliminaAsync();
+	// 	}
+	// }
+	/* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
+	private async Task ConfermaEliminazioneVoceAsync(VoceIntervento voce)
+	{
+		var parameters = new DialogParameters
+		{
+			["Parameters"] = new Dictionary<string, object>
+			{
+				{"Id",voce.Id}
+			}
+			
+		};
+		var options = new DialogOptions { CloseOnEscapeKey = true };
+		var dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters,options);
+		var result = await dialog.Result;
+
+		if (!result.Canceled)
+		{
+			await RimuoviVoceAsync(voce);
 		}
 	}
 }

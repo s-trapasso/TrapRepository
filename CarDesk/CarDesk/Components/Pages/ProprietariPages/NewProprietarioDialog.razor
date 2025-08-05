@@ -1,0 +1,26 @@
+﻿@using CarDesk.Data.Models
+@using CarDesk.Data.Services.Interfaces
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <ProprietariForm Proprietario="Proprietario"
+                         OnSalvato="HandleSalvato"
+                         OnAnnulla="CloseDialog" />
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public Proprietario Proprietario { get; set; } = new();
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task HandleSalvato()
+    {
+        MudDialog.Close(DialogResult.Ok(Proprietario));
+    }
+}

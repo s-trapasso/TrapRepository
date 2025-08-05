@@ -3,122 +3,42 @@
 @using CarDesk.Components.Pages.ProprietariPages
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<VeicoliForm> Log
+@inject IDialogService DialogService
 
-<EditForm Model="Veicolo" OnValidSubmit="SalvaAsync">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<MudForm Model="Veicolo">
 
     <!-- === CAMPI VEICOLO =================================================== -->
-    <div class="mb-2">
-        <label class="form-label">Targa</label>
-        <InputText class="form-control" @bind-Value="Veicolo.Targa" />
-    </div>
+    <MudTextField Label="Targa" @bind-Value="Veicolo.Targa" Required="true"></MudTextField>
+    <MudTextField Label="Marca" @bind-Value="Veicolo.Marca" Required="true"></MudTextField>
+    <MudTextField Label="Modello" @bind-Value="Veicolo.Modello" Required="true"></MudTextField>
+    <MudTextField Label="Anno" @bind-Value="Veicolo.Anno" Required="true" Min="1900" Max="@DateTime.Now.Year"></MudTextField>
+    <MudSelect T="AlimentazioneEnum?" Label="Alimentazione" @bind-Value="Veicolo.Alimentazione" Required="true" Clearable="true">
+        @foreach(var tipo in Enum.GetValues<AlimentazioneEnum>())
+        {
+            <MudSelectItem T="AlimentazioneEnum?" Value="tipo">@tipo</MudSelectItem>
+        }
+    </MudSelect>
+    <MudNumericField Label="Chilometraggio" @bind-Value="Veicolo.Km" Required="true" Min="0" />
 
-    <div class="mb-2">
-        <label class="form-label">Marca</label>
-        <InputText class="form-control" @bind-Value="Veicolo.Marca" />
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label">Modello</label>
-        <InputText class="form-control" @bind-Value="Veicolo.Modello" />
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label">Anno</label>
-        <InputNumber class="form-control" @bind-Value="Veicolo.Anno" />
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label">Alimentazione</label>
-        <InputSelect class="form-select" @bind-Value="Veicolo.Alimentazione" TValue="AlimentazioneEnum?">
-            <option value="">-- Seleziona --</option>   @* placeholder *@
-            @foreach (var tipo in Enum.GetValues<AlimentazioneEnum>())
-            {
-                <option value="@tipo">@tipo</option>
-            }
-        </InputSelect>
-    </div>
-    <div class="mb-2">
-        <label class="form-label">Chilometraggio</label>
-        <InputNumber class="form-control" @bind-Value="Veicolo.Km" />
-    </div>
     <!-- === PROPRIETARIO ==================================================== -->
-    <div class="mb-3">
-        <label class="form-label">Proprietario</label>
-        <InputSelect class="form-select" @bind-Value="ProprietarioIdSelezionato" @onchange="OnProprietarioChanged">
-            <option value="-1">-- Seleziona --</option>
-            @foreach (var p in proprietari)
-            {
-                <option value="@p.Id">@p.Nome @p.Cognome</option>
-            }
-            <option value="0">Nuovo proprietario</option>
-        </InputSelect>
-    </div>
-
-    @* === FORM INLINE PER NUOVO PROPRIETARIO ============================== *@
-    @if (isNuovoProprietario)
-    {
-        @* <div class="border rounded p-3 bg-light mb-3">
-            <h6 class="mb-3">Nuovo proprietario</h6>
-
-            <ProprietariForm Proprietario="nuovoProprietario"
-            OnSalvato="OnProprietarioCreato"
-            OnAnnulla="AnnullaProprietario" />
-        </div> *@
-        <div class="modal fade show d-block" style="background:#00000080;">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Nuovo Proprietario</h5>
-                        <button type="button" class="btn-close" @onclick="AnnullaProprietario"></button>
-                    </div>
-                    <div class="modal-body">
-                        <ProprietariForm Proprietario="nuovoProprietario"
-                                         OnSalvato="OnProprietarioCreato"
-                                         OnAnnulla="AnnullaProprietario" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-
+    <MudSelect T="int" Label="Proprietario" Value="ProprietarioIdSelezionato" Required="true" ValueChanged="OnProprietarioChanged" ValueExpression="@(() => ProprietarioIdSelezionato)">
+        <MudSelectItem Value="-1">-- Seleziona --</MudSelectItem>
+        @foreach (var p in proprietari)
+        {
+            <MudSelectItem Value="@p.Id">@p.Nome @p.Cognome</MudSelectItem>
+        }
+        <MudSelectItem Value="0">Nuovo proprietario</MudSelectItem>
+    </MudSelect>
     <!-- === BOTTONI ========================================================= -->
-    <div class="d-flex gap-2 mt-4">
-        <button type="submit"  class="btn btn-primary">Salva</button>
-        <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
-        @* Mostra “Elimina” soltanto se il veicolo esiste già *@
+    <MudStack Direction="Row" Spacing="2" Class="mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Button" OnClick="() => SalvaAsync()">Salva</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" ButtonType="ButtonType.Button" OnClick="() => OnAnnulla.InvokeAsync()">Annulla</MudButton>
         @if (Veicolo.Id != 0)
         {
-            <button type="button"
-            class="btn btn-danger ms-auto"
-            @onclick="MostraConfermaElimina">
-                Elimina
-            </button>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ms-auto" ButtonType="ButtonType.Button" OnClick="() => ConfermaEliminazioneDaFormAsync(Veicolo)">Elimina dettaglio</MudButton>
         }
-    </div>
-    @* === MODAL DI CONFERMA ================================================ *@
-    @if (confermaElimina)
-    {
-        <div class="modal fade show d-block" style="background:#00000080;">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                    </div>
-                    <div class="modal-body">
-                        Vuoi davvero eliminare il veicolo <strong>@Veicolo.Targa</strong>?
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                        <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-</EditForm>
-
+    </MudStack>
+</MudForm>
 @code {
     /* ---------- PARAMETRI DAL PADRE -------------------------- */
     [Parameter] public Veicolo Veicolo { get; set; } = new();
@@ -129,55 +49,26 @@
     private List<Proprietario> proprietari = new();
     private bool isNuovoProprietario;
     private Proprietario nuovoProprietario = new();
-    private bool confermaElimina;
 
-    void MostraConfermaElimina() => confermaElimina = true;
-    void ChiudiModal() => confermaElimina = false;
 
     /* ---------- CICLO VITA ----------------------------------- */
     protected override async Task OnInitializedAsync()
     {
         proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
-
         ProprietarioIdSelezionato = Veicolo.ProprietarioId > 0 ? Veicolo.ProprietarioId : -1;
-
     }
-
-    /* ---------- EVENTI UI ------------------------------------ */
-    void OnProprietarioChanged(ChangeEventArgs e)
+    private async Task OnProprietarioChanged(int id)
     {
-        var val = int.Parse(e.Value!.ToString()!);
-
-        if (val == 0)            /* utente ha scelto “Nuovo proprietario”   */
+        if (id == 0)
         {
-            isNuovoProprietario = true;
-            nuovoProprietario = new Proprietario();
-            Veicolo.ProprietarioId = 0;   // per validare il campo
+            await ApriDialogNewProprietarioAsync();
         }
-        else                     /* proprietario esistente selezionato      */
+        else
         {
-            isNuovoProprietario = false;
-            Veicolo.ProprietarioId = val;
+            ProprietarioIdSelezionato = id;
         }
     }
-
-    async Task OnProprietarioCreato(Proprietario p)
-    {
-        // salva già nel db (avviene dentro ProprietariForm) e ricarica lista
-        proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
-
-        Veicolo.ProprietarioId = p.Id;
-        ProprietarioIdSelezionato = p.Id;
-        isNuovoProprietario = false;
-    }
-
-    void AnnullaProprietario()
-    {
-        isNuovoProprietario = false;
-        Veicolo.ProprietarioId = -1;
-		ProprietarioIdSelezionato = -1; // Nessuno selezionato
-    }
-
+   
     // ---- proprietà wrapper ----
     private int ProprietarioIdSelezionatoBacking = -1;
     private int ProprietarioIdSelezionato
@@ -189,9 +80,9 @@
 
             if (value == 0)                      // “Nuovo proprietario”
             {
-                isNuovoProprietario = true;
-                nuovoProprietario = new Proprietario();
-                Veicolo.ProprietarioId = 0;
+                // isNuovoProprietario = true;
+                _ = ApriDialogNewProprietarioAsync(); // apre il dialog per creare un nuovo proprietario
+                // Veicolo.ProprietarioId = 0;
             }
             else if (value > 0)                  // proprietario esistente selezionato
             {
@@ -212,7 +103,7 @@
         try
         {
             if (Veicolo.Id == 0)
-				await RepositoryManager.For<Veicolo>().AddAsync(Veicolo);
+                await RepositoryManager.For<Veicolo>().AddAsync(Veicolo);
             else
                 await RepositoryManager.For<Veicolo>().UpdateAsync(Veicolo);
 
@@ -226,19 +117,55 @@
     }
 
     /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
-    async Task EliminaAsync()
+    private async Task ConfermaEliminazioneDaFormAsync(Veicolo veicolo)
     {
-        try
+        var parameters = new DialogParameters
         {
-            await RepositoryManager.For<Veicolo>().DeleteAsync(Veicolo.Id);
-            Log.LogInformation("Eliminato veicolo {Targa}", Veicolo.Targa);
-            confermaElimina = false;
-            await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
+            ["Parameters"] = new Dictionary<string, object>
+                {
+                    {"Targa",veicolo.Targa}
+                }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
+        DialogResult result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await RepositoryManager.For<Veicolo>().DeleteAsync(veicolo.Id);
+                Log.LogInformation("Veicolo eliminato: {Targa}", veicolo.Targa);
+                await OnAnnulla.InvokeAsync(); // torna alla lista dopo l'eliminazione
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(ex, "Errore durante l'eliminazione del veicolo {Targa}", veicolo.Targa);
+                // potresti mostrare un messaggio all'utente
+            }
         }
-        catch (Exception ex)
+    }
+
+    //---DIALOG PER CREAZIONE NUOVO PROPRIETARIO---//
+    async Task ApriDialogNewProprietarioAsync()
+    {
+        var parameters = new DialogParameters
         {
-            Log.LogError(ex, "Errore eliminazione veicolo {Targa}", Veicolo.Targa);
-            confermaElimina = false;
+            ["Proprietario"] = new Proprietario()
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialog = await DialogService.ShowAsync<NewProprietarioDialog>("Nuovo Proprietario", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is Proprietario nuovo)
+        {
+            // Ricarica la lista e aggiorna il veicolo
+            proprietari = await RepositoryManager.For<Proprietario>().GetAllAsync();
+            Veicolo.ProprietarioId = nuovo.Id;
+            ProprietarioIdSelezionato = nuovo.Id;
         }
     }
 }

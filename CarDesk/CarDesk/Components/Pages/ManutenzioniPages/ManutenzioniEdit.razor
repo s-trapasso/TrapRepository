@@ -3,8 +3,6 @@
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
 
-<h3>ManutenzioniEdit Page</h3>
-
 <ManutenzioniForm Manutenzione="model" SelectedVehicleId="vehicleId" OnSalvato="RitornaAllaLista" OnAnnulla="RitornaAllaLista" @key="model.Id"></ManutenzioniForm>
 
 @code {

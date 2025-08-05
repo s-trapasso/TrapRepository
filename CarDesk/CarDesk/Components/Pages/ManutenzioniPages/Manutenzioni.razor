@@ -2,98 +2,71 @@
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
 @inject ILoggingService<Manutenzione> Log
+@inject IDialogService DialogService
 
-@if(veicoli?.Count > 0)
-{
-    <div class="mb-3">
-        <label class="form-label">Veicolo</label>
-        <InputSelect class="form-select"
-        @bind-Value="VeicoloIdSelezionato">
-            <option value="-1">-- Seleziona --</option>
-            @foreach (var v in veicoli)
-            {
-                <option value="@v.Id">@v.Targa (@v.Marca @v.Modello)</option>
-            }
-            <option value="0">Nuovo veicolo…</option>
-        </InputSelect>
-    </div>
-}
-else
-{
-    <div>
+<MudPaper Class="pa-4">
+    @if(veicoli?.Count > 0)
+    {
+        <MudStack Spacing="2">
+            <MudSelect T="int" Label="Veicolo" @bind-Value="VeicoloIdSelezionato" Dense="true">
+                <MudSelectItem Value="-1">-- Seleziona veicolo --</MudSelectItem>
+                @foreach (var v in veicoli)
+                {
+                    <MudSelectItem value="@v.Id">@v.Targa (@v.Marca @v.Modello)</MudSelectItem>
+                }
+                <MudSelectItem Value="0">Nuovo veicolo…</MudSelectItem>
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
+                       OnClick="@(() => Nav.NavigateTo($"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))">
+                Nuovo intervento
+            </MudButton>
+        </MudStack>
+    }
+    else
+    {
         <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-            Nessun veicolo registrato. <b><a href="/veicoli/nuovo">Aggiungine uno</a></b>
-            per poter inserire una manutenzione
+            Nessun veicolo registrato. <MudLink Href="/veicoli/nuovo"><b>Aggiungine uno</b></MudLink>
+            per poter inserire una manutenzione.
         </MudAlert>
-    </div>
-}
-<button class="btn btn-primary mb-3"
-disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
-@onclick='@(() => Nav.NavigateTo(
-            $"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))'>
-    Nuovo intervento
-</button>
-
-<!-- === Elenco manutenzioni filtrato ================================ -->
-@if(manutenzioniFiltrate  is null)
-{
-    <p><em>Caricamento...</em></p>
-}
-else if(VeicoloIdSelezionatoBacking > 0 && manutenzioniFiltrate.Count == 0)
-{
-    <p>Nessun intervento trovato per il veicolo selezionato</p>
-}
-else if (manutenzioniFiltrate.Count > 0)
-{
-    <h3>Elenco Interventi di manutenzione</h3>
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Data intervento</th>
-                <th>Targa del veicolo</th>
-                <th>Costo Totale(€)</th>
-                
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var m in manutenzioniFiltrate)
-            {
-                <tr>
-                    <td>@m.Data.ToString("dd/MM/yyyy")</td>
-                    <td>@m.Veicolo?.Targa</td>
-                    <td>@m.CostoTotale</td>
-                    <td>
-                        <MudButton Variant="Variant.Filled" OnClick="() => GoToModifica(m.Id)"> Modifica Intervento </MudButton>
-                        <MudButton Color="Color.Error" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Delete" OnClick="() => MostraConfermaElimina(m)"> Elimina Intervento </MudButton>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-@* =========== MODAL UNICO =========== *@
-@if (confermaElimina && manutenzioneSelezionata is not null)
-{
-    <div class="modal fade show d-block" style="background:#00000080;">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                </div>
-                <div class="modal-body">
-                    Vuoi davvero eliminare l'intervento selezionato, per il veicolo
-                    <strong>@manutenzioneSelezionata.Veicolo.Targa</strong>?
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
-
+    }
+    <MudDivider Class="my-4" />
+    <!-- === Elenco manutenzioni filtrato ================================ -->
+    @if (manutenzioniFiltrate is null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+    }
+    else if (VeicoloIdSelezionatoBacking > 0 && manutenzioniFiltrate.Count == 0)
+    {
+        <MudText>Nessun intervento trovato per il veicolo selezionato</MudText>
+    }
+    else if (manutenzioniFiltrate.Count > 0)
+    {
+        <MudText Typo ="Typo.h5" Class="mb-2">Elenco Interventi di manutenzione</MudText>
+        <MudTable Items="manutenzioniFiltrate" Hover="true">
+            <HeaderContent>
+                <MudTh>Data intervento</MudTh>
+                <MudTh>Targa del veicolo</MudTh>
+                <MudTh>Costo Totale (€)</MudTh>
+                <MudTh>Azioni</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Data.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd>@context.Veicolo?.Targa</MudTd>
+                <MudTd>@context.CostoTotale</MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small" OnClick="() => GoToModifica(context.Id)" StartIcon="@Icons.Material.Filled.Edit"></MudButton>
+                    <MudButton Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
+                               OnClick="() => ConfermaEliminazioneAsync(context)">                        
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
 @code {
+
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+
     /* ------- dati caricati all’avvio -------------------- */
     private List<Veicolo>? veicoli;
     private List<Proprietario>? proprietari;
@@ -142,11 +115,11 @@ else if (manutenzioniFiltrate.Count > 0)
                 FiltraManutenzioni();
                 StateHasChanged();
             }
-			else
-			{
-				VeicoloIdSelezionatoBacking = value;
-				FiltraManutenzioni();
-			}
+            else
+            {
+                VeicoloIdSelezionatoBacking = value;
+                FiltraManutenzioni();
+            }
         }
     }
     private void FiltraManutenzioni()
@@ -157,46 +130,33 @@ else if (manutenzioniFiltrate.Count > 0)
         }
         else
         {
-			manutenzioniFiltrate = manutenzioni.Where(m => m.VeicoloId == VeicoloIdSelezionatoBacking).ToList();
-        }
-    }
-    /* ---------- ELIMINAZIONE DELLA MANUTENZIONE ---------- */
-    void MostraConfermaElimina(Manutenzione manutenzione)
-    {
-        manutenzioneSelezionata = manutenzione;
-        confermaElimina = true;
-    }
-    void ChiudiModal()
-    {
-        confermaElimina = false;
-        manutenzioneSelezionata = null;
-    }
-
-    async Task EliminaAsync()
-    {
-        if (manutenzioneSelezionata is null) return;
-
-        try
-        {
-            await RepositoryManager.For<Manutenzione>().DeleteAsync(manutenzioneSelezionata.Id);
-            manutenzioni.Remove(manutenzioneSelezionata);
-            Log.LogInformation("Eliminata manutenzione su veicolo {Targa}", manutenzioneSelezionata.Veicolo.Targa);
-            confermaElimina = false;
-
-        }
-        catch (Exception ex)
-        {
-            Log.LogError(ex, "Errore eliminazione manutenzione su veicolo {Targa}", manutenzioneSelezionata.Veicolo.Targa);
-            confermaElimina = false;
-        }
-        finally
-        {
-            ChiudiModal();
+            manutenzioniFiltrate = manutenzioni.Where(m => m.VeicoloId == VeicoloIdSelezionatoBacking).ToList();
         }
     }
     /* ---------- MODIFICA DELLA MANUTENZIONE ---------- */
-	void GoToModifica(int manutenzioneId)
-	{
-		Nav.NavigateTo($"/manutenzioni/edit/{manutenzioneId}");
+    void GoToModifica(int manutenzioneId)
+    {
+        Nav.NavigateTo($"/manutenzioni/edit/{manutenzioneId}");
     }
+    private async Task ConfermaEliminazioneAsync(Manutenzione m)
+    {
+        var parameters = new DialogParameters
+        {
+            ["Parameters"] = new Dictionary<string, object>
+                {
+                    {"Id",m.Id}
+                }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
+        DialogResult result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await RepositoryManager.For<Manutenzione>().DeleteAsync(m.Id);
+            await OnInitializedAsync();
+        }
+    }
+   
 }

@@ -3,104 +3,51 @@
 @using CodiceFiscaleLib
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ProprietariForm> Log
+@inject IDialogService DialogService
 
 
-<EditForm Model="Proprietario" OnValidSubmit="SalvaAsync">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <!-- === DATI PROPRIETARIO ========================================================= -->
-    <div class="mb-2">
-        <label class="form-label">Nome</label>
-        <InputText class="form-control" @bind-Value="Proprietario.Nome" />
-    </div>
 
-    <div class="mb-2">
-        <label class="form-label">Cognome</label>
-        <InputText class="form-control" @bind-Value="Proprietario.Cognome" />
-    </div>
+<MudForm Model="Proprietario" OnValidSubmit="SalvaAsync">
 
-    <div class="mb-2">
-        <label class="form-label">Indirizzo</label>
-        <InputText class="form-control" @bind-Value="Proprietario.Indirizzo" />
-    </div>
+    <!-- === CAMPI PROPRIETARIO =================================================== -->
+    <MudTextField Label="Nome" @bind-Value="Proprietario.Nome" Required="true"></MudTextField>
+    <MudTextField Label="Cognome" @bind-Value="Proprietario.Cognome" Required="true"></MudTextField>
+    <MudTextField Label="Indirizzo" @bind-Value="Proprietario.Indirizzo" Required="true"></MudTextField>
+    <MudTextField Label="Data di nascita" @bind-Value="Proprietario.DataNascita" Required="true"></MudTextField>
+    <MudTextField Label="Luogo di nascita" @bind-Value="Proprietario.LuogoNascita" Required="true"></MudTextField>
 
-    <div class="mb-2">
-        <label class="form-label">Data di nascita</label>
-        <InputDate class="form-control" @bind-Value="Proprietario.DataNascita" />
-    </div>
+    <MudSelect Label="Sesso" @bind-Value="Proprietario.Sesso" Required="true" Clearable="true">
+        <MudSelectItem T="string" Value="@("")">Seleziona...</MudSelectItem>
+        <MudSelectItem T="string" Value="@("M")">Maschio</MudSelectItem>
+        <MudSelectItem T="string" Value="@("F")">Femmina</MudSelectItem>
+    </MudSelect>
+    <MudTextField @bind-Value="Proprietario.CodiceFiscale"
+                  Label="Codice Fiscale"
+                  ReadOnly="true"
+                  For="@(() => Proprietario.CodiceFiscale)"
+                  Error="@(!string.IsNullOrEmpty(codiceFiscaleErrore))"
+                  ErrorText="@codiceFiscaleErrore" />
 
-    <div class="mb-2">
-        <label class="form-label">Luogo di nascita</label>
-        <InputText class="form-control" @bind-Value="Proprietario.LuogoNascita" />
-    </div>
-    <div class="mb-2">
-        <label class="form-label">Sesso</label>
-        <InputSelect class="form-select" @bind-Value="Proprietario.Sesso">
-            <option value="">Seleziona...</option>
-            <option value="M">Maschio</option>
-            <option value="F">Femmina</option>
-        </InputSelect>
-    </div>
-    <div class="mb-2">
-        <label class="form-label">Codice Fiscale</label>
-        <InputText @bind-Value="Proprietario.CodiceFiscale" readonly
-                    class=@($"form-control {(codiceFiscaleErrore != null ? "invalid" : "")}") 
-                    title="@codiceFiscaleErrore" />
-    </div>
-    <button type="button" class="btn btn-info mb-3" @onclick="CalcolaCodiceFiscale"  disabled="@(!DatiCompletiPerCodiceFiscale())">
+    <MudButton Variant="Variant.Filled" Color="Color.Info" Disabled="!DatiCompletiPerCodiceFiscale()" OnClick="CalcolaCodiceFiscale" Class="mb-3">
         Calcola Codice Fiscale
-    </button>
+    </MudButton>
+
     <!-- === PATENTE ========================================================= -->
-    <div class="mb-2">
-        <label class="form-label">Numero Patente</label>
-        <InputText class="form-control" @bind-Value="Proprietario.NumeroPatente" />
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label">Data rilascio patente</label>
-        <InputDate class="form-control" @bind-Value="Proprietario.DataRilascioPatente" />
-    </div>
-
-    <div class="mb-2">
-        <label class="form-label">Data scadenza patente</label>
-        <InputDate class="form-control" @bind-Value="Proprietario.DataScadenzaPatente" />
-    </div>
+    <MudTextField Label="N° Patente" @bind-Value="Proprietario.NumeroPatente" Required="true"></MudTextField>
+    <MudTextField Label="Data di rilascio" @bind-Value="Proprietario.DataRilascioPatente" Required="true"></MudTextField>
+    <MudTextField Label="Data di scadenza" @bind-Value="Proprietario.DataScadenzaPatente" Required="true"></MudTextField>
 
     <!-- === BOTTONI ========================================================= -->
-    <div class="d-flex gap-2 ms-auto">
-        <button type="submit"  class="btn btn-primary">Salva</button>
-        <button type="button" class="btn btn-secondary" @onclick="() => OnAnnulla.InvokeAsync()">Annulla</button>
-        @* Mostra “Elimina” soltanto se il veicolo esiste già *@
+    <MudStack Direction="Row" Spacing="2" Class="mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => SalvaAsync()">Salva</MudButton>
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => OnAnnulla.InvokeAsync()">Annulla</MudButton>
         @if (Proprietario.Id != 0)
         {
-            <button type="button"
-            class="btn btn-danger ms-auto"
-            @onclick="MostraConfermaElimina">
-                Elimina
-            </button>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ms-auto" ButtonType="ButtonType.Button" OnClick="() => ConfermaEliminazioneDaFormAsync()">Elimina dettaglio</MudButton>
         }
-    </div>
-    @* === MODAL DI CONFERMA ================================================ *@
-    @if (confermaElimina)
-    {
-        <div class="modal fade show d-block" style="background:#00000080;">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                    </div>
-                    <div class="modal-body">
-                        Vuoi davvero eliminare? <strong>@Proprietario.Nome - @Proprietario.Cognome</strong>?
-                    </div>
-                    <div class="modal-footer">
-                        <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                        <button class="btn btn-danger"    @onclick="EliminaAsync">Elimina</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-</EditForm>
+    </MudStack>
+</MudForm>
+
 
 @code {
 
@@ -114,14 +61,12 @@
     private List<Proprietario> proprietari = new();
     private bool isNuovoProprietario;
     private Proprietario nuovoProprietario = new();
-    private bool confermaElimina;
     private string? codiceFiscaleErrore;
-    void MostraConfermaElimina() => confermaElimina = true;
-    void ChiudiModal() => confermaElimina = false;
+
 
     /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
-    {   
+    {
         try
         {
             if (Proprietario.Id == 0)
@@ -131,6 +76,7 @@
 
             Log.LogInformation("Salvato proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
             await OnSalvato.InvokeAsync(Proprietario);
+
         }
         catch (Exception ex)
         {
@@ -139,32 +85,47 @@
     }
 
     /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
-    async Task EliminaAsync()
+    private async Task ConfermaEliminazioneDaFormAsync()
     {
-        try
+        var parameters = new DialogParameters
         {
-            await RepositoryManager.For<Proprietario>().DeleteAsync(Proprietario.Id);
-            Log.LogInformation("Eliminato veicolo proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
-            confermaElimina = false;
-            await OnSalvato.InvokeAsync();    // riusa la callback per tornare alla lista
-        }
-        catch (Exception ex)
+            ["Parameters"] = new Dictionary<string, object>
+                {
+                    { "Nome", Proprietario.Nome },
+                    { "Cognome", Proprietario.Cognome }
+                }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
+
+        IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
+        DialogResult result = await dialog.Result;
+
+        if (!result.Canceled)
         {
-            Log.LogError(ex, "Errore eliminazione proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
-            confermaElimina = false;
+            try
+            {
+                await RepositoryManager.For<Proprietario>().DeleteAsync(Proprietario.Id);
+                Log.LogInformation("Proprietario eliminato: {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+                await OnAnnulla.InvokeAsync(); // torna alla lista dopo l'eliminazione
+            }
+            catch (Exception ex)
+            {
+                Log.LogError(ex, "Errore durante l'eliminazione del proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+                // potresti mostrare un messaggio all'utente
+            }
         }
     }
 
 
     //---------GESTIONE DATI PER CALCOLO CODICE FISCALE-----------//
-    
+
     //----VERIFICA SE I DATI PER IL CALCOLO DEL CODICE FISCALE SONO VALIDI E PRESENTI
-    private bool DatiCompletiPerCodiceFiscale() =>  !string.IsNullOrWhiteSpace(Proprietario.Nome) &&
+    private bool DatiCompletiPerCodiceFiscale() => !string.IsNullOrWhiteSpace(Proprietario.Nome) &&
                                                     !string.IsNullOrWhiteSpace(Proprietario.Cognome) &&
                                                     Proprietario.DataNascita != default &&
                                                     !string.IsNullOrWhiteSpace(Proprietario.LuogoNascita) &&
                                                     !string.IsNullOrWhiteSpace(Proprietario.Sesso);
-    
+
     private void CalcolaCodiceFiscale()
     {
         try
@@ -182,10 +143,10 @@
             Proprietario.CodiceFiscale = CodiceFiscaleLib.Helpers.EncodingHelper.Encode(Proprietario.Cognome, Proprietario.Nome, sessoChar, Proprietario.DataNascita, Proprietario.LuogoNascita);
             codiceFiscaleErrore = null;
         }
-		catch (Exception ex)
-		{
-			Log.LogError(ex, "Errore calcolo codice fiscale per proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
-			codiceFiscaleErrore = ex.Message;
-		}
-	}
+        catch (Exception ex)
+        {
+            Log.LogError(ex, "Errore calcolo codice fiscale per proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+            codiceFiscaleErrore = ex.Message;
+        }
+    }
 }

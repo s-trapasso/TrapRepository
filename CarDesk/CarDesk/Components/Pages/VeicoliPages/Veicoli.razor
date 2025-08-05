@@ -2,85 +2,56 @@
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
 @inject ILoggingService<Veicoli> Log
+@inject IDialogService DialogService
 
-<h3>Elenco Veicoli</h3>
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Elenco veicoli</MudText>
 
-<button class="btn btn-primary" @onclick="@(()=> Nav.NavigateTo("/veicoli/nuovo"))">Nuovo Veicolo</button>
-
-
-@if (veicoli == null)
-{
-    <p><em>Caricamento...</em></p>
-}
-else if (veicoli.Count == 0)
-{   
-    <div class="alert alert-info">
-        Nessun veicolo registrato.
-    </div>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Targa</th>
-                <th>Marca</th>
-                <th>Modello</th>
-                <th>Anno</th>
-                <th>Alimentazione</th>
-                <th>Chilometraggio</th>
-                <th>Intestatario</th>
-                <th></th> @* Modifica *@
-                <th></th> @* Elimina *@
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var v in veicoli)
-            {
-                <tr>
-                    <td>@v.Targa</td>
-                    <td>@v.Marca</td>
-                    <td>@v.Modello</td>
-                    <td>@v.Anno</td>
-                    <td>@v.Alimentazione.ToString()</td>
-                    <td>@v.Km</td>
-                    <td>@v.Proprietario?.Nome @v.Proprietario?.Cognome</td>
-                    <td>
-                        <button class="btn btn-primary"  
-                        @onclick='() => Nav.NavigateTo($"/veicoli/edit/{v.Id}")'>Modifica Veicolo</button>
-                    </td>
-                    <td>
-                        <MudButton Color="Color.Error"
-                        Variant="Variant.Filled"
-                        OnClick="() => MostraConfermaElimina(v)">Elimina Veicolo
-                        </MudButton>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-@* =========== MODAL UNICO =========== *@
-@if (confermaElimina && veicoloSelezionato is not null)
-{
-    <div class="modal fade show d-block" style="background:#00000080;">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                </div>
-                <div class="modal-body">
-                    Vuoi davvero eliminare il veicolo
-                    <strong>@veicoloSelezionato.Targa</strong>?
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => Nav.NavigateTo("/veicoli/nuovo"))">Nuovo veicolo
+    </MudButton>
+    @if (veicoli == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+    }
+    else if (!veicoli.Any())
+    {
+        <MudAlert Severity="Severity.Info" Elevation="0" Class="mt-4">Nessun veicolo registrato.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="veicoli" Hover="true" Dense="true" Striped="true" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Targa</MudTh>
+                <MudTh>Marca</MudTh>
+                <MudTh>Modello</MudTh>
+                <MudTh>Anno</MudTh>
+                <MudTh>Alimentazione</MudTh>
+                <MudTh>Chilometri</MudTh>
+                <MudTh>Intestatario</MudTh>
+                <MudTh></MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Targa">@context.Targa</MudTd>
+                <MudTd DataLabel="Marca">@context.Marca</MudTd>
+                <MudTd DataLabel="Modello">@context.Modello</MudTd>
+                <MudTd DataLabel="Anno">@context.Anno</MudTd>
+                <MudTd DataLabel="Alimentazione">@context.Alimentazione</MudTd>
+                <MudTd DataLabel="Km">@context.Km</MudTd>
+                <MudTd DataLabel="Intestatario">@context.Proprietario?.Nome @context.Proprietario?.Cognome</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                   OnClick="@(() => Nav.NavigateTo($"/veicoli/edit/{context.Id}"))" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   OnClick="@(() => ConfermaEliminazioneAsync(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
 
 @code {
     private List<Veicolo>? veicoli = new();
@@ -100,37 +71,24 @@ else
         manutenzioni = datiIniziali.Manutenzioni;
     }
     /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
-    void MostraConfermaElimina(Veicolo veicolo)
+    private async Task ConfermaEliminazioneAsync(Veicolo veicolo)
     {
-        veicoloSelezionato = veicolo;
-        confermaElimina = true;
-    }
-    void ChiudiModal()
-    {
-        confermaElimina = false;
-        veicoloSelezionato = null;
-    }
+        var parameters = new DialogParameters
+            {
+                ["Parameters"] =new Dictionary<string, object>
+                {
+                    {"Targa",veicolo.Targa}
+                }
+            };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
 
-    async Task EliminaAsync()
-    {
-        if (veicoloSelezionato is null) return;
+        IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
+        DialogResult result = await dialog.Result;
 
-        try
+        if (!result.Canceled)
         {
-            await RepositoryManager.For<Veicolo>().DeleteAsync(veicoloSelezionato.Id);
-            veicoli.Remove(veicoloSelezionato);
-            Log.LogInformation("Eliminato veicolo {Targa}", veicoloSelezionato.Targa);
-            confermaElimina = false;
-
-        }
-        catch (Exception ex)
-        {
-            Log.LogError(ex, "Errore eliminazione veicolo {Targa}", veicoloSelezionato.Targa);
-            confermaElimina = false;
-        }
-        finally
-        {
-            ChiudiModal();
+            await RepositoryManager.For<Veicolo>().DeleteAsync(veicolo.Id);
+            await OnInitializedAsync();
         }
     }
 }

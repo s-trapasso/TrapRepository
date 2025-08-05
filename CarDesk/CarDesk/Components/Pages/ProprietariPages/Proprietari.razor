@@ -2,96 +2,65 @@
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
 @inject ILoggingService<Proprietari> Log
+@inject IDialogService DialogService
 
-<h3>Elenco Proprietari</h3>
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">Elenco proprietari</MudText>
 
-<button class="btn btn-primary" @onclick="@(()=> Nav.NavigateTo("/proprietari/nuovo"))">Nuovo Proprietario</button>  
-
-
-@if (proprietari == null)
-{
-    <p><em>Caricamento...</em></p>
-}
-else if (proprietari.Count == 0)
-{
-    <div class="alert alert-info">
-        Nessun proprietario trovato.
-    </div>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Cognome</th>
-                <th>Indirizzo</th>
-                <th>Data di nascita</th>
-                <th>Luogo di nascita</th>
-                <th>Codice Fiscale</th>
-                <th>N° Patente</th>
-                <th>Data di rilascio</th>
-                <th>Data di scadenza</th>
-                <th></th> @* Modifica *@
-                <th></th> @* Elimina *@
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var p in proprietari)
-            {
-                <tr>
-                    <td>@p.Nome</td>
-                    <td>@p.Cognome</td>
-                    <td>@p.Indirizzo</td>
-                    <td>@p.DataNascita.ToString("dd/MM/yyyy")</td>
-                    <td>@p.LuogoNascita</td>
-                    <td>@p.CodiceFiscale</td>
-                    <td>@p.NumeroPatente</td>
-                    <td>@p.DataRilascioPatente.ToString("dd/MM/yyyy")</td>
-                    <td>@p.DataScadenzaPatente.ToString("dd/MM/yyyy")</td>
-                    <td>
-                        <button class="btn btn-primary"
-                                @onclick='() => Nav.NavigateTo($"/proprietari/edit/{p.Id}")'>
-                            Modifica
-                        </button>
-                    </td>
-                    <td>
-                        <MudButton Color="Color.Error"
-                                   Variant="Variant.Filled"
-                                   OnClick="() => MostraConfermaElimina(p)">
-                            Elimina Proprietario
-                        </MudButton>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-@* =========== MODAL UNICO =========== *@
-@if (confermaElimina && proprietarioSelezionato is not null)
-{
-    <div class="modal fade show d-block" style="background:#00000080;">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title text-danger">Conferma eliminazione</h5>
-                </div>
-                <div class="modal-body">
-                    Vuoi davvero eliminare<strong>@proprietarioSelezionato.Nome @proprietarioSelezionato.Cognome</strong>?
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" @onclick="ChiudiModal">Annulla</button>
-                    <button class="btn btn-danger" @onclick="EliminaAsync">Elimina</button>
-                </div>
-            </div>
-        </div>
-    </div>
-}
+    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+               OnClick="@(() => Nav.NavigateTo("/proprietari/nuovo"))">
+        Nuovo Proprietario
+    </MudButton>
+    @if (proprietari == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+    }
+    else if (!proprietari.Any())
+    {
+        <MudAlert Severity="Severity.Info" Elevation="0" Class="mt-4">Nessun proprietario registrato.</MudAlert>
+    }
+    else
+    {
+        <MudTable Items="proprietari" Hover="true" Dense="true" Striped="true" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Nome</MudTh>
+                <MudTh>Cognome</MudTh>
+                <MudTh>Indirizzo</MudTh>
+                <MudTh>Data di nascita</MudTh>
+                <MudTh>Luogo di nascita</MudTh>
+                <MudTh>Chilometri</MudTh>
+                <MudTh>Codice Fiscale</MudTh>
+                <MudTh>N° Patente</MudTh>
+                <MudTh>Data di rilascio</MudTh>
+                <MudTh>Data di scadenza</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                <MudTd DataLabel="Cognome">@context.Cognome</MudTd>
+                <MudTd DataLabel="Indirizzo">@context.Indirizzo</MudTd>
+                <MudTd DataLabel="Data di nascita">@context.DataNascita.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Luogo di nascita">@context.LuogoNascita</MudTd>
+                <MudTd DataLabel="CodiceFiscale">@context.CodiceFiscale</MudTd>
+                <MudTd DataLabel="NumeroPatente">@context.NumeroPatente</MudTd>
+                <MudTd DataLabel="DataRilascioPatente">@context.DataRilascioPatente.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="DataScadenzaPatente">@context.DataScadenzaPatente.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
+                                   OnClick="@(() => Nav.NavigateTo($"/proprietari/edit/{context.Id}"))" />
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
+                                   OnClick="@(() => ConfermaEliminazioneProprietarioAsync(context))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
 @code {
     private List<Veicolo>? veicoli;
     private List<Proprietario>? proprietari;
     private List<Manutenzione>? manutenzioni;
-    private bool confermaElimina;
+    // private bool confermaElimina;
     private Proprietario? proprietarioSelezionato;
 
 
@@ -105,37 +74,25 @@ else
     }
 
     /* ---------- ELIMINAZIONE DELLA MANUTENZIONE ---------- */
-    void MostraConfermaElimina(Proprietario proprietario)
+    private async Task ConfermaEliminazioneProprietarioAsync(Proprietario proprietario)
     {
-        proprietarioSelezionato = proprietario;
-        confermaElimina = true;
-    }
-    void ChiudiModal()
-    {
-        confermaElimina = false;
-        proprietarioSelezionato = null;
-    }
-
-    async Task EliminaAsync()
-    {
-        if (proprietarioSelezionato is null) return;
-
-        try
+        var parameters = new DialogParameters
         {
-            await RepositoryManager.For<Proprietario>().DeleteAsync(proprietarioSelezionato.Id);
-            proprietari.Remove(proprietarioSelezionato);
-            Log.LogInformation("Eliminato proprietario {0}{1}", proprietarioSelezionato.Nome, proprietarioSelezionato.Cognome);
-            confermaElimina = false;
+            ["Parameters"] = new Dictionary<string, object>
+                {
+                    { "Nome", proprietario.Nome },
+                    { "Cognome", proprietario.Cognome }
+                }
+        };
+        var options = new DialogOptions { CloseOnEscapeKey = true };
 
-        }
-        catch (Exception ex)
+        IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
+        DialogResult result = await dialog.Result;
+
+        if (!result.Canceled)
         {
-            Log.LogError(ex, "Errore eliminazione proprietario {0}{1}", proprietarioSelezionato.Nome, proprietarioSelezionato.Cognome);
-            confermaElimina = false;
-        }
-        finally
-        {
-            ChiudiModal();
+            await RepositoryManager.For<Proprietario>().DeleteAsync(proprietario.Id);
+            await OnInitializedAsync();
         }
     }
 }
