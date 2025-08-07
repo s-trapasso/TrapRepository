@@ -8,27 +8,27 @@ namespace CarDesk.Data.Models
         [Key]
         public int Id { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required(ErrorMessage ="Campo obbligatorio"), MaxLength(50)]
         public string Targa { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required(ErrorMessage ="Campo obbligatorio"), MaxLength(50)]
         public string Marca { get; set; }
 
-        [Required, MaxLength(50)]
+        [Required(ErrorMessage ="Campo obbligatorio"), MaxLength(50)]
         public string Modello { get; set; }
 
-        [Required]
+        [Required(ErrorMessage ="Campo obbligatorio")]
         public int Anno { get; set; }
-
+        [Required(ErrorMessage = "Campo obbligatorio")]
         public AlimentazioneEnum? Alimentazione { get; set; }
-
+        [Required(ErrorMessage = "Campo obbligatorio")]
         public int? Km { get; set; }
         public string MarcaModello => $"{Marca} {Modello}";
 
         // Navigation Properties
         public ICollection<Manutenzione> Manutenzioni { get; set; } = new List<Manutenzione>();
 
-        [Required]
+        [Required(ErrorMessage ="Campo obbligatorio")]
         public int ProprietarioId { get; set; }
 
         public Proprietario Proprietario { get; set; }

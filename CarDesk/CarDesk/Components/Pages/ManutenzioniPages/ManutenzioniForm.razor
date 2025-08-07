@@ -6,7 +6,7 @@
 @inject IDialogService DialogService
 
 
-<MudForm @ref="mudForm" Model="Manutenzione">
+<MudForm Model="Manutenzione" @ref="formManutenzione">
 	<MudPaper Class="pa-4" Elevation="1">
 	<!-- === CAMPI MANUTENZIONE =================================================== -->
 	@* Mostra i dettagli del veicolo selezionato, solo se presente *@
@@ -31,21 +31,21 @@
 				<MudNumericField T="decimal?" @bind-Value="voce.Costo" Immediate="true" Placeholder="€" Dense="true" Adornment="Adornment.End" AdornmentText="€"/>
 			</MudTd>
 			<MudTd Class="text-end">
-					<MudButton Color="Color.Error" Size="Size.Small" Disabled="@(!mudForm.IsValid || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => ConfermaEliminazioneVoceAsync(voce)">
+					<MudButton Color="Color.Error" Size="Size.Small" Disabled="@(!formManutenzione.IsValid || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => ConfermaEliminazioneVoceAsync(voce)">
 					<MudIcon Icon="@Icons.Material.Filled.Delete" Class="me-1" />Elimina voce
 				</MudButton>
 			</MudTd>
 		</RowTemplate>
 	</MudTable>
 	<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
-				   Disabled="@(!mudForm.IsValid || !VoceInterventoValida || !PrimaVoceValida )" OnClick="AggiungiVoce">
+				   Disabled="@(!formManutenzione.IsValid || !VoceInterventoValida || !PrimaVoceValida )" OnClick="AggiungiVoce">
 		Aggiungi Voce Intervento
 	</MudButton>
 	<!-- Bottoni -->
 		<MudDivider Class="my-4" />
 		<MudStack Direction="Row" Spacing="2">
 			<MudButton Variant="Variant.Filled" Color="Color.Primary" ButtonType="ButtonType.Button"
-					   Disabled="@(!mudForm.IsValid || Manutenzione.VeicoloId <=0 || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => SalvaAsync()">
+					   Disabled="@(!formManutenzione.IsValid || Manutenzione.VeicoloId <=0 || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => SalvaAsync()">
 				Salva voce
 			</MudButton>
 			
@@ -76,7 +76,8 @@
 	[Parameter] public List<VoceIntervento> listaVoceIntervento { get; set; }
 	[Parameter] public string Message { get; set; }
 	[CascadingParameter] IMudDialogInstance MudDialog { get; set; }
-	MudForm mudForm;
+	MudForm formManutenzione;
+	
 	/* ---------- DATI DI SUPPORTO ----------------------------- */
 	private List<Veicolo> veicoli = new();
 

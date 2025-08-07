@@ -7,16 +7,16 @@
 
 
 
-<MudForm Model="Proprietario" OnValidSubmit="SalvaAsync">
+<MudForm Model="Proprietario" @ref="formProprietario" @bind-IsValid="formIsValid">
 
     <!-- === CAMPI PROPRIETARIO =================================================== -->
-    <MudTextField Label="Nome" @bind-Value="Proprietario.Nome" Required="true"></MudTextField>
-    <MudTextField Label="Cognome" @bind-Value="Proprietario.Cognome" Required="true"></MudTextField>
-    <MudTextField Label="Indirizzo" @bind-Value="Proprietario.Indirizzo" Required="true"></MudTextField>
-    <MudTextField Label="Data di nascita" @bind-Value="Proprietario.DataNascita" Required="true"></MudTextField>
-    <MudTextField Label="Luogo di nascita" @bind-Value="Proprietario.LuogoNascita" Required="true"></MudTextField>
+    <MudTextField Label="Nome" @bind-Value="Proprietario.Nome" Required="true" For="@(() => Proprietario.Nome)"></MudTextField>
+    <MudTextField Label="Cognome" @bind-Value="Proprietario.Cognome" Required="true" For="@(() => Proprietario.Cognome)"></MudTextField>
+    <MudTextField Label="Indirizzo" @bind-Value="Proprietario.Indirizzo" Required="true" For="@(() => Proprietario.Indirizzo)"></MudTextField>
+    <MudTextField Label="Data di nascita" @bind-Value="Proprietario.DataNascita" Required="true" For="@(() => Proprietario.DataNascita)"></MudTextField>
+    <MudTextField Label="Luogo di nascita" @bind-Value="Proprietario.LuogoNascita" Required="true" For="@(() => Proprietario.LuogoNascita)"></MudTextField>
 
-    <MudSelect Label="Sesso" @bind-Value="Proprietario.Sesso" Required="true" Clearable="true">
+    <MudSelect Label="Sesso" @bind-Value="Proprietario.Sesso" Required="true" Clearable="true" For="@(() => Proprietario.Sesso)">
         <MudSelectItem T="string" Value="@("")">Seleziona...</MudSelectItem>
         <MudSelectItem T="string" Value="@("M")">Maschio</MudSelectItem>
         <MudSelectItem T="string" Value="@("F")">Femmina</MudSelectItem>
@@ -33,9 +33,9 @@
     </MudButton>
 
     <!-- === PATENTE ========================================================= -->
-    <MudTextField Label="N° Patente" @bind-Value="Proprietario.NumeroPatente" Required="true"></MudTextField>
-    <MudTextField Label="Data di rilascio" @bind-Value="Proprietario.DataRilascioPatente" Required="true"></MudTextField>
-    <MudTextField Label="Data di scadenza" @bind-Value="Proprietario.DataScadenzaPatente" Required="true"></MudTextField>
+    <MudTextField Label="N° Patente" @bind-Value="Proprietario.NumeroPatente" Required="true" For="@(() => Proprietario.NumeroPatente)"></MudTextField>
+    <MudTextField Label="Data di rilascio" @bind-Value="Proprietario.DataRilascioPatente" Required="true" For="@(() => Proprietario.DataRilascioPatente)"></MudTextField>
+    <MudTextField Label="Data di scadenza" @bind-Value="Proprietario.DataScadenzaPatente" Required="true" For="@(() => Proprietario.DataScadenzaPatente)"></MudTextField>
 
     <!-- === BOTTONI ========================================================= -->
     <MudStack Direction="Row" Spacing="2" Class="mt-4">
@@ -62,21 +62,25 @@
     private bool isNuovoProprietario;
     private Proprietario nuovoProprietario = new();
     private string? codiceFiscaleErrore;
-
+    MudForm formProprietario;
+    bool formIsValid;
 
     /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
     {
         try
         {
-            if (Proprietario.Id == 0)
-                await RepositoryManager.For<Proprietario>().AddAsync(Proprietario);
-            else
-                await RepositoryManager.For<Proprietario>().UpdateAsync(Proprietario);
+            await formProprietario.Validate();
+            if (formIsValid)
+            {
+                if (Proprietario.Id == 0)
+                    await RepositoryManager.For<Proprietario>().AddAsync(Proprietario);
+                else
+                    await RepositoryManager.For<Proprietario>().UpdateAsync(Proprietario);
 
-            Log.LogInformation("Salvato proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
-            await OnSalvato.InvokeAsync(Proprietario);
-
+                Log.LogInformation("Salvato proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+                await OnSalvato.InvokeAsync(Proprietario);
+            }
         }
         catch (Exception ex)
         {

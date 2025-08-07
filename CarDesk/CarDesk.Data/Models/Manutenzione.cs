@@ -11,13 +11,13 @@ namespace CarDesk.Data.Models
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required(ErrorMessage ="Campo obbligatorio")]
         public DateTime Data { get; set; }
 
         [Column(TypeName = "decimal(10,2)")]
         public decimal Costo { get; set; }
 
-        [Required]
+        [Required(ErrorMessage ="Campo obbligatorio")]
         public int VeicoloId { get; set; }
 
         public Veicolo? Veicolo { get; set; }

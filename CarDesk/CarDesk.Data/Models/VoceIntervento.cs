@@ -13,7 +13,7 @@ namespace CarDesk.Data.Models
         [Key]
         public int Id { get; set; }
 
-        [Required, MaxLength(100)]
+        [Required(ErrorMessage ="Campo obbligatorio"), MaxLength(100)]
         public string Descrizione { get; set; } = string.Empty;
 
         [Column(TypeName = "decimal(10,2)")]
