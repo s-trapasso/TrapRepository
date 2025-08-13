@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using CarDesk.Data.Models.Enum;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 namespace CarDesk.Data.Models

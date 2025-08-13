@@ -1,4 +1,5 @@
 ﻿@using CarDesk.Data.Models
+@using CarDesk.Data.Models.Enum
 @using CarDesk.Data.Services.Interfaces
 @using CodiceFiscaleLib
 @inject IRepositoryManager RepositoryManager
@@ -13,7 +14,7 @@
     <MudTextField Label="Nome" @bind-Value="Proprietario.Nome" Required="true" For="@(() => Proprietario.Nome)"></MudTextField>
     <MudTextField Label="Cognome" @bind-Value="Proprietario.Cognome" Required="true" For="@(() => Proprietario.Cognome)"></MudTextField>
     <MudTextField Label="Indirizzo" @bind-Value="Proprietario.Indirizzo" Required="true" For="@(() => Proprietario.Indirizzo)"></MudTextField>
-    <MudTextField Label="Data di nascita" @bind-Value="Proprietario.DataNascita" Required="true" For="@(() => Proprietario.DataNascita)"></MudTextField>
+    <MudDatePicker Label="Data di nascita" @bind-Date="Proprietario.DataNascita" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataNascita)"/>
     <MudTextField Label="Luogo di nascita" @bind-Value="Proprietario.LuogoNascita" Required="true" For="@(() => Proprietario.LuogoNascita)"></MudTextField>
 
     <MudSelect Label="Sesso" @bind-Value="Proprietario.Sesso" Required="true" Clearable="true" For="@(() => Proprietario.Sesso)">
@@ -34,8 +35,17 @@
 
     <!-- === PATENTE ========================================================= -->
     <MudTextField Label="N° Patente" @bind-Value="Proprietario.NumeroPatente" Required="true" For="@(() => Proprietario.NumeroPatente)"></MudTextField>
-    <MudTextField Label="Data di rilascio" @bind-Value="Proprietario.DataRilascioPatente" Required="true" For="@(() => Proprietario.DataRilascioPatente)"></MudTextField>
-    <MudTextField Label="Data di scadenza" @bind-Value="Proprietario.DataScadenzaPatente" Required="true" For="@(() => Proprietario.DataScadenzaPatente)"></MudTextField>
+    <MudDatePicker Label="Data di rilascio" @bind-Date="Proprietario.DataRilascioPatente" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataRilascioPatente)"></MudDatePicker>
+    <MudDatePicker Label="Data di scadenza" @bind-Date="Proprietario.DataScadenzaPatente" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataScadenzaPatente)"></MudDatePicker>
+
+    <MudSelect T="CategoriaPatenteEnum" Label="Categoria Patente" MultiSelection="true" @bind-SelectedValues="_categorieSelezionate">
+        @foreach (var valoreCategoria in Enum.GetValues<CategoriaPatenteEnum>())
+        {
+            <MudSelectItem T="CategoriaPatenteEnum" Value="@valoreCategoria">@valoreCategoria</MudSelectItem>
+        }
+    </MudSelect>
+
+    
 
     <!-- === BOTTONI ========================================================= -->
     <MudStack Direction="Row" Spacing="2" Class="mt-4">
@@ -64,7 +74,12 @@
     private string? codiceFiscaleErrore;
     MudForm formProprietario;
     bool formIsValid;
+    private IEnumerable<CategoriaPatenteEnum> _categorieSelezionate = new HashSet<CategoriaPatenteEnum>();
 
+    protected override void OnInitialized()
+    {
+        _categorieSelezionate = Proprietario.CategoriePatente;
+    }
     /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
     {
@@ -73,6 +88,9 @@
             await formProprietario.Validate();
             if (formIsValid)
             {
+                // Aggiorna la proprietà CategoriaPatente prima del salvataggio
+                Proprietario.CategoriePatente = _categorieSelezionate.ToList();
+
                 if (Proprietario.Id == 0)
                     await RepositoryManager.For<Proprietario>().AddAsync(Proprietario);
                 else
@@ -153,4 +171,8 @@
             codiceFiscaleErrore = ex.Message;
         }
     }
+
+
+    
+
 }

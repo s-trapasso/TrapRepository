@@ -4,7 +4,7 @@
 @inject ILoggingService<ManutenzioniForm> Log
 @inject NavigationManager Nav
 @inject IDialogService DialogService
-
+@inject IErrorHandlerService ErrorHandler
 
 <MudForm Model="Manutenzione" @ref="formManutenzione">
 	<MudPaper Class="pa-4" Elevation="1">
@@ -153,6 +153,7 @@
 		}
 		catch (Exception ex)
 		{
+			await ErrorHandler.HandleAsync(ex, $"Errore salvataggio veicolo {VeicoloCorrente?.Targa}");
 			Log.LogError(ex, "Errore salvataggio intervento riferito al veicolo {0}", VeicoloCorrente?.Targa);
 		}
 	}

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarDesk.Data.Models
+namespace CarDesk.Data.Models.Enum
 {
     public enum AlimentazioneEnum
     {

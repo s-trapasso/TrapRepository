@@ -1,4 +1,5 @@
 ﻿using CarDesk.Data.Models;
+using CarDesk.Data.Models.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace CarDesk.Data.Data

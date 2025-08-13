@@ -1,4 +1,5 @@
 ﻿@page "/proprietari"
+@using CarDesk.Data.Models.Enum
 @inject CarDesk.Data.Services.Interfaces.IRepositoryManager RepositoryManager
 @inject NavigationManager Nav
 @inject ILoggingService<Proprietari> Log
@@ -28,22 +29,23 @@
                 <MudTh>Indirizzo</MudTh>
                 <MudTh>Data di nascita</MudTh>
                 <MudTh>Luogo di nascita</MudTh>
-                <MudTh>Chilometri</MudTh>
                 <MudTh>Codice Fiscale</MudTh>
                 <MudTh>N° Patente</MudTh>
                 <MudTh>Data di rilascio</MudTh>
                 <MudTh>Data di scadenza</MudTh>
+                <MudTh>Categoria patente</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Nome">@context.Nome</MudTd>
                 <MudTd DataLabel="Cognome">@context.Cognome</MudTd>
                 <MudTd DataLabel="Indirizzo">@context.Indirizzo</MudTd>
-                <MudTd DataLabel="Data di nascita">@context.DataNascita.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Data di nascita">@context.DataNascita?.ToString("dd/MM/yyyy")</MudTd>
                 <MudTd DataLabel="Luogo di nascita">@context.LuogoNascita</MudTd>
                 <MudTd DataLabel="CodiceFiscale">@context.CodiceFiscale</MudTd>
                 <MudTd DataLabel="NumeroPatente">@context.NumeroPatente</MudTd>
-                <MudTd DataLabel="DataRilascioPatente">@context.DataRilascioPatente.ToString("dd/MM/yyyy")</MudTd>
-                <MudTd DataLabel="DataScadenzaPatente">@context.DataScadenzaPatente.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="DataRilascioPatente">@context.DataRilascioPatente?.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="DataScadenzaPatente">@context.DataScadenzaPatente?.ToString("dd/MM/yyyy")</MudTd>
+                <MudTd DataLabel="Catorie di Patente">@context.CategoriaPatente</MudTd>
                 <MudTd>
                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
                                    OnClick="@(() => Nav.NavigateTo($"/proprietari/edit/{context.Id}"))" />
@@ -62,7 +64,7 @@
     private List<Manutenzione>? manutenzioni;
     // private bool confermaElimina;
     private Proprietario? proprietarioSelezionato;
-
+    private List<CategoriaPatenteEnum> categoriePatenteSelezionate = new();
 
     protected override async Task OnInitializedAsync()
     {

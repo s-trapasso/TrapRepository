@@ -1,6 +1,7 @@
-﻿@using CarDesk.Data.Models
+﻿@using CarDesk.Components.Pages.ProprietariPages
+@using CarDesk.Data.Models
+@using CarDesk.Data.Models.Enum
 @using CarDesk.Data.Services.Interfaces
-@using CarDesk.Components.Pages.ProprietariPages
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<VeicoliForm> Log
 @inject IDialogService DialogService
@@ -11,7 +12,7 @@
     <MudTextField Label="Targa" @bind-Value="Veicolo.Targa" Required="true" For="@(() => Veicolo.Targa)"></MudTextField>
     <MudTextField Label="Marca" @bind-Value="Veicolo.Marca" Required="true" For="@(() => Veicolo.Marca)"></MudTextField>
     <MudTextField Label="Modello" @bind-Value="Veicolo.Modello" Required="true" For="@(() => Veicolo.Modello)"></MudTextField>
-    <MudNumericField T="int" Label="Anno" @bind-Value="Veicolo.Anno" Required="true" Min="1900" Max="@DateTime.Now.Year" For="@(() => Veicolo.Anno)"></MudNumericField>
+    <MudNumericField T="int" Label="Anno" @bind-Value="Veicolo.Anno" Required="true" Min="1990" Max="@DateTime.Now.Year" For="@(() => Veicolo.Anno)"></MudNumericField>
     <MudSelect T="AlimentazioneEnum?" Label="Alimentazione" @bind-Value="Veicolo.Alimentazione" Required="true" For="@(() => Veicolo.Alimentazione)" Clearable="true">
         @foreach(var tipo in Enum.GetValues<AlimentazioneEnum>())
         {
