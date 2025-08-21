@@ -1,0 +1,37 @@
+﻿<MudDialog>
+    <TitleContent>Rinnovo patente</TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.subtitle1" Class="mb-2">
+            La patente è stata rinnovata dopo la prima scadenza?
+        </MudText>
+
+        <MudSwitch @bind-Value="Rinnovata" Label="Sì, patente rinnovata" />
+
+        @if (Rinnovata)
+        {
+            <MudDatePicker @bind-Date="DataUltimoRinnovo" Label="Data ultimo rinnovo" DateFormat="dd-MM-yyyy" Required="true" />
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton Color="Color.Primary" OnClick="OkClicked" Disabled="Rinnovata && !DataUltimoRinnovo.HasValue">Conferma</MudButton>
+        <MudButton Color="Color.Secondary" OnClick="CancelClicked">Annulla</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public DateTime DataRilascio { get; set; }
+
+    private bool Rinnovata { get; set; } = false;
+    private DateTime? DataUltimoRinnovo { get; set; }
+
+    private void OkClicked()
+    {
+        MudDialog.Close(DialogResult.Ok(DataUltimoRinnovo));
+    }
+
+    private void CancelClicked()
+    {
+        MudDialog.Cancel();
+    }
+}

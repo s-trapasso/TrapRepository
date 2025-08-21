@@ -2,6 +2,7 @@
 using CarDesk.Data.Data;
 using CarDesk.Data.Models;
 using CarDesk.Data.Services;
+using CarDesk.Data.Services.Functions;
 using CarDesk.Data.Services.Interfaces;
 using CarDesk.Data.Services.Repository;
 using Microsoft.EntityFrameworkCore;
@@ -77,6 +78,7 @@ public static class MauiProgram
     {
         //Registrazione LoggingService
         services.AddScoped(typeof(ILoggingService<>), typeof(LoggingService<>));
+        services.AddScoped<PatenteService>();
         services.AddScoped<IErrorHandlerService, ErrorDialog>();
 
         // DbContext

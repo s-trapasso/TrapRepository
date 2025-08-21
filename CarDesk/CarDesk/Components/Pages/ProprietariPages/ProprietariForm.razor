@@ -1,12 +1,13 @@
 ﻿@using CarDesk.Data.Models
 @using CarDesk.Data.Models.Enum
+@using CarDesk.Data.Services.Functions
 @using CarDesk.Data.Services.Interfaces
 @using CodiceFiscaleLib
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ProprietariForm> Log
 @inject IDialogService DialogService
-
-
+@inject PatenteService PatenteService
+@inject IErrorHandlerService ErrorHandler
 
 <MudForm Model="Proprietario" @ref="formProprietario" @bind-IsValid="formIsValid">
 
@@ -35,8 +36,18 @@
 
     <!-- === PATENTE ========================================================= -->
     <MudTextField Label="N° Patente" @bind-Value="Proprietario.NumeroPatente" Required="true" For="@(() => Proprietario.NumeroPatente)"></MudTextField>
-    <MudDatePicker Label="Data di rilascio" @bind-Date="Proprietario.DataRilascioPatente" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataRilascioPatente)"></MudDatePicker>
+    @* <MudDatePicker Label="Data di rilascio" @bind-Date="Proprietario.DataRilascioPatente" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataRilascioPatente)"></MudDatePicker> *@
+    <MudDatePicker Label="Data di rilascio"
+               Date="Proprietario.DataRilascioPatente"
+               DateChanged="OnDateRilascioChanged"
+               Immediate="true"
+               DateFormat="dd-MM-yyyy"
+               Required="true"
+               For="@(() => Proprietario.DataRilascioPatente)">
+    </MudDatePicker>
+    
     <MudDatePicker Label="Data di scadenza" @bind-Date="Proprietario.DataScadenzaPatente" DateFormat="dd-MM-yyyy" Required="true" For="@(() => Proprietario.DataScadenzaPatente)"></MudDatePicker>
+    <MudText Typo="Typo.h6" Class="mt-2">@StatoPatente</MudText>
 
     <MudSelect T="CategoriaPatenteEnum" Label="Categoria Patente" MultiSelection="true" @bind-SelectedValues="_categorieSelezionate">
         @foreach (var valoreCategoria in Enum.GetValues<CategoriaPatenteEnum>())
@@ -53,7 +64,7 @@
         <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="() => OnAnnulla.InvokeAsync()">Annulla</MudButton>
         @if (Proprietario.Id != 0)
         {
-            <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ms-auto" ButtonType="ButtonType.Button" OnClick="() => ConfermaEliminazioneDaFormAsync()">Elimina dettaglio</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" Class="ms-auto" ButtonType="ButtonType.Button" OnClick="() => ConfermaEliminazioneDaFormAsync()">Elimina nominativo</MudButton>
         }
     </MudStack>
 </MudForm>
@@ -74,12 +85,104 @@
     private string? codiceFiscaleErrore;
     MudForm formProprietario;
     bool formIsValid;
+    #region PATENTE
     private IEnumerable<CategoriaPatenteEnum> _categorieSelezionate = new HashSet<CategoriaPatenteEnum>();
+    private bool GestisciRinnovi { get; set; } = false;
+    private int NumeroRinnovi { get; set; } = 0;
+    private DateTime ultimaScadenza;
+    private string StatoPatente { get; set; } = string.Empty;
+
+    #endregion
 
     protected override void OnInitialized()
     {
         _categorieSelezionate = Proprietario.CategoriePatente;
     }
+
+
+    //Gestione date patente
+    private async Task OnDateRilascioChanged(DateTime? newDate)
+    {
+        if (!newDate.HasValue) return;
+
+        DateTime dataSelezionata = newDate.Value;
+
+        // Controllo data futura
+        if (dataSelezionata > DateTime.Now)
+        {
+            await ErrorHandler.HandleAsync(new InvalidOperationException("La data di rilascio non può essere futura."));
+            return;
+        }
+
+        // Controllo data precedente alla nascita
+        if (Proprietario.DataNascita.HasValue && dataSelezionata < Proprietario.DataNascita.Value)
+        {
+            await ErrorHandler.HandleAsync(new InvalidOperationException("La data di rilascio non può essere precedente alla data di nascita."));
+            return;
+        }
+
+        // Controllo età minima
+        if (Proprietario.DataNascita.HasValue)
+        {
+            int eta = PatenteService.CalcolaEta(Proprietario.DataNascita.Value, dataSelezionata);
+            if (eta < 18)
+            {
+                await ErrorHandler.HandleAsync(new InvalidOperationException("Il proprietario deve avere almeno 18 anni al momento del rilascio."));
+                return;
+            }
+        }
+
+        // Se tutte le verifiche sono OK, aggiorna e apri dialog
+        Proprietario.DataRilascioPatente = dataSelezionata;
+
+        var parameters = new DialogParameters { ["DataRilascio"] = dataSelezionata };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, FullWidth = true };
+
+        var dialogRef = DialogService.Show<RinnovoPatenteDialog>("Rinnovo patente", parameters, options);
+        var result = await dialogRef.Result;
+
+        if (!result.Canceled && result.Data is DateTime dataRinnovo)
+        {
+            Proprietario.DataUltimoRinnovo = dataRinnovo;
+        }
+
+        await AggiornaScadenza();
+    }
+
+    private async Task OnUltimoRinnovoChanged(DateTime? newDate)
+    {
+        Proprietario.DataUltimoRinnovo = newDate;
+        await AggiornaScadenza();
+    }
+    private async Task AggiornaScadenza()
+    {
+        try
+        {
+            if (!Proprietario.DataNascita.HasValue || !Proprietario.DataRilascioPatente.HasValue)
+            {
+                StatoPatente = "Dati mancanti";
+                Proprietario.DataScadenzaPatente = null;
+                return;
+            }
+    
+            var risultato = PatenteService.CalcolaScadenzaConVerifica(
+                Proprietario.DataNascita,
+                Proprietario.DataRilascioPatente,
+                Proprietario.DataUltimoRinnovo
+            );
+    
+            Proprietario.DataScadenzaPatente = risultato.dataScadenza;
+            StatoPatente = risultato.patenteValida ? "✅ OK - patente valida" : "❌ KO - patente scaduta";
+        }
+        catch (Exception ex)
+        {
+            await ErrorHandler.HandleAsync(ex, ex.Message);
+            StatoPatente = "Errore nel calcolo";
+        }
+    
+        StateHasChanged();
+    }
+
     /* ---------- SALVATAGGIO PROPRIETARIO -------------------------- */
     async Task SalvaAsync()
     {
@@ -88,6 +191,21 @@
             await formProprietario.Validate();
             if (formIsValid)
             {
+                //Calcolo scadenza patente
+                try
+                {
+                    if (!Proprietario.DataScadenzaPatente.HasValue)
+                        throw new InvalidOperationException("La data di scadenza della patente non è valida. Verificare le date inserite.");
+                }
+                catch (Exception ex)
+                {
+                    await ErrorHandler.HandleAsync(ex, "Errore durante il calcolo della scadenza della patente.\nVerificare le date inserite!");
+                    Log.LogError(ex, "Errore durante il calcolo della scadenza della patente per il proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
+                    
+
+                    // Potresti mostrare un messaggio all'utente
+                }
+
                 // Aggiorna la proprietà CategoriaPatente prima del salvataggio
                 Proprietario.CategoriePatente = _categorieSelezionate.ToList();
 
@@ -102,6 +220,7 @@
         }
         catch (Exception ex)
         {
+            await ErrorHandler.HandleAsync(ex, "");
             Log.LogError(ex, "Errore salvataggio proprietario {0} {1}", Proprietario.Nome, Proprietario.Cognome);
         }
     }

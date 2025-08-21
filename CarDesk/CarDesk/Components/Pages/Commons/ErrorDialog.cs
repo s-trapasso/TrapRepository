@@ -42,7 +42,7 @@ namespace CarDesk.Components.Pages.Commons
             // Mostra il dialog
             await _dialogService.ShowMessageBox(
                 titolo,
-                messaggio,
+                ex.Message,
                 yesText: "Ok"
             );
         }

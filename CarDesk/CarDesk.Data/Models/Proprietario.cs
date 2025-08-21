@@ -36,9 +36,11 @@ namespace CarDesk.Data.Models
         [Required(ErrorMessage ="Campo obbligatorio"), MaxLength(20)]
         public string? NumeroPatente { get; set; }
         [Required(ErrorMessage ="Campo obbligatorio")]
-        public DateTime? DataRilascioPatente { get; set; }
+        public DateTime? DataRilascioPatente { get; set; }      
         [Required(ErrorMessage ="Campo obbligatorio")]
         public DateTime? DataScadenzaPatente { get; set; }
+        [NotMapped]
+        public DateTime? DataUltimoRinnovo { get; set; } // Solo calcolo temporaneo
         [MaxLength(10)]
         public string? CategoriaPatente { get; set; }
 
