@@ -4,23 +4,31 @@
 @inject ILoggingService<Veicoli> Log
 @inject IDialogService DialogService
 
-<MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5" Class="mb-4">Elenco veicoli</MudText>
+<MudPaper Class="page-container">
+    <div class="page-header">
+        <MudText Typo="Typo.h5">Elenco veicoli</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => Nav.NavigateTo("/veicoli/nuovo"))">
+            Nuovo veicolo
+        </MudButton>
+    </div>
 
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="@(() => Nav.NavigateTo("/veicoli/nuovo"))">Nuovo veicolo
-    </MudButton>
     @if (veicoli == null)
     {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+        <div class="page-loading">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+            <MudText Typo="Typo.body1">Caricamento...</MudText>
+        </div>
     }
     else if (!veicoli.Any())
     {
-        <MudAlert Severity="Severity.Info" Elevation="0" Class="mt-4">Nessun veicolo registrato.</MudAlert>
+        <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">
+            Nessun veicolo registrato.
+        </MudAlert>
     }
     else
     {
-        <MudTable Items="veicoli" Hover="true" Dense="true" Striped="true" Class="mt-4">
+        <MudTable Items="veicoli" Hover="true" Dense="true" Striped="true" Class="page-table">
             <HeaderContent>
                 <MudTh>Targa</MudTh>
                 <MudTh>Marca</MudTh>
@@ -29,8 +37,7 @@
                 <MudTh>Alimentazione</MudTh>
                 <MudTh>Chilometri</MudTh>
                 <MudTh>Intestatario</MudTh>
-                <MudTh></MudTh>
-                <MudTh></MudTh>
+                <MudTh>Azioni</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Targa">@context.Targa</MudTd>
@@ -41,12 +48,8 @@
                 <MudTd DataLabel="Km">@context.Km</MudTd>
                 <MudTd DataLabel="Intestatario">@context.Proprietario?.Nome @context.Proprietario?.Cognome</MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                   OnClick="@(() => Nav.NavigateTo($"/veicoli/edit/{context.Id}"))" />
-                </MudTd>
-                <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                   OnClick="@(() => ConfermaEliminazioneAsync(context))" />
+                    <ActionButtons OnEdit="@(() => Nav.NavigateTo($"/veicoli/edit/{context.Id}"))"
+                                   OnDelete="@(() => ConfermaEliminazioneAsync(context))" />
                 </MudTd>
             </RowTemplate>
         </MudTable>
@@ -58,30 +61,28 @@
     private List<Proprietario>? proprietari;
     private List<Manutenzione>? manutenzioni;
 
-    private bool confermaElimina;
     private Veicolo? veicoloSelezionato;
-
 
     protected override async Task OnInitializedAsync()
     {
         var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
-
         veicoli = datiIniziali.Veicoli;
         proprietari = datiIniziali.Proprietari;
         manutenzioni = datiIniziali.Manutenzioni;
     }
+
     /* ---------- ELIMINAZIONE DEL VEICOLO ---------- */
     private async Task ConfermaEliminazioneAsync(Veicolo veicolo)
     {
         var parameters = new DialogParameters
+        {
+            ["Parameters"] = new Dictionary<string, object>
             {
-                ["Parameters"] =new Dictionary<string, object>
-                {
-                    {"Targa",veicolo.Targa}
-                }
-            };
-        var options = new DialogOptions { CloseOnEscapeKey = true };
+                { "Targa", veicolo.Targa }
+            }
+        };
 
+        var options = new DialogOptions { CloseOnEscapeKey = true };
         IDialogReference dialog = await DialogService.ShowAsync<ConfermaEliminazioneDialog>("Conferma eliminazione", parameters, options);
         DialogResult result = await dialog.Result;
 

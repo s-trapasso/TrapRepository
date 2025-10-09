@@ -11,6 +11,7 @@ namespace CarDesk.Data.Models.Weather
         public double TemperatureC { get; set; }
         public double WindSpeedKmh { get; set; }
         public string Condition { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
     }
 
 }

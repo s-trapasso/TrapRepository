@@ -1,5 +1,6 @@
 ﻿@using CarDesk.Data.Models
 @using CarDesk.Data.Services.Interfaces
+@using CarDesk.Data.Models.Enum
 @inject IRepositoryManager RepositoryManager
 @inject ILoggingService<ManutenzioniForm> Log
 @inject NavigationManager Nav
@@ -16,6 +17,14 @@
 		<MudTextField T="string" Label="Targa selezionata" Value="@VeicoloCorrente.Targa" ReadOnly="true" />
 	}
 
+	<MudDatePicker Label="Data intervento" 
+				   Required="true"
+				   DateFormat="dd-MM-yyyy" 
+				   ShowToolbar="true" 
+				   PickerVariant="PickerVariant.Inline" Class="mb-4"
+				   @bind-Date="DataInteventoSelezionata">
+	</MudDatePicker>	
+
 	<MudText Typo="Typo.h6" Class="mt-4 mb-2">Voci Intervento</MudText>
 
 	<MudTable Items="Manutenzione.VociIntervento" Dense="true" Hover="true" Elevation="0">
@@ -24,22 +33,72 @@
 			<MudTh>Prezzo (€)</MudTh>
 		</HeaderContent>
 		<RowTemplate Context="voce">
-			<MudTd>
-				<MudTextField @bind-Value="voce.Descrizione" Placeholder="Descrizione" Dense="true" />
-			</MudTd>
-			<MudTd>
-				<MudNumericField T="decimal?" @bind-Value="voce.Costo" Immediate="true" Placeholder="€" Dense="true" Adornment="Adornment.End" AdornmentText="€"/>
-			</MudTd>
-			<MudTd Class="text-end">
-					<MudButton Color="Color.Error" Size="Size.Small" Disabled="@(!formManutenzione.IsValid || !VoceInterventoValida || !PrimaVoceValida)" OnClick="() => ConfermaEliminazioneVoceAsync(voce)">
-					<MudIcon Icon="@Icons.Material.Filled.Delete" Class="me-1" />Elimina voce
-				</MudButton>
-			</MudTd>
-		</RowTemplate>
+    <MudTd>
+        <MudSlideTransition>
+            @if (voce.TipoIntervento == TipoInterventoEnum.AltraVoce)
+            {
+                <MudStack>
+                    <MudTextField T="string"
+                                  Label="Descrizione personalizzata"
+                                  @bind-Value="voce.Descrizione"
+                                  Dense="true"
+                                  Placeholder="Inserisci descrizione" />
+
+                    <MudButton Variant="Variant.Text"
+                               StartIcon="@Icons.Material.Filled.ArrowBack"
+                               Color="Color.Secondary"
+                               Size="Size.Small"
+                               Class="mt-1"
+                               OnClick="@(() => voce.TipoIntervento = null)">
+                        Torna alla selezione standard
+                    </MudButton>
+                </MudStack>
+            }
+            else
+            {
+                <MudStack>
+                    <MudSelect T="TipoInterventoEnum?" Label="Tipo intervento"
+                               @bind-Value="voce.TipoIntervento"
+                               Clearable="true"
+                               Dense="true">
+
+                        @foreach (var tipo in Enum.GetValues<TipoInterventoEnum>()
+                                                 .OrderBy(t => t.GetDisplayName()))
+                        {
+                            <MudSelectItem T="TipoInterventoEnum?" Value="tipo">@tipo.GetDisplayName()</MudSelectItem>
+                        }
+                    </MudSelect>
+
+                    <MudText Typo="Typo.caption" Class="mt-1 text-secondary">
+                        Oppure seleziona "Altra voce" per una descrizione personalizzata
+                    </MudText>
+                </MudStack>
+            }
+        </MudSlideTransition>
+    </MudTd>
+
+    <MudTd>
+        <MudTextField T="decimal?" @bind-Value="voce.Costo"
+                      Immediate="true"
+                      Placeholder="€"
+                      Dense="true"
+                      Adornment="Adornment.End"
+                      AdornmentText="€" />
+    </MudTd>
+
+    <MudTd Class="text-end">
+        <MudButton Color="Color.Error"
+                   Size="Size.Small"
+                   OnClick="() => ConfermaEliminazioneVoceAsync(voce)">
+            <MudIcon Icon="@Icons.Material.Filled.Delete" Class="me-1" /> Elimina voce
+        </MudButton>
+    </MudTd>
+</RowTemplate>
 	</MudTable>
-	<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2"
-				   Disabled="@(!formManutenzione.IsValid || !VoceInterventoValida || !PrimaVoceValida )" OnClick="AggiungiVoce">
-		Aggiungi Voce Intervento
+		<!-- da controllare formManutenzione.IsValid -->
+	<MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-2" 
+				OnClick="AggiungiVoce">
+				Aggiungi Voce Intervento
 	</MudButton>
 	<!-- Bottoni -->
 		<MudDivider Class="my-4" />
@@ -92,6 +151,11 @@
 	// === Proprietà calcolata: veicolo attualmente selezionato ===
 	private Veicolo? VeicoloCorrente => veicoli.FirstOrDefault(v => v.Id == Manutenzione.VeicoloId);
 
+	private DateTime? DataInteventoSelezionata
+	{
+		get => Manutenzione.Data;
+		set => Manutenzione.Data = value ?? DateTime.Today; // se null, imposta oggi
+	}
 	/* ---------- CICLO VITA ----------------------------------- */
 	protected override async Task OnInitializedAsync()
 	{
@@ -100,10 +164,18 @@
 		{
 			Manutenzione.VociIntervento = new List<VoceIntervento>();
 		}
+		// Se ci sono voci salvate, inizializza TipoIntervento da Descrizione
+		foreach (var voce in Manutenzione.VociIntervento)
+		{
+			voce.InitializeTipoInterventoFromDescrizione();
+		}
 		if (Manutenzione.VociIntervento.Count == 0)
 		{
-			Manutenzione.VociIntervento.Add(new VoceIntervento());
+			Manutenzione.VociIntervento.Add(new VoceIntervento{Costo = 0});
 		}
+		// Se è una nuova manutenzione, inizializza la data a oggi (può essere modificata dall'utente)
+		if (Manutenzione.Id == 0)
+			Manutenzione.Data = DateTime.Today;
 	}
 	protected override void OnParametersSet()
 	{
@@ -143,6 +215,9 @@
 	{
 		try
 		{
+			// Calcola il costo totale
+			Manutenzione.Costo = Manutenzione.VociIntervento.Sum(v => v.Costo ?? 0);
+
 			if (Manutenzione.Id == 0)
 				await RepositoryManager.For<Manutenzione>().AddAsync(Manutenzione);
 			else

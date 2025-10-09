@@ -1,33 +1,20 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">CarDesk</a>
-    </div>
-</div>
+﻿<MudNavMenu>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">
+        Home
+    </MudNavLink>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+    <MudNavLink Href="veicoli" Icon="@Icons.Material.Filled.DirectionsCar">
+        Veicoli
+    </MudNavLink>
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="veicoli">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Veicoli
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="proprietari">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Proprietari
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="manutenzioni">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Manutenzioni
-            </NavLink>
-        </div>
-        
-    </nav>
-</div>
+    <MudNavLink Href="proprietari" Icon="@Icons.Material.Filled.Person">
+        Proprietari
+    </MudNavLink>
+
+    <MudNavLink Href="manutenzioni" Icon="@Icons.Material.Filled.Build">
+        Manutenzioni
+    </MudNavLink>
+    <MudNavLink Href="scadenze" Icon="@Icons.Material.Filled.Alarm">
+        Scadenze
+    </MudNavLink>
+</MudNavMenu>

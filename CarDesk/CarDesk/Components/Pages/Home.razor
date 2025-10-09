@@ -6,76 +6,68 @@
 @inject CarDesk.Data.Services.OpenMeteoService MeteoService
 @using CarDesk.Data.Models
 
-<MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+<MudContainer Class="dashboard-container">
 
-    @* ====== LOADING ====== *@
+    <MudText Typo="Typo.h4" Class="dashboard-text-h4">Dashboard</MudText>
+
     @if (isLoading)
     {
-        <MudStack  JustifyContent="Center" Class="mt-6">
-            <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-            <MudText Typo="Typo.subtitle2" Class="mt-2">Caricamento dati…</MudText>
-        </MudStack>
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" Class="mt-6" />
     }
     else
     {
-        @* ====== KPI CARDS ====== *@
-        <MudGrid Spacing="3" Justify="Justify.Center" AlignItems="Align.Center">
+        <!-- ALERT -->
+        <MudGrid Class="dashboard-grid" Spacing="3">
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Elevation="0" Class="dashboard-alert">
+                    Benvenuto in CarDesk! Questa dashboard ti offre una panoramica rapida dei veicoli, manutenzioni e proprietari registrati nel sistema.
+                    Clicca sulle schede per esplorare i dettagli.
+                </MudAlert>
+            </MudItem>
+        </MudGrid>
+
+        <!-- KPI CARDS -->
+        <div class="kpi-cards-wrapper">
             @foreach (var card in KpiCards)
             {
-                <MudItem xs="12" sm="6" lg="3">
-                    <MudPaper Elevation="6"
-                              Rounded="true"
-                              Class="pa-4 hover-lift kpi-card"
-                              Style="min-height:160px; cursor:pointer;"
-                              @onclick="() => NavigateToCard(card.Label)">
-                        <MudStack Spacing="1" JustifyContent="Center">
-                            <MudAvatar Icon="@card.Icon" Size="Size.Large" Color="@card.Color" />
-                            <MudText Typo="Typo.h4" Class="mt-2">@card.Value</MudText>
-                            <MudText Typo="Typo.subtitle2">@card.Label</MudText>
-
-                            @if (!string.IsNullOrEmpty(card.ExtraInfo))
-                            {
-                                <MudTooltip Text="@card.ExtraInfo">
-                                    <MudBadge Content="'i'" Color="Color.Secondary" Class="mt-1" />
-                                </MudTooltip>
-                            }
-                        </MudStack>
-                    </MudPaper>
-                </MudItem>
-            }
-        </MudGrid>
-        @* ====== METEO CARD ====== *@
-        @* @if (weather is not null)
-        {
-            <MudItem xs="12" sm="6" lg="3">
-                <MudPaper Elevation="6"
-                          Rounded="true"
-                          Class="pa-4 hover-lift kpi-card"
-                          Style="min-height:160px">
-                    <MudStack Spacing="1" JustifyContent="Center">
-                        <MudText Typo="Typo.subtitle1">Meteo</MudText>
-                        <MudText Typo="Typo.h4">@weather.TemperatureC&nbsp;°C</MudText>
-                        <MudText Typo="Typo.body2">@weather.Condition</MudText>
-                        <MudText Typo="Typo.caption">💨 @weather.WindSpeedKmh km/h</MudText>
-                    </MudStack>
+                <MudPaper Class="@($"kpi-card {card.CssClass}")" Elevation="6" @onclick="@(() => NavigateToCard(card.Label))">
+                    <MudIcon Icon="@card.Icon" Size="Size.Large" Color="@card.Color" />
+                    <MudText Typo="Typo.body2" Class="mt-2">@card.Label</MudText>
+                    <MudText Typo="Typo.h3" Class="fw-bold">@card.Value</MudText>
+                    @if (!string.IsNullOrEmpty(card.ExtraInfo))
+                    {
+                        <MudText Typo="Typo.caption">@card.ExtraInfo</MudText>
+                    }
                 </MudPaper>
-            </MudItem>
-        } *@
-        @* ====== CHART ====== *@
-        @* <MudPaper Class="pa-4 mt-6" Elevation="6" Rounded="true">
-            <MudText Typo="Typo.h6" Class="mb-2">Costo manutenzioni (ultimi 6 mesi)</MudText>
-            <MudChart ChartType="ChartType.Bar"
-                      Labels="@CostLabels"
-                      Datasets="@CostSeries"
-                      Animate="true" />
-        </MudPaper> *@
+            }
+        </div>
+
+        <!-- METEO -->
+        @if (weather is not null)
+        {
+            <MudPaper Class="dashboard-weather" Elevation="6">
+                <MudIcon Icon="@Icons.Material.Filled.WbSunny" Size="Size.Large" Color="Color.Warning" />
+                <MudText Typo="Typo.body2" Class="mt-2">Meteo</MudText>
+                <MudText Typo="Typo.h3" Class="fw-bold">@($"{weather.TemperatureC}°C")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">@weather.Description</MudText>
+            </MudPaper>
+        }
+
+        <!-- CHART -->
+        <MudPaper Class="dashboard-chart" Elevation="6">
+            <MudText Typo="Typo.h6" GutterBottom="true">Costo manutenzioni (anno corrente @DateTime.Now.Year)</MudText>
+            <MudChart ChartType="ChartType.Line"
+                      ChartSeries="@Series"
+                      XAxisLabels="@XAxisLabels"
+                      ChartOptions="options"
+                      Width="100%"
+                      Height="350" />
+        </MudPaper>
     }
 </MudContainer>
 
 
-
 @code {
-    /* ---------- MODELLI ---------- */
     class KpiCard
     {
         public string Label { get; set; } = "";
@@ -83,110 +75,75 @@
         public string Icon { get; set; } = "";
         public Color Color { get; set; }
         public string? ExtraInfo { get; set; }
+        public string CssClass { get; set; } = "";
     }
 
-    /* ---------- STATE ---------- */
     private bool isLoading = true;
     private List<KpiCard> KpiCards = new();
     private WeatherInfo? weather;
-
-    /* ---------- DATI DAL REPO ---------- */
     private List<Veicolo>? veicoli;
     private List<Proprietario>? proprietari;
     private List<Manutenzione>? manutenzioni;
+    private List<Scadenza>? scadenze;
 
-    // /* ---------- CHART DATA ---------- */
-    private string[] CostLabels = Array.Empty<string>();
-    private List<ChartSeries> CostSeries = new();
+    private List<ChartSeries> Series = new();
+    private string[] XAxisLabels = Array.Empty<string>();
+    private ChartOptions options = new ChartOptions();
 
-    /* ---------- CICLO VITA ---------- */
     protected override async Task OnInitializedAsync()
     {
         await CaricaDatiAsync();
         CreaKpiCards();
-
-        // >>> nuovo: carico il meteo (Torino di esempio)
-        // weather = await MeteoService.GetCurrentWeatherAsync(45.07, 7.69);
-        
         PreparaChart();
         isLoading = false;
     }
 
-    /* ---------- METODI ---------- */
     private async Task CaricaDatiAsync()
     {
         var datiIniziali = await RepositoryManager.CaricaDatiInizialiAsync();
         veicoli = datiIniziali.Veicoli;
         proprietari = datiIniziali.Proprietari;
-		manutenzioni = datiIniziali.Manutenzioni;
+        manutenzioni = datiIniziali.Manutenzioni;
+        //scadenze = datiIniziali.Scadenze;
     }
 
     private void CreaKpiCards()
     {
-        var prossimi30 = manutenzioni?
-                         .Count(x => x.Data <= DateTime.Today.AddDays(30)) ?? 0;
+        var prossimi30 = manutenzioni?.Count(x => x.Data <= DateTime.Today.AddDays(30)) ?? 0;
 
         KpiCards = new()
         {
-            new KpiCard
-            {
-                Label = "Veicoli Totali",
-                Value = (veicoli?.Count ?? 0).ToString(),
-                Icon  = Icons.Material.Filled.DirectionsCar,
-                Color = Color.Primary,
-                ExtraInfo = "Numero complessivo di veicoli registrati"
-            },
-            new KpiCard
-            {
-                Label = "Interventi Imminenti",
-                Value = prossimi30.ToString(),
-                Icon  = Icons.Material.Filled.Schedule,
-                Color = Color.Warning,
-                ExtraInfo = "Manutenzioni entro i prossimi 30 giorni"
-            },
-            new KpiCard
-            {
-                Label = "Proprietari Censiti",
-                Value = (proprietari?.Count ?? 0).ToString(),
-                Icon  = Icons.Material.Filled.Person,
-                Color = Color.Success,
-                ExtraInfo = "Totale proprietari registrati"
-            }
+            new KpiCard { Label = "Veicoli Totali", Value = (veicoli?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.DirectionsCar, CssClass = "veicoli"/*, ExtraInfo = "Numero complessivo di veicoli registrati"*/ },
+            new KpiCard { Label = "Interventi", Value = prossimi30.ToString(), Icon  = Icons.Material.Filled.Schedule, CssClass = "interventi" /*, ExtraInfo = "Manutenzioni entro i prossimi 30 giorni" */},
+            new KpiCard { Label = "Proprietari Censiti", Value = (proprietari?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Person, CssClass = "proprietari"/*, ExtraInfo = "Totale proprietari registrati" */}
+            //new KpiCard { Label = "Scadenze", Value = (scadenze?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Alarm, CssClass = "scadenze"/*, ExtraInfo = "Riepilogo scadenze registrate" */}
         };
     }
 
     private void PreparaChart()
     {
-        // Costi manutenzione ultimi 6 mesi (esempio mock se non hai dati)
-        var dataByMonth = manutenzioni?
-       .Where(m => m.Data >= DateTime.Today.AddMonths(-6))
-       .GroupBy(m => new { m.Data.Year, m.Data.Month })
-       .OrderBy(g => g.Key.Year).ThenBy(g => g.Key.Month)
-       .Select(g => new
-       {
-           Label = new DateTime(g.Key.Year, g.Key.Month, 1).ToString("MMM"),
-           Totale = g.Sum(m => (double)m.Costo)          // cast decimal→double
-       }).ToList() ?? new();
+        options.InterpolationOption = InterpolationOption.Straight;
+        options.YAxisFormat = "c2";
 
-        // se non hai manutenzioni, mock
-        if (!dataByMonth.Any())
-        {
-            dataByMonth = Enumerable.Range(0, 6)
-            .Select(i => new
-            {
-                Label = DateTime.Today.AddMonths(-5 + i).ToString("MMM"),
-                Totale = 0d
-            }).ToList();
-        }
+        int year = DateTime.Today.Year;
+        var manutenzioniByVeicolo = manutenzioni?
+            .Where(m => m.Data.Year == year)
+            .GroupBy(m => m.VeicoloId)
+            .ToList() ?? new();
 
-        CostLabels = dataByMonth.Select(x => x.Label).ToArray();
-        CostSeries = [
-        new ChartSeries
+        foreach (var gruppo in manutenzioniByVeicolo)
         {
-            Name = "Spesa €",
-            Data = dataByMonth.Select(x => x.Totale).ToArray()
+            var byMonth = gruppo
+                          .GroupBy(m => m.Data.Month)
+                          .ToDictionary(g => g.Key, g => g.Sum(x => (double)x.Costo));
+
+            var data = Enumerable.Range(1, 12)
+                       .Select(m => byMonth.ContainsKey(m) ? byMonth[m] : 0d)
+                       .ToArray();
+
+            var nomeVeicolo = gruppo.First().Veicolo?.Modello ?? $"Veicolo {gruppo.Key}";
+            Series.Add(new ChartSeries { Name = nomeVeicolo, Data = data });
         }
-        ];
     }
 
     private void NavigateToCard(string label)
@@ -194,8 +151,9 @@
         switch (label)
         {
             case "Veicoli Totali": Navigation.NavigateTo("/veicoli"); break;
-            case "Interventi Imminenti": Navigation.NavigateTo("/manutenzioni"); break;
+            case "Interventi": Navigation.NavigateTo("/manutenzioni"); break;
             case "Proprietari Censiti": Navigation.NavigateTo("/proprietari"); break;
+           // case "Scadenze": Navigation.NavigateTo("/scadenze"); break;
         }
     }
 }

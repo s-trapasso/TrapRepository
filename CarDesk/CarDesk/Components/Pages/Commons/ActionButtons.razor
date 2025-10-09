@@ -1,0 +1,39 @@
+﻿<MudStack Direction="Row" Spacing="1">
+    @if (OnEdit.HasDelegate)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                       Color="Color.Primary"
+                       OnClick="OnEdit"
+                       Title="Modifica" />
+    }
+
+    @if (OnDelete.HasDelegate)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                       Color="Color.Error"
+                       OnClick="OnDelete"
+                       Title="Elimina" />
+    }
+
+    @if (OnAdd.HasDelegate)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Add"
+                       Color="Color.Success"
+                       OnClick="OnAdd"
+                       Title="Aggiungi" />
+    }
+    @if (OnDetail.HasDelegate)
+    {
+        <MudIconButton Icon="@Icons.Material.Filled.Info"
+                       Color="Color.Secondary"
+                       OnClick="OnDetail"
+                       Title="Dettaglio" />
+    }
+</MudStack>
+
+@code {
+    [Parameter] public EventCallback OnEdit { get; set; }
+    [Parameter] public EventCallback OnDelete { get; set; }
+    [Parameter] public EventCallback OnAdd { get; set; }
+    [Parameter] public EventCallback OnDetail{ get; set; }
+}

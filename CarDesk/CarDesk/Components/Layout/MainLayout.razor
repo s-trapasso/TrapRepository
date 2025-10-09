@@ -1,12 +1,12 @@
 ﻿@inherits LayoutComponentBase
 @using MudBlazor
 
-<MudThemeProvider />
+<MudThemeProvider Theme="myTheme" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 <MudPopoverProvider />
 
-
+@* 
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -22,3 +22,56 @@
         </article>
     </main>
 </div>
+ *@
+<MudLayout>
+    <!--Sidebar-->
+
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="1" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive">
+        <NavMenu />
+    </MudDrawer>
+    <!-- Contenuto principale -->
+    <MudMainContent>
+        <!-- Top bar -->
+        <MudAppBar Elevation="4" Color="Color.Primary">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToogleDrawer"></MudIconButton>
+            <MudText Typo="Typo.h6" Class="ml-2">CarDesk Manager</MudText>
+        </MudAppBar>
+        <!-- Corpo della pagina -->
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+
+@code {
+    private bool _drawerOpen = true;
+    private void ToogleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+
+    private MudTheme myTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = Colors.Blue.Darken3,
+            Secondary = Colors.Orange.Accent3,
+            AppbarBackground = Colors.Blue.Darken4,
+            DrawerBackground = Colors.Gray.Lighten4,
+            Background = Colors.Gray.Lighten5,
+            Surface = Colors.Shades.White,
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = Colors.Blue.Lighten2,
+            Secondary = Colors.Orange.Lighten2,
+            AppbarBackground = Colors.Blue.Darken4,
+            DrawerBackground = Colors.Gray.Darken3,
+            Background = Colors.Gray.Darken4,
+            Surface = Colors.Gray.Darken2,
+        }
+    };
+
+}

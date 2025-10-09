@@ -1,0 +1,85 @@
+﻿@using MudBlazor
+@inject IDialogService DialogService
+
+
+<MudDialog>
+    <DialogContent>
+
+        <MudText Typo="Typo.h5" Class="mb-4">@Proprietario.Nome @Proprietario.Cognome</MudText>
+
+        <MudGrid GutterSize="3">
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Codice Fiscale</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.CodiceFiscale</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Numero Patente</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.NumeroPatente</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Indirizzo</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.Indirizzo</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Luogo di nascita</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.LuogoNascita</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Data di nascita</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.DataNascita?.ToString("dd/MM/yyyy")</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Data rilascio patente</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.DataRilascioPatente?.ToString("dd/MM/yyyy")</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Data scadenza patente</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.DataScadenzaPatente?.ToString("dd/MM/yyyy")</MudText>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCard Class="pa-3">
+                    <MudText Typo="Typo.subtitle2" Class="text-secondary mb-1">Categoria patente</MudText>
+                    <MudText Typo="Typo.body1">@Proprietario.CategoriaPatente</MudText>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+
+        <MudDivider Class="my-4" />
+
+        <MudStack Direction="Row" Spacing="2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="CloseDialog">Chiudi</MudButton>
+        </MudStack>
+
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter] public Proprietario Proprietario { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private void CloseDialog()
+    {
+        MudDialog.Close();
+    }
+}

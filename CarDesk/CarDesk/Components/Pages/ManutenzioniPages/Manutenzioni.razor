@@ -4,45 +4,57 @@
 @inject ILoggingService<Manutenzione> Log
 @inject IDialogService DialogService
 
-<MudPaper Class="pa-4">
-    @if(veicoli?.Count > 0)
+<MudPaper Class="page-container">
+
+    <div class="page-header">
+        <MudText Typo="Typo.h5">Gestione Manutenzioni</MudText>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   Disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
+                   OnClick="@(() => Nav.NavigateTo($"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))">
+            Nuovo intervento
+        </MudButton>
+    </div>
+
+    @if (veicoli?.Count > 0)
     {
-        <MudStack Spacing="2">
-            <MudSelect T="int" Label="Veicolo" @bind-Value="VeicoloIdSelezionato" Dense="true">
-                <MudSelectItem Value="-1">-- Seleziona veicolo --</MudSelectItem>
-                @foreach (var v in veicoli)
-                {
-                    <MudSelectItem value="@v.Id">@v.Targa (@v.Marca @v.Modello)</MudSelectItem>
-                }
-                <MudSelectItem Value="0">Nuovo veicolo…</MudSelectItem>
-            </MudSelect>
-            <MudButton Variant="Variant.Filled" Disabled="@(veicoli?.Count == 0 || VeicoloIdSelezionatoBacking <= 0)"
-                       OnClick="@(() => Nav.NavigateTo($"/manutenzioni/nuovo/{VeicoloIdSelezionatoBacking}"))">
-                Nuovo intervento
-            </MudButton>
-        </MudStack>
+        <MudSelect T="int" Label="Veicolo" @bind-Value="VeicoloIdSelezionato" Dense="true" Class="mb-4">
+            <MudSelectItem Value="-1">-- Seleziona veicolo --</MudSelectItem>
+            @foreach (var v in veicoli)
+            {
+                <MudSelectItem Value="@v.Id">@v.Targa (@v.Marca @v.Modello)</MudSelectItem>
+            }
+            <MudSelectItem Value="0">Nuovo veicolo…</MudSelectItem>
+        </MudSelect>
     }
     else
     {
-        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
-            Nessun veicolo registrato. <MudLink Href="/veicoli/nuovo"><b>Aggiungine uno</b></MudLink>
+        <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="page-alert">
+            Nessun veicolo registrato.
+            <MudLink Href="/veicoli/nuovo"><b>Aggiungine uno</b></MudLink>
             per poter inserire una manutenzione.
         </MudAlert>
     }
+
     <MudDivider Class="my-4" />
+
     <!-- === Elenco manutenzioni filtrato ================================ -->
     @if (manutenzioniFiltrate is null)
     {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+        <div class="page-loading">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+            <MudText>Caricamento...</MudText>
+        </div>
     }
     else if (VeicoloIdSelezionatoBacking > 0 && manutenzioniFiltrate.Count == 0)
     {
-        <MudText>Nessun intervento trovato per il veicolo selezionato</MudText>
+        <MudAlert Severity="Severity.Info" Class="page-alert">
+            Nessun intervento trovato per il veicolo selezionato.
+        </MudAlert>
     }
     else if (manutenzioniFiltrate.Count > 0)
     {
-        <MudText Typo ="Typo.h5" Class="mb-2">Elenco Interventi di manutenzione</MudText>
-        <MudTable Items="manutenzioniFiltrate" Hover="true">
+        <MudText Typo="Typo.h6" Class="mb-2">Elenco Interventi di manutenzione</MudText>
+        <MudTable Items="manutenzioniFiltrate" Hover="true" Dense="true" Striped="true" Class="page-table">
             <HeaderContent>
                 <MudTh>Data intervento</MudTh>
                 <MudTh>Targa del veicolo</MudTh>
@@ -54,10 +66,8 @@
                 <MudTd>@context.Veicolo?.Targa</MudTd>
                 <MudTd>@context.CostoTotale</MudTd>
                 <MudTd>
-                    <MudButton Size="Size.Small" OnClick="() => GoToModifica(context.Id)" StartIcon="@Icons.Material.Filled.Edit"></MudButton>
-                    <MudButton Color="Color.Error" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete"
-                               OnClick="() => ConfermaEliminazioneAsync(context)">                        
-                    </MudButton>
+                    <ActionButtons OnEdit="() => GoToModifica(context.Id)"
+                                   OnDelete="() => ConfermaEliminazioneAsync(context)" />
                 </MudTd>
             </RowTemplate>
         </MudTable>

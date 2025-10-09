@@ -5,59 +5,57 @@
 @inject ILoggingService<Proprietari> Log
 @inject IDialogService DialogService
 
-<MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5" Class="mb-4">Elenco proprietari</MudText>
+<MudPaper Class="page-container">
 
-    <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
-               OnClick="@(() => Nav.NavigateTo("/proprietari/nuovo"))">
-        Nuovo Proprietario
-    </MudButton>
+    <div class="page-header">
+        <MudText Typo="Typo.h5">Elenco Proprietari</MudText>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="@(() => Nav.NavigateTo("/proprietari/nuovo"))">
+            Nuovo Proprietario
+        </MudButton>
+    </div>
+
     @if (proprietari == null)
     {
-        <MudProgressCircular Indeterminate="true" Color="Color.Primary">Caricamento...</MudProgressCircular>
+        <div class="page-loading">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+            <MudText>Caricamento...</MudText>
+        </div>
     }
     else if (!proprietari.Any())
     {
-        <MudAlert Severity="Severity.Info" Elevation="0" Class="mt-4">Nessun proprietario registrato.</MudAlert>
+        <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">
+            Nessun proprietario registrato.
+        </MudAlert>
     }
     else
     {
-        <MudTable Items="proprietari" Hover="true" Dense="true" Striped="true" Class="mt-4">
+        <MudTable Items="proprietari"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  Class="page-table">
             <HeaderContent>
                 <MudTh>Nome</MudTh>
                 <MudTh>Cognome</MudTh>
-                <MudTh>Indirizzo</MudTh>
-                <MudTh>Data di nascita</MudTh>
-                <MudTh>Luogo di nascita</MudTh>
                 <MudTh>Codice Fiscale</MudTh>
-                <MudTh>N° Patente</MudTh>
-                <MudTh>Data di rilascio</MudTh>
-                <MudTh>Data di scadenza</MudTh>
-                <MudTh>Categoria patente</MudTh>
+                <MudTh>Azioni</MudTh>
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Nome">@context.Nome</MudTd>
                 <MudTd DataLabel="Cognome">@context.Cognome</MudTd>
-                <MudTd DataLabel="Indirizzo">@context.Indirizzo</MudTd>
-                <MudTd DataLabel="Data di nascita">@context.DataNascita?.ToString("dd/MM/yyyy")</MudTd>
-                <MudTd DataLabel="Luogo di nascita">@context.LuogoNascita</MudTd>
-                <MudTd DataLabel="CodiceFiscale">@context.CodiceFiscale</MudTd>
-                <MudTd DataLabel="NumeroPatente">@context.NumeroPatente</MudTd>
-                <MudTd DataLabel="DataRilascioPatente">@context.DataRilascioPatente?.ToString("dd/MM/yyyy")</MudTd>
-                <MudTd DataLabel="DataScadenzaPatente">@context.DataScadenzaPatente?.ToString("dd/MM/yyyy")</MudTd>
-                <MudTd DataLabel="Catorie di Patente">@context.CategoriaPatente</MudTd>
+                <MudTd DataLabel="Codice Fiscale">@context.CodiceFiscale</MudTd>
                 <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary"
-                                   OnClick="@(() => Nav.NavigateTo($"/proprietari/edit/{context.Id}"))" />
-                </MudTd>
-                <MudTd>
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error"
-                                   OnClick="@(() => ConfermaEliminazioneProprietarioAsync(context))" />
+                    <ActionButtons OnEdit="@(() => Nav.NavigateTo($"/proprietari/edit/{context.Id}"))"
+                                   OnDelete="@(() => ConfermaEliminazioneProprietarioAsync(context))"
+                                   OnDetail="@(() => MostraDettaglio(context))" />
                 </MudTd>
             </RowTemplate>
         </MudTable>
     }
 </MudPaper>
+
 @code {
     private List<Veicolo>? veicoli;
     private List<Proprietario>? proprietari;
@@ -74,6 +72,14 @@
         proprietari = datiIniziali.Proprietari;
         manutenzioni = datiIniziali.Manutenzioni;
     }
+
+    private async Task MostraDettaglio(Proprietario p)
+    {
+        var parameters = new DialogParameters { ["Proprietario"] = p };
+        var options = new DialogOptions { CloseOnEscapeKey = true, MaxWidth = MaxWidth.Medium };
+        await DialogService.ShowAsync<ProprietarioDetailDialog>("Dettaglio Proprietario", parameters, options);
+    }
+
 
     /* ---------- ELIMINAZIONE DELLA MANUTENZIONE ---------- */
     private async Task ConfermaEliminazioneProprietarioAsync(Proprietario proprietario)
