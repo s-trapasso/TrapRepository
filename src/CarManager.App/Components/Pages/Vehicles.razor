@@ -1,0 +1,71 @@
+﻿@page "/vehicles"
+@using CarManager.App.Models.Vehicle
+@using CarManager.App.Services.Interfaces
+
+
+@inject IVehicleApiClient VehicleApiClient
+
+<h3>Elenco Veicoli</h3>
+@if (_isLoading)
+{
+    <p>Caricamento veicoli...</p>
+}
+else if(!string.IsNullOrEmpty(_errorMessage))
+{
+    <p style="color:red">@_errorMessage</p>
+}
+else if (_vehicles is null || !_vehicles.Any())
+{
+    <p>Nessun veicolo trovato.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Targa</th>
+                <th>Marca</th>
+                <th>Modello</th>
+                <th>Anno</th>
+                <th>Alimentazione</th>
+                <th>KM</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var vehicle in _vehicles)
+            {
+                <tr>
+                    <td>@vehicle.Plate</td>
+                    <td>@vehicle.Brand</td>
+                    <td>@vehicle.Model</td>
+                    <td>@vehicle.Year</td>
+                    <td>@vehicle.FuelType</td>
+                    <td>@vehicle.Km</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<VehicleModel>? _vehicles;
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _vehicles = (await VehicleApiClient.GetAllVehiclesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore durante il caricamento dei veicoli: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

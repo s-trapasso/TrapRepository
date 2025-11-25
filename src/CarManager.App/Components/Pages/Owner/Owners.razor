@@ -1,0 +1,72 @@
+﻿@page "/owners"
+@using CarManager.App.Models.Owners
+@using CarManager.App.Services.Interfaces
+@inject IOwnerApiClient OwnerApiClient
+
+<h3>Elenco Proprietari</h3>
+@if (_isLoading)
+{
+    <p>Caricamento proprietari...</p>
+}
+else if(!string.IsNullOrEmpty(_errorMessage))
+{
+    <p style="color:red">@_errorMessage</p>
+}
+else if (_owners is null || !_owners.Any())
+{
+    <p>Nessun proprietario trovato.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Cognome</th>
+                <th>Indirizzo</th>
+                <th>Data di nascita</th>
+                <th>Luogo di Nascita</th>
+                <th>Sesso</th>
+                <th>Codice Fiscale</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var owners in _owners)
+            {
+                <tr>
+                    <td>@owners.FirstName</td>
+                    <td>@owners.LastName</td>
+                    <td>@owners.Address</td>
+                    <td>@owners.BirthDate</td>
+                    <td>@owners.BirthPlace</td>
+                    <td>@owners.Gender</td>
+                    <td>@owners.FiscalCode</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private List<OwnerModel>? _owners;
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _owners = (await OwnerApiClient.GetAllOwnersAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore durante il caricamento dei proprietari: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}
+

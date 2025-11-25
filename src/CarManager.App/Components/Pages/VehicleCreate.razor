@@ -1,0 +1,94 @@
+﻿@page "/vehicles/create"
+@using CarManager.App.Models.Vehicle
+@using CarManager.App.Services.Interfaces
+
+@using CarManager.Core.Enum
+@inject IVehicleApiClient VehicleApiClient
+@inject NavigationManager Nav
+
+
+<h3>Nuovo Veicolo</h3>
+<EditForm Model="_newVehicle" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <div class="mb-3">
+        <label class="form-label">Targa</label>
+        <InputText class="form-control" @bind-Value="_newVehicle.Plate"/>
+        <ValidationMessage For="@(() => _newVehicle.Plate)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Marca</label>
+        <InputText class="form-control" @bind-Value="_newVehicle.Brand"/>
+        <ValidationMessage For="@(() => _newVehicle.Brand)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Modello</label>
+        <InputText class="form-control" @bind-Value="_newVehicle.Model"/>
+        <ValidationMessage For="@(() => _newVehicle.Model)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Anno</label>
+        <InputNumber class="form-control" @bind-Value="_newVehicle.Year"/>
+        <ValidationMessage For="@(() => _newVehicle.Year)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Alimentazione</label>
+        <InputSelect class="form-select" @bind-Value="_newVehicle.FuelType">
+            @foreach (var fuel in Enum.GetValues<FuelTypeEnum>())
+            {
+                <option value="@fuel">@fuel</option>
+            }
+        </InputSelect>
+        <ValidationMessage For="@(() => _newVehicle.FuelType)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Km</label>
+        <InputNumber class="form-control" @bind-Value="_newVehicle.Km" />
+        <ValidationMessage For="@(() => _newVehicle.Km)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit" disabled="@_isSaving">
+        @(_isSaving ? "Salvataggio..." : "Salva")
+    </button>
+
+    <button class="btn btn-secondary ms-2" type="button" @onclick="GoBack">
+        Annulla
+    </button>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <p class="text-danger mt-2">@_errorMessage</p>
+    }
+</EditForm>
+@code {
+    private VehicleCreateModel _newVehicle = new();
+    private bool _isSaving = false;
+    private string? _errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        try
+        {
+            // Call the API to create the new vehicle
+            var created = await VehicleApiClient.CreateVehicleAsync(_newVehicle);
+            // Optionally, navigate to the vehicle list or show a success message
+            Nav.NavigateTo("/vehicles");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Errore durante la creazione del veicolo: " + ex.Message;
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+    
+    private void GoBack()
+    {
+        Nav.NavigateTo("/vehicles");
+    }
+}

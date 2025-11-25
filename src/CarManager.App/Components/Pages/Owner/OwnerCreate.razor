@@ -1,0 +1,94 @@
+﻿@page "/owners/create"
+@using CarManager.App.Models.Owners
+@using CarManager.App.Services.Interfaces
+
+@inject IOwnerApiClient OwnerApiClient
+@inject NavigationManager Nav
+
+<h3>Nuovo Proprietario</h3>
+
+
+<EditForm Model="_newOwner" OnValidSubmit="HandleValidSubmit">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+    <div class="mb-3">
+        <label class="form-label">Nome</label>
+        <InputText class="form-control" @bind-Value="_newOwner.FirstName"/>
+        <ValidationMessage For="@(() => _newOwner.FirstName)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Cognome</label>
+        <InputText class="form-control" @bind-Value="_newOwner.LastName"/>
+        <ValidationMessage For="@(() => _newOwner.LastName)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Indirizzo</label>
+        <InputText class="form-control" @bind-Value="_newOwner.Address"/>
+        <ValidationMessage For="@(() => _newOwner.Address)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Data di nascita</label>
+        <InputDate class="form-control" @bind-Value="_newOwner.BirthDate"/>
+        <ValidationMessage For="@(() => _newOwner.BirthDate)"/>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Luogo di nascita</label>
+        <InputText class="form-select" @bind-Value="_newOwner.BirthPlace"/>
+        <ValidationMessage For="@(() => _newOwner.BirthPlace)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Sesso</label>
+        <InputText class="form-control" @bind-Value="_newOwner.Gender" />
+        <ValidationMessage For="@(() => _newOwner.Gender)" />
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Codice fiscale</label>
+        <InputText class="form-control" @bind-Value="_newOwner.FiscalCode" />
+        <ValidationMessage For="@(() => _newOwner.FiscalCode)" />
+    </div>
+
+    <button class="btn btn-primary" type="submit" disabled="@_isSaving">
+        @(_isSaving ? "Salvataggio..." : "Salva")
+    </button>
+
+    <button class="btn btn-secondary ms-2" type="button" @onclick="GoBack">
+        Annulla
+    </button>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <p class="text-danger mt-2">@_errorMessage</p>
+    }
+</EditForm>
+@code {
+    private OwnerCreateModel _newOwner = new();
+    private bool _isSaving = false;
+    private string? _errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+        try
+        {
+            // Call the API to create the new owner
+            var created = await OwnerApiClient.CreateOwnerAsync(_newOwner);
+            // Optionally, navigate to the owners list or show a success message
+            Nav.NavigateTo("/owners");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Errore durante la creazione del proprietario: " + ex.Message;
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+    
+    private void GoBack()
+    {
+        Nav.NavigateTo("/owners");
+    }
+}
