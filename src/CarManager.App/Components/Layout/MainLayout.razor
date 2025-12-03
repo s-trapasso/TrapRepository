@@ -1,17 +1,58 @@
 ﻿@inherits LayoutComponentBase
+@using MudBlazor
 
-<div class="page">
-    <div class="sidebar">
+<MudThemeProvider Theme="myTheme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudLayout>
+
+    <!-- Menu laterale -->
+    <MudDrawer @bind-Open="_drawerOpen" Variant="DrawerVariant.Responsive" Anchor="Anchor.Start" Elevation="4" Width="260px">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6">Menu</MudText>
+        </MudDrawerHeader>
         <NavMenu />
-    </div>
+    </MudDrawer>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+    <!-- Contenuto principale -->
+    <MudMainContent>
+        <!-- Barra in alto -->
+        <MudAppBar Elevation="4">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+            <MudText Typo="Typo.h6" Class="ms-2"> Trap Car Manager </MudText>
+        </MudAppBar>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pa-6"> @Body </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+@code {
+    private bool _drawerOpen = false;
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+    private MudTheme myTheme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = Colors.Blue.Darken3,
+            Secondary = Colors.Orange.Accent3,
+            AppbarBackground = Colors.Blue.Darken4,
+            DrawerBackground = Colors.Gray.Lighten4,
+            Background = Colors.Gray.Lighten5,
+            Surface = Colors.Shades.White,
+        },
+        PaletteDark = new PaletteDark()
+        {
+            Primary = Colors.Blue.Lighten2,
+            Secondary = Colors.Orange.Lighten2,
+            AppbarBackground = Colors.Blue.Darken4,
+            DrawerBackground = Colors.Gray.Darken3,
+            Background = Colors.Gray.Darken4,
+            Surface = Colors.Gray.Darken2,
+        }
+    };
+}

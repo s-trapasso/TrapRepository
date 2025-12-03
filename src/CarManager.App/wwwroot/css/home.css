@@ -1,0 +1,142 @@
+﻿/* ---------- CONTAINER PRINCIPALE ---------- */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .dashboard-container {
+        padding: 16px;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 576px) {
+    .dashboard-container {
+        padding: 12px;
+    }
+}
+
+/* ---------- TESTI ---------- */
+.dashboard-text-h4 {
+    margin-bottom: 24px;
+}
+
+.dashboard-text-h6 {
+    margin-bottom: 16px;
+}
+
+/* ---------- ALERT ---------- */
+.dashboard-alert {
+    padding: 16px;
+    font-size: 0.95rem;
+    margin-bottom: 32px; /* 👈 spazio sotto l’alert */
+}
+
+/* ---------- KPI CARDS WRAPPER ---------- */
+.kpi-cards-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center; /* centra le card */
+    align-items: flex-start;
+    margin-bottom: 24px;
+}
+
+    .kpi-cards-wrapper .kpi-card {
+        flex: 1 1 250px; /* larghezza minima 250px, cresce se c'è spazio */
+        max-width: 300px;
+        border-radius: 20px;
+        padding: 24px;
+        cursor: pointer;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out, background 0.3s ease;
+    }
+
+        /* Hover effect */
+        .kpi-cards-wrapper .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.25);
+        }
+
+/* Colori specifici */
+.kpi-card.veicoli {
+    background-color: #1976d2;
+}
+
+    .kpi-card.veicoli:hover {
+        background-color: #1565c0;
+    }
+
+.kpi-card.interventi {
+    background-color: #f57c00;
+}
+
+    .kpi-card.interventi:hover {
+        background-color: #e65100;
+    }
+
+.kpi-card.proprietari {
+    background-color: #388e3c;
+}
+
+    .kpi-card.proprietari:hover {
+        background-color: #2e7d32;
+    }
+
+/* Icone grandi */
+.kpi-card i, .kpi-card .mud-icon-root {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: white;
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+    .kpi-cards-wrapper .kpi-card {
+        flex: 1 1 45%;
+    }
+}
+
+/* Smartphone */
+@media (max-width: 576px) {
+    .kpi-cards-wrapper .kpi-card {
+        flex: 1 1 100%;
+    }
+}
+
+/* ---------- METEO ---------- */
+.dashboard-weather {
+    border-radius: 20px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    margin-bottom: 24px;
+}
+
+    .dashboard-weather:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+    }
+
+/* ---------- CHART ---------- */
+.dashboard-chart {
+    border-radius: 20px;
+    padding: 24px;
+    transition: box-shadow 0.2s ease-in-out;
+}
+
+    .dashboard-chart:hover {
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }

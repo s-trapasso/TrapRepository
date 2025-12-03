@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Logging;
-using CarManager.App.Services.Implementations;
+﻿using CarManager.App.Services.Implementations;
 using CarManager.App.Services.Interfaces;
+using Microsoft.Extensions.Logging;
+using MudBlazor.Services;
 
 namespace CarManager.App
 {
@@ -17,9 +18,10 @@ namespace CarManager.App
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddMudServices();
 
 #if DEBUG
-    		builder.Services.AddBlazorWebViewDeveloperTools();
+            builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();
 #endif
             builder.Services.AddHttpClient<IVehicleApiClient,VehicleApiClient>(client =>
