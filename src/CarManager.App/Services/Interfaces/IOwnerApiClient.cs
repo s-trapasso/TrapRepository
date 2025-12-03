@@ -1,4 +1,4 @@
-﻿using CarManager.App.Models.Owners;
+﻿using CarManager.App.Models.Owner;
 using System;
 using System.Collections.Generic;
 using System.Linq;

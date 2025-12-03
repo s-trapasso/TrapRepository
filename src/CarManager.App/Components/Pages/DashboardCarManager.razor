@@ -1,12 +1,142 @@
 ﻿@page "/"
-
+@using CarManager.App.Models.Owner
+@using CarManager.App.Models.Vehicle
 @using MudBlazor
+@using CarManager.App.Services.Interfaces
+@inject IVehicleApiClient VehicleApiClient
+@inject IOwnerApiClient OwnerApiClient
+@inject NavigationManager Navigation
 
-<MudPaper Class="p-4">
+@* <MudPaper Class="p-4">
     <MudText Typo="Typo.h4" GutterBottom="true" Class="dashboard-text-h4">
         Benvenuto in Trap Car Manager
     </MudText>
     <MudText Class="dashboard-text-h6">
         Seleziona una voce dal menu per iniziare.
     </MudText>
-</MudPaper>
+</MudPaper> *@
+
+<MudContainer Class="dashboard-container" MaxWidth="MaxWidth.Large">
+    <!-- Layout verticale generale -->
+    <MudStack Spacing="3">
+        <!--TITOLO PRINCIPALE-->
+        <MudPaper Class="p-4">
+            <MudText Typo="Typo.h4" GutterBottom="true" Class="dashboard-text-h4">
+                Benvenuto in Trap Car Manager
+            </MudText>
+            <MudText Class="dashboard-text-h6">
+                Seleziona una voce dal menu per iniziare.
+            </MudText>
+        </MudPaper>
+        @if(isLoading)
+        {
+            <MudStack AlignItems="AlignItems.Center" JustifyContent="JustifyContent.Center" Class="mt-6">
+                <MudProgressCircular Size="Size.Large"
+                                     Indeterminate="true"
+                                     Color="Color.Primary" />
+            </MudStack>
+        }
+        else
+        {
+            <!-- ALERT -->
+            <MudAlert Severity="Severity.Info" Elevation="0" Variant="Variant.Filled">
+                Questa è una versione demo di Trap Car Manager. Alcune funzionalità potrebbero essere
+                limitate o non funzionare come previsto.
+            </MudAlert>
+
+
+            <!--KPI CARD-->
+            <MudGrid Spacing="3">
+                @foreach(var card in KpiCards)
+                {
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <MudPaper Class="@($"kpi-card {card.CssClass}")" Elevation="6" Style="cursor:pointer; padding:16px"
+                                  @onclick="@(() => NavigateToCard(card.Label))">
+                            <MudIcon Icon="@card.Icon" Size="Size.Large" Color="@card.Color"></MudIcon>
+                            <MudText Typo="Typo.body2" Class="mt-2">@card.Label</MudText>
+                            <MudText Typo="Typo.h3" Class="fw-bold">@card.Value</MudText>
+                            @if (!string.IsNullOrEmpty(card.ExtraInfo))
+                            {
+                                <MudText Typo="Typo.caption">
+                                    @card.ExtraInfo
+                                </MudText>
+                            }
+                        </MudPaper>
+                        
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+
+    //Proprietà e campi
+    private bool isLoading { get; set; } = true;
+    private List<KpiCard> KpiCards = new();
+    private List<VehicleModel>? veicoli;
+    private List<OwnerModel>? proprietari;
+    private string _errorMessage = string.Empty;
+    //Classe per le KPI cards
+    class KpiCard
+    {
+        public string Label { get; set; } = "";
+        public string Value { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public Color Color { get; set; }
+        public string? ExtraInfo { get; set; }
+        public string CssClass { get; set; } = "";
+    }
+
+    //Metodi
+    protected override async Task OnInitializedAsync()
+    {
+        await CaricaDatiAsync();
+        CreaKpiCards();
+        // PreparaChart();
+        isLoading = false;
+    }
+
+    //Metodo per creare le KPI cards
+    private void CreaKpiCards()
+    {
+        KpiCards = new()
+        {
+            new KpiCard { Label = "Veicoli Totali", Value = (veicoli?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.DirectionsCar, CssClass = "veicoli"/*, ExtraInfo = "Numero complessivo di veicoli registrati"*/ },
+            //new KpiCard { Label = "Interventi", Value = prossimi30.ToString(), Icon  = Icons.Material.Filled.Schedule, CssClass = "interventi" /*, ExtraInfo = "Manutenzioni entro i prossimi 30 giorni" */},
+            new KpiCard { Label = "Proprietari Censiti", Value = (proprietari?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Person, CssClass = "proprietari"/*, ExtraInfo = "Totale proprietari registrati" */}
+            //new KpiCard { Label = "Scadenze", Value = (scadenze?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Alarm, CssClass = "scadenze"/*, ExtraInfo = "Riepilogo scadenze registrate" */}
+        };
+    }
+
+    //Metodo per caricare i dati (simulato)
+    private async Task CaricaDatiAsync()
+    {
+        try
+        {
+            veicoli = (await VehicleApiClient.GetAllVehiclesAsync()).ToList();
+            proprietari = (await OwnerApiClient.GetAllOwnersAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore durante il caricamento dei veicoli/proprietari: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    //Metodo per navigare a una pagina specifica
+    private void NavigateToCard(string label)
+    {
+        switch (label)
+        {
+            case "Veicoli Totali": Navigation.NavigateTo("/vehicles"); break;
+            // case "Interventi": Navigation.NavigateTo("/manutenzioni"); break;
+            case "Proprietari Censiti": Navigation.NavigateTo("/owners"); break;
+                // case "Scadenze": Navigation.NavigateTo("/scadenze"); break;
+        }
+    }
+}

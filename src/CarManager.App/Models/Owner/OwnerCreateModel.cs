@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarManager.App.Models.Owners
+namespace CarManager.App.Models.Owner
 {
     public class OwnerCreateModel
     {

@@ -1,4 +1,4 @@
-﻿using CarManager.App.Models.Owners;
+﻿using CarManager.App.Models.Owner;
 using CarManager.App.Services.Interfaces;
 using System;
 using System.Collections.Generic;
