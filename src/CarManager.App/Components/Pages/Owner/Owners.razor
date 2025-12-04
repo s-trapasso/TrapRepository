@@ -2,50 +2,80 @@
 @using CarManager.App.Models.Owner
 @using CarManager.App.Services.Interfaces
 @inject IOwnerApiClient OwnerApiClient
+@inject NavigationManager Nav
 
-<h3>Elenco Proprietari</h3>
-@if (_isLoading)
-{
-    <p>Caricamento proprietari...</p>
-}
-else if(!string.IsNullOrEmpty(_errorMessage))
-{
-    <p style="color:red">@_errorMessage</p>
-}
-else if (_owners is null || !_owners.Any())
-{
-    <p>Nessun proprietario trovato.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Nome</th>
-                <th>Cognome</th>
-                <th>Indirizzo</th>
-                <th>Data di nascita</th>
-                <th>Luogo di Nascita</th>
-                <th>Sesso</th>
-                <th>Codice Fiscale</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var owners in _owners)
-            {
-                <tr>
-                    <td>@owners.FirstName</td>
-                    <td>@owners.LastName</td>
-                    <td>@owners.Address</td>
-                    <td>@owners.BirthDate</td>
-                    <td>@owners.BirthPlace</td>
-                    <td>@owners.Gender</td>
-                    <td>@owners.FiscalCode</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+
+<MudContainer>
+    <MudPaper Class="p-4 mb-4">
+
+        <!-- HEADER: titolo + descrizione al centro -->
+        <MudStack Direction="Row"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Class="mb-3">
+
+            <!-- blocco testo -->
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4" Class="dashboard-text-h4">
+                    Elenco Proprietari
+                </MudText>
+                <MudText Class="dashboard-text-h4">
+                    Visualizza tutti i proprietari registrati nel sistema.
+                </MudText>
+            </MudStack>
+
+            <!-- bottone al centro -->
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/owners/create"))">
+                Nuovo proprietario
+            </MudButton>
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-6">
+                <MudProgressCircular Size="Size.Large"
+                                     Indeterminate="true"
+                                     Color="Color.Primary" />
+                <MudText Typo="Typo.body1">Caricamento...</MudText>
+            </MudStack>
+        }
+        else if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">@_errorMessage</MudAlert>
+        }
+        else if (_owners is null || !_owners.Any())
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">Nessun proprietario trovato.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_owners" Hover="true" Dense="true" Striped="true" Class="page-table">
+                <HeaderContent>
+                    <MudTh>Nome</MudTh>
+                    <MudTh>Cognome</MudTh>
+                    <MudTh>Indirizzo</MudTh>
+                    <MudTh>Data di nascita</MudTh>
+                    <MudTh>Luogo di Nascita</MudTh>
+                    <MudTh>Sesso</MudTh>
+                    <MudTh>Codice Fiscale</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Nome">@context.FirstName</MudTd>
+                    <MudTd DataLabel="Cognome">@context.LastName</MudTd>
+                    <MudTd DataLabel="Indirizzo">@context.Address</MudTd>
+                    <MudTd DataLabel="Data di nascita">@context.BirthDate</MudTd>
+                    <MudTd DataLabel="Luogo di Nascita">@context.BirthPlace</MudTd>
+                    <MudTd DataLabel="Sesso">@context.Gender</MudTd>
+                    <MudTd DataLabel="Codice Fiscale">@context.FiscalCode</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    </MudPaper>
+</MudContainer>
 
 @code {
 

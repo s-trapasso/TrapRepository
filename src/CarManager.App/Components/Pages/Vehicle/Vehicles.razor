@@ -1,51 +1,79 @@
 ﻿@page "/vehicles"
 @using CarManager.App.Models.Vehicle
 @using CarManager.App.Services.Interfaces
-
-
 @inject IVehicleApiClient VehicleApiClient
+@inject NavigationManager Nav
 
-<h3>Elenco Veicoli</h3>
-@if (_isLoading)
-{
-    <p>Caricamento veicoli...</p>
-}
-else if(!string.IsNullOrEmpty(_errorMessage))
-{
-    <p style="color:red">@_errorMessage</p>
-}
-else if (_vehicles is null || !_vehicles.Any())
-{
-    <p>Nessun veicolo trovato.</p>
-}
-else
-{
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Targa</th>
-                <th>Marca</th>
-                <th>Modello</th>
-                <th>Anno</th>
-                <th>Alimentazione</th>
-                <th>KM</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var vehicle in _vehicles)
-            {
-                <tr>
-                    <td>@vehicle.Plate</td>
-                    <td>@vehicle.Brand</td>
-                    <td>@vehicle.Model</td>
-                    <td>@vehicle.Year</td>
-                    <td>@vehicle.FuelType</td>
-                    <td>@vehicle.Km</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+<MudContainer>
+    <MudPaper Class="p-4 mb-4">
+
+        <!-- HEADER: titolo + descrizione al centro -->
+        <MudStack Direction="Row"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Class="mb-3">
+
+            <!-- blocco testo -->
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4" Class="dashboard-text-h4">
+                    Elenco Veicoli
+                </MudText>
+                <MudText Class="dashboard-text-h4">
+                    Visualizza tutti i veicoli registrati nel sistema.
+                </MudText>
+            </MudStack>
+
+            <!-- bottone al centro -->
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/vehicles/create"))">
+                Nuovo veicolo
+            </MudButton>
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-6">
+                <MudProgressCircular Size="Size.Large"
+                                     Indeterminate="true"
+                                     Color="Color.Primary" />
+                <MudText Typo="Typo.body1">Caricamento...</MudText>
+            </MudStack>
+        }
+        else if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">@_errorMessage</MudAlert>
+        }
+        else if (_vehicles is null || !_vehicles.Any())
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">Nessun veicolo trovato.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_vehicles" Hover="true" Dense="true" Striped="true" Class="page-table">
+                <HeaderContent>
+                    <MudTh>Targa</MudTh>
+                    <MudTh>Marca</MudTh>
+                    <MudTh>Modello</MudTh>
+                    <MudTh>Anno</MudTh>
+                    <MudTh>Alimentazione</MudTh>
+                    <MudTh>KM</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Targa">@context.Plate</MudTd>
+                    <MudTd DataLabel="Marca">@context.Brand</MudTd>
+                    <MudTd DataLabel="Modello">@context.Model</MudTd>
+                    <MudTd DataLabel="Anno">@context.Year</MudTd>
+                    <MudTd DataLabel="Alimentazione">@context.FuelType</MudTd>
+                    <MudTd DataLabel="KM">@context.Km</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    </MudPaper>
+</MudContainer>
+
 
 @code {
 
