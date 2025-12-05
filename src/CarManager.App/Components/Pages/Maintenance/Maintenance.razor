@@ -1,0 +1,105 @@
+﻿@page "/maintenances"
+@using CarManager.App.Models.Maintenance
+@using CarManager.App.Services.Interfaces
+@inject IMaintenanceApiClient MaintenanceApiClient
+@inject NavigationManager Nav
+
+
+
+<MudContainer>
+    <MudPaper Class="p-4 mb-4">
+
+        <!-- HEADER: titolo + descrizione al centro -->
+        <MudStack Direction="Row"
+                  Justify="Justify.SpaceBetween"
+                  AlignItems="AlignItems.Center"
+                  Class="mb-3">
+
+            <!-- blocco testo -->
+            <MudStack Spacing="0">
+                <MudText Typo="Typo.h4" Class="dashboard-text-h4">
+                    Elenco Manutenzioni
+                </MudText>
+                <MudText Class="dashboard-text-h4">
+                    Visualizza tutte le manutenzioni registrate nel sistema.
+                </MudText>
+            </MudStack>
+
+            <!-- bottone al centro -->
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="@(() => Nav.NavigateTo("/maintenances/create"))">
+                Nuova manutenzione
+            </MudButton>
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="mt-6">
+                <MudProgressCircular Size="Size.Large"
+                                     Indeterminate="true"
+                                     Color="Color.Primary" />
+                <MudText Typo="Typo.body1">Caricamento...</MudText>
+            </MudStack>
+        }
+        else if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">@_errorMessage</MudAlert>
+        }
+        else if (_maintenances is null || !_maintenances.Any())
+        {
+            <MudAlert Severity="Severity.Info" Elevation="0" Class="page-alert">Nessuna manutenzione trovata.</MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_maintenances" Hover="true" Dense="true" Striped="true" Class="page-table">
+                <HeaderContent>
+                    <MudTh>Targa</MudTh>
+                    <MudTh>Data</MudTh>
+                    <MudTh>Tipo</MudTh>
+                    <MudTh>DEscrizione</MudTh>
+                    <MudTh>Costo</MudTh>
+                    <MudTh>KM</MudTh>
+                    <MudTh>Officina</MudTh>
+                    <MudTh>Note</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Targa">@context.VehiclePlate</MudTd>
+                    <MudTd DataLabel="Data">@context.Date</MudTd>
+                    <MudTd DataLabel="Tipo">@context.Type</MudTd>
+                    <MudTd DataLabel="DEscrizione">@context.Description</MudTd>
+                    <MudTd DataLabel="Costo">@context.Cost</MudTd>
+                    <MudTd DataLabel="KM">@context.Km</MudTd>
+                    <MudTd DataLabel="Officina">@context.Workshop</MudTd>
+                    <MudTd DataLabel="Note">@context.Notes</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+    </MudPaper>
+</MudContainer>
+
+
+@code {
+
+    private List<MaintenanceModel>? _maintenances;
+    private bool _isLoading = true;
+    private string _errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _maintenances = (await MaintenanceApiClient.GetAllMaintenancesAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Errore durante il caricamento delle manutenzioni: {ex.Message}";
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+}

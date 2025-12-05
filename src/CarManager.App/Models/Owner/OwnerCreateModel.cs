@@ -19,7 +19,7 @@ namespace CarManager.App.Models.Owner
         [StringLength(100)]
         public string Address { get; set; } = default!;
         [Required]
-        public DateTime BirthDate { get; set; }
+        public DateTime? BirthDate { get; set; }
         [Required]
         [StringLength(50)]
         public string BirthPlace { get; set; } = default!;

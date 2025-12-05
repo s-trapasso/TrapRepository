@@ -1,10 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 using CarManager.Api.Data;
+using Serilog;
+
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .Enrich.FromLogContext()
+    .Enrich.WithMachineName()
+    .Enrich.WithThreadId()
+    .WriteTo.Console()
+    .WriteTo.File("logs/api-.log", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
+builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -22,6 +32,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+app.UseSerilogRequestLogging(); // log automatico delle richieste
 
 app.UseHttpsRedirection();
 

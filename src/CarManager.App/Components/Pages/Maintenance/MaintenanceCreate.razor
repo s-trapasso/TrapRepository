@@ -1,0 +1,174 @@
+﻿@page "/maintenances/create"
+@using CarManager.App.Models.Maintenance
+@using CarManager.App.Models.Vehicle
+@using CarManager.App.Services.Interfaces
+@inject IMaintenanceApiClient MaintenanceApiClient
+@inject IVehicleApiClient VehicleApiClient
+@inject NavigationManager Nav
+
+
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudPaper Class="p-4">
+        <MudText Typo="Typo.h4" GutterBottom="true">Nuova Manutenzione</MudText>
+
+        <MudForm @ref="_form">
+            <MudGrid Spacing="3">
+
+                <!-- TARGA -->
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="int"
+                               Label="Veicolo (targa)"
+                               @bind-Value="_newMaintenance.VehicleId"
+                               Required="true"
+                               For="@(() => _newMaintenance.VehicleId)">
+                        <MudSelectItem Value="0" Disabled="true">
+                            -- Seleziona un veicolo --
+                        </MudSelectItem>
+
+                        @foreach (var v in _vehicles)
+                        {
+                            <MudSelectItem Value="@v.Id">
+                                @v.Plate (@v.Brand @v.Model)
+                            </MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- TIPO -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Tipo di manutenzione"
+                                  @bind-Value="_newMaintenance.Type"
+                                  Required="true"
+                                  For="@(() => _newMaintenance.Type)" />
+                </MudItem>
+
+                <!-- DESCRIZIONE -->
+                <MudItem xs="12">
+                    <MudTextField Label="Descrizione"
+                                  @bind-Value="_newMaintenance.Description"
+                                  For="@(() => _newMaintenance.Description)" />
+                </MudItem>
+
+                <!-- DATA --> 
+                <MudItem xs="12" sm="6"> 
+                    <MudDatePicker Label="Data intervento" 
+                        Required="true" 
+                        DateFormat="dd-MM-yyyy" 
+                        ShowToolbar="true" 
+                        PickerVariant="PickerVariant.Inline" 
+                        Class="mb-4" @bind-Date="DataInteventoSelezionata"> 
+                    </MudDatePicker> 
+                </MudItem>
+                <!-- COSTO -->
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="decimal?"
+                                     Label="Costo totale"
+                                     @bind-Value="_newMaintenance.Cost"
+                                     For="@(() => _newMaintenance.Cost)" />
+                </MudItem>
+
+                <!-- KM -->
+                <MudItem xs="12" sm="6">
+                    <MudNumericField T="int?"
+                                     Label="Km"
+                                     @bind-Value="_newMaintenance.Km"
+                                     For="@(() => _newMaintenance.Km)" />
+                </MudItem>
+
+                <!-- OFFICINA -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Officina"
+                                  @bind-Value="_newMaintenance.Workshop"
+                                  For="@(() => _newMaintenance.Workshop)" />
+                </MudItem>
+
+                <!-- NOTE -->
+                <MudItem xs="12">
+                    <MudTextField Label="Note"
+                                  @bind-Value="_newMaintenance.Notes"
+                                  For="@(() => _newMaintenance.Notes)"
+                                  Lines="3"
+                                  TextArea="true" />
+                </MudItem>
+
+                <!-- BUTTONS -->
+                <MudItem xs="12">
+                    <MudStack Direction="Row" Spacing="2">
+                        <MudButton OnClick="HandleValidSubmit"
+                                   Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   Disabled="@_isSaving">
+                            @(_isSaving ? "Salvataggio..." : "Salva")
+                        </MudButton>
+
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   OnClick="GoBack">
+                            Annulla
+                        </MudButton>
+                    </MudStack>
+                </MudItem>
+
+            </MudGrid>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-3">
+                    @_errorMessage
+                </MudAlert>
+            }
+
+        </MudForm>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private MudForm? _form;
+    private MaintenanceCreateModel _newMaintenance = new();
+    private bool _isSaving = false;
+    private string? _errorMessage;
+
+    private List<VehicleModel> _vehicles = new();
+    private DateTime? DataInteventoSelezionata { get => _newMaintenance.Date; set => _newMaintenance.Date = value ?? DateTime.Today; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _vehicles = (await VehicleApiClient.GetAllVehiclesAsync()).ToList();
+
+        _newMaintenance.Date = DateTime.Today;
+        _newMaintenance.VehicleId = 0; // default → "nessun veicolo"
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        _isSaving = true;
+        _errorMessage = null;
+
+        try
+        {
+            // 1) Validazione esplicita
+            await _form!.Validate();
+            if (!_form.IsValid)
+            {
+                _isSaving = false;
+                return;
+            }
+
+            // 2) Chiamata API
+            await MaintenanceApiClient.CreateMaintenanceAsync(_newMaintenance);
+
+            // 3) Navigate alla lista
+            Nav.NavigateTo("/maintenances");
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = "Errore durante la creazione: " + ex.Message;
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void GoBack() => Nav.NavigateTo("/maintenances");
+}

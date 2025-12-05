@@ -11,10 +11,11 @@ namespace CarManager.Api.Controllers;
 public class VehiclesController : ControllerBase
 {
     private readonly CarManagerDbContext _db;
-
-    public VehiclesController(CarManagerDbContext db)
+    private readonly ILogger<VehiclesController> _logger;
+    public VehiclesController(CarManagerDbContext db, ILogger<VehiclesController> logger)
     {
         _db = db;
+        _logger = logger;
     }
 
     // GET: api/vehicles
@@ -50,6 +51,7 @@ public class VehiclesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     public async Task<ActionResult<VehicleDTO>> Create([FromBody] CreateVehicleDTO dto)
     {
+        _logger.LogInformation("Creazione nuovo veicolo");
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
@@ -67,7 +69,7 @@ public class VehiclesController : ControllerBase
         await _db.SaveChangesAsync();
 
         var result = vehicle.ToDto();
-
+        _logger.LogInformation("Veicolo {Id} creato correttamente", vehicle.Id);
         return CreatedAtAction(nameof(GetById), new { id = vehicle.Id }, result);
     }
 

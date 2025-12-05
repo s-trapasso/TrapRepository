@@ -1,20 +1,13 @@
 ﻿@page "/"
+@using CarManager.App.Models.Maintenance
 @using CarManager.App.Models.Owner
 @using CarManager.App.Models.Vehicle
-@using MudBlazor
 @using CarManager.App.Services.Interfaces
 @inject IVehicleApiClient VehicleApiClient
 @inject IOwnerApiClient OwnerApiClient
+@inject IMaintenanceApiClient MaintenanceApiClient
 @inject NavigationManager Navigation
-
-@* <MudPaper Class="p-4">
-    <MudText Typo="Typo.h4" GutterBottom="true" Class="dashboard-text-h4">
-        Benvenuto in Trap Car Manager
-    </MudText>
-    <MudText Class="dashboard-text-h6">
-        Seleziona una voce dal menu per iniziare.
-    </MudText>
-</MudPaper> *@
+@inject ILogger<DashboardCarManager> Logger
 
 <MudContainer Class="dashboard-container" MaxWidth="MaxWidth.Large">
     <!-- Layout verticale generale -->
@@ -77,6 +70,7 @@
     private List<KpiCard> KpiCards = new();
     private List<VehicleModel>? veicoli;
     private List<OwnerModel>? proprietari;
+    private List<MaintenanceModel>? manutenzioni;
     private string _errorMessage = string.Empty;
     //Classe per le KPI cards
     class KpiCard
@@ -92,6 +86,7 @@
     //Metodi
     protected override async Task OnInitializedAsync()
     {
+        Logger.LogInformation("Pagina Dashboard inizializzata");
         await CaricaDatiAsync();
         CreaKpiCards();
         // PreparaChart();
@@ -104,7 +99,7 @@
         KpiCards = new()
         {
             new KpiCard { Label = "Veicoli Totali", Value = (veicoli?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.DirectionsCar, CssClass = "veicoli"/*, ExtraInfo = "Numero complessivo di veicoli registrati"*/ },
-            //new KpiCard { Label = "Interventi", Value = prossimi30.ToString(), Icon  = Icons.Material.Filled.Schedule, CssClass = "interventi" /*, ExtraInfo = "Manutenzioni entro i prossimi 30 giorni" */},
+            new KpiCard { Label = "Interventi", Value = (manutenzioni?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Schedule, CssClass = "interventi" /*, ExtraInfo = "Manutenzioni entro i prossimi 30 giorni" */},
             new KpiCard { Label = "Proprietari Censiti", Value = (proprietari?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Person, CssClass = "proprietari"/*, ExtraInfo = "Totale proprietari registrati" */}
             //new KpiCard { Label = "Scadenze", Value = (scadenze?.Count ?? 0).ToString(), Icon  = Icons.Material.Filled.Alarm, CssClass = "scadenze"/*, ExtraInfo = "Riepilogo scadenze registrate" */}
         };
@@ -117,10 +112,11 @@
         {
             veicoli = (await VehicleApiClient.GetAllVehiclesAsync()).ToList();
             proprietari = (await OwnerApiClient.GetAllOwnersAsync()).ToList();
+            manutenzioni = (await MaintenanceApiClient.GetAllMaintenancesAsync()).ToList();
         }
         catch (Exception ex)
         {
-            _errorMessage = $"Errore durante il caricamento dei veicoli/proprietari: {ex.Message}";
+            _errorMessage = $"Errore durante il caricamento dei veicoli/proprietari/manutenzioni: {ex.Message}";
         }
         finally
         {
@@ -134,7 +130,7 @@
         switch (label)
         {
             case "Veicoli Totali": Navigation.NavigateTo("/vehicles"); break;
-            // case "Interventi": Navigation.NavigateTo("/manutenzioni"); break;
+            case "Interventi": Navigation.NavigateTo("/maintenances"); break;
             case "Proprietari Censiti": Navigation.NavigateTo("/owners"); break;
                 // case "Scadenze": Navigation.NavigateTo("/scadenze"); break;
         }

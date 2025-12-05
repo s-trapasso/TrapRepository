@@ -20,7 +20,7 @@ namespace CarManager.Core.Models
         public string BrandModel => $"{Brand} {Model}";
 
         //// Navigation Properties
-        //public ICollection<Manutenzione> Manutenzioni { get; set; } = new List<Manutenzione>();
+        public ICollection<Maintenance> Maintenance { get; set; } = new List<Maintenance>();
 
         //[Required(ErrorMessage ="Campo obbligatorio")]
         //public int ProprietarioId { get; set; }

@@ -5,63 +5,87 @@
 @inject IOwnerApiClient OwnerApiClient
 @inject NavigationManager Nav
 
-<h3>Nuovo Proprietario</h3>
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudPaper Class="p-4">
+        <MudText Typo="Typo.h4" GutterBottom="true">Crea Nuovo Proprietario</MudText>
+        <MudForm @ref="_ownerCreateForm">
+            <MudGrid Spacing="3">
+                <!-- NOME -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Targa"
+                                  @bind-Value="_newOwner.FirstName"
+                                  Required="true"
+                                  For="@(() => _newOwner.FirstName)" />
+                </MudItem>
+                <!-- COGNOME -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Cognome"
+                                  @bind-Value="_newOwner.LastName"
+                                  Required="true"
+                                  For="@(() => _newOwner.LastName)" />
+                </MudItem>
+                <!-- INDIRIZZO -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Indirizzo"
+                                  @bind-Value="_newOwner.Address"
+                                  Required="true"
+                                  For="@(() => _newOwner.Address)" />
+                </MudItem>
+                <!-- DATA DI NASCITA -->
+                <MudItem xs="12" sm="6">
+                    <MudDatePicker Label="Data di Nascita"
+                                   @bind-Date="_newOwner.BirthDate"
+                                   Required="true"
+                                   For="@(() => _newOwner.BirthDate)" />
+                </MudItem>
+                <!-- LUOGO DI NASCITA -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Luogo di Nascita"
+                                  @bind-Value="_newOwner.BirthPlace"
+                                  Required="true"
+                                  For="@(() => _newOwner.BirthPlace)" />
+                </MudItem>
+                <!-- SESSO -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Sesso"
+                                  @bind-Value="_newOwner.Gender"
+                                  Required="true"
+                                  For="@(() => _newOwner.Gender)"/>
+                </MudItem>
+                <!-- CODICE FISCALE -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Codice Fiscale"
+                                  @bind-Value="_newOwner.FiscalCode"
+                                  Required="true"
+                                  For="@(() => _newOwner.FiscalCode)" />
+                </MudItem>
+                <!--BUTTONS-->
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="HandleValidSubmit"
+                               Disabled="_isSaving">
+                        @(_isSaving ? "Salvataggio..." : "Salva")
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               Class="ms-2"
+                               OnClick="GoBack">
+                        Annulla
+                    </MudButton>
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <MudText Color="Color.Error" Class="mt-2">@_errorMessage</MudText>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
 
 
-<EditForm Model="_newOwner" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator/>
-    <ValidationSummary/>
-
-    <div class="mb-3">
-        <label class="form-label">Nome</label>
-        <InputText class="form-control" @bind-Value="_newOwner.FirstName"/>
-        <ValidationMessage For="@(() => _newOwner.FirstName)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Cognome</label>
-        <InputText class="form-control" @bind-Value="_newOwner.LastName"/>
-        <ValidationMessage For="@(() => _newOwner.LastName)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Indirizzo</label>
-        <InputText class="form-control" @bind-Value="_newOwner.Address"/>
-        <ValidationMessage For="@(() => _newOwner.Address)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Data di nascita</label>
-        <InputDate class="form-control" @bind-Value="_newOwner.BirthDate"/>
-        <ValidationMessage For="@(() => _newOwner.BirthDate)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Luogo di nascita</label>
-        <InputText class="form-select" @bind-Value="_newOwner.BirthPlace"/>
-        <ValidationMessage For="@(() => _newOwner.BirthPlace)" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Sesso</label>
-        <InputText class="form-control" @bind-Value="_newOwner.Gender" />
-        <ValidationMessage For="@(() => _newOwner.Gender)" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Codice fiscale</label>
-        <InputText class="form-control" @bind-Value="_newOwner.FiscalCode" />
-        <ValidationMessage For="@(() => _newOwner.FiscalCode)" />
-    </div>
-
-    <button class="btn btn-primary" type="submit" disabled="@_isSaving">
-        @(_isSaving ? "Salvataggio..." : "Salva")
-    </button>
-
-    <button class="btn btn-secondary ms-2" type="button" @onclick="GoBack">
-        Annulla
-    </button>
-
-    @if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <p class="text-danger mt-2">@_errorMessage</p>
-    }
-</EditForm>
 @code {
+    private MudForm? _ownerCreateForm;
     private OwnerCreateModel _newOwner = new();
     private bool _isSaving = false;
     private string? _errorMessage;
@@ -86,7 +110,7 @@
             _isSaving = false;
         }
     }
-    
+
     private void GoBack()
     {
         Nav.NavigateTo("/owners");

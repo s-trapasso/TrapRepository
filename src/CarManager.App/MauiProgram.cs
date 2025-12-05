@@ -19,6 +19,8 @@ namespace CarManager.App
 
             builder.Services.AddMauiBlazorWebView();
             builder.Services.AddMudServices();
+            builder.Logging.ClearProviders();
+            builder.Logging.AddDebug();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
@@ -32,7 +34,10 @@ namespace CarManager.App
             {
                 client.BaseAddress = new Uri("https://localhost:7260/");
             });
-
+            builder.Services.AddHttpClient<IMaintenanceApiClient, MaintenanceApiClient>(client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7260/");
+            });
             return builder.Build();
         }
     }

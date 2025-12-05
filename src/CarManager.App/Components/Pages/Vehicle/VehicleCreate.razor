@@ -7,61 +7,87 @@
 @inject NavigationManager Nav
 
 
-<h3>Nuovo Veicolo</h3>
-<EditForm Model="_newVehicle" OnValidSubmit="HandleValidSubmit">
-    <DataAnnotationsValidator/>
-    <ValidationSummary/>
+<MudContainer MaxWidth="MaxWidth.Medium">
+    <MudPaper Class="p-4">
+        <MudText Typo="Typo.h4" GutterBottom="true">Nuovo Veicolo</MudText>
+        <MudForm @ref="_newVehicleForm">
+            <MudGrid Spacing="3">
+                <!-- TARGA -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Targa"
+                                  @bind-Value="_newVehicle.Plate"
+                                  Required="true"
+                                  For="@(() => _newVehicle.Plate)" />
+                </MudItem>
+                <!-- MARCA -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Marca"
+                                  @bind-Value="_newVehicle.Brand"
+                                  Required="true"
+                                  For="@(() => _newVehicle.Brand)" />
+                </MudItem>
+                <!-- MODELLO -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Modello"
+                                  @bind-Value="_newVehicle.Model"
+                                  Required="true"
+                                  For="@(() => _newVehicle.Model)" />
+                </MudItem>
+                <!-- ANNO -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Anno"
+                                  @bind-Value="_newVehicle.Year"
+                                  Required="true"
+                                  For="@(() => _newVehicle.Year)" />
+                </MudItem>
+                <!-- ALIMENTAZIONE -->
+                <MudItem xs="12" sm="6">
+                    <MudSelect T="FuelTypeEnum"
+                               Label="Alimentazione"
+                               @bind-Value="_newVehicle.FuelType"
+                               Required="true"
+                               For="@(() => _newVehicle.FuelType)">
+                        @foreach (var fuel in Enum.GetValues<FuelTypeEnum>())
+                        {
+                            <MudSelectItem Value="@fuel">@fuel</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <!-- KM -->
+                <MudItem xs="12" sm="6">
+                    <MudTextField Label="Km"
+                                  @bind-Value="_newVehicle.Km"
+                                  Required="true"
+                                  For="@(() => _newVehicle.Km)" />
+                </MudItem>
 
-    <div class="mb-3">
-        <label class="form-label">Targa</label>
-        <InputText class="form-control" @bind-Value="_newVehicle.Plate"/>
-        <ValidationMessage For="@(() => _newVehicle.Plate)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Marca</label>
-        <InputText class="form-control" @bind-Value="_newVehicle.Brand"/>
-        <ValidationMessage For="@(() => _newVehicle.Brand)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Modello</label>
-        <InputText class="form-control" @bind-Value="_newVehicle.Model"/>
-        <ValidationMessage For="@(() => _newVehicle.Model)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Anno</label>
-        <InputNumber class="form-control" @bind-Value="_newVehicle.Year"/>
-        <ValidationMessage For="@(() => _newVehicle.Year)"/>
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Alimentazione</label>
-        <InputSelect class="form-select" @bind-Value="_newVehicle.FuelType">
-            @foreach (var fuel in Enum.GetValues<FuelTypeEnum>())
-            {
-                <option value="@fuel">@fuel</option>
-            }
-        </InputSelect>
-        <ValidationMessage For="@(() => _newVehicle.FuelType)" />
-    </div>
-    <div class="mb-3">
-        <label class="form-label">Km</label>
-        <InputNumber class="form-control" @bind-Value="_newVehicle.Km" />
-        <ValidationMessage For="@(() => _newVehicle.Km)" />
-    </div>
+                <!--BUTTONS-->
+                <MudItem xs="12">
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               OnClick="HandleValidSubmit"
+                               Disabled="_isSaving">
+                        @(_isSaving ? "Salvataggio..." : "Salva")
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Secondary"
+                               Class="ms-2"
+                               OnClick="GoBack">
+                        Annulla
+                    </MudButton>
+                    @if (!string.IsNullOrEmpty(_errorMessage))
+                    {
+                        <MudText Color="Color.Error" Class="mt-2">@_errorMessage</MudText>
+                    }
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </MudPaper>
+</MudContainer>
 
-    <button class="btn btn-primary" type="submit" disabled="@_isSaving">
-        @(_isSaving ? "Salvataggio..." : "Salva")
-    </button>
 
-    <button class="btn btn-secondary ms-2" type="button" @onclick="GoBack">
-        Annulla
-    </button>
-
-    @if (!string.IsNullOrEmpty(_errorMessage))
-    {
-        <p class="text-danger mt-2">@_errorMessage</p>
-    }
-</EditForm>
 @code {
+    private MudForm? _newVehicleForm;
     private VehicleCreateModel _newVehicle = new();
     private bool _isSaving = false;
     private string? _errorMessage;

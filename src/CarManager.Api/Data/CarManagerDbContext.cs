@@ -12,5 +12,6 @@ namespace CarManager.Api.Data
 
         public DbSet<Vehicle> Vehicles => Set<Vehicle>();
         public DbSet<Owner> Owners => Set<Owner>();
+        public DbSet<Maintenance> Maintenances => Set<Maintenance>();
     }
 }
