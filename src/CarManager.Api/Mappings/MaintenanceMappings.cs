@@ -1,4 +1,6 @@
-﻿using CarManager.Api.DTOs.MaintenanceDTO;
+﻿using CarManager.Api.DTOs;
+using CarManager.Api.DTOs.MaintenanceDTO;
+using CarManager.Core.Enum;
 using CarManager.Core.Models;
 
 namespace CarManager.Api.Mappings
@@ -40,6 +42,18 @@ namespace CarManager.Api.Mappings
             maintenance.Cost = dto.Cost;
             maintenance.Workshop = dto.Workshop;
             maintenance.Notes = dto.Notes;
+        }
+        public static Maintenance ToTireChangeEntity(this TireChangeDTO dto, TireType oldType)
+        {
+            return new Maintenance
+            {
+                VehicleId = dto.VehicleId,
+                Date = dto.Date,
+                MaintenanceType = MaintenanceType.CambioGomme,
+                Description = $"Cambio gomme {oldType} → {dto.NewTireType}",
+                Km = dto.Km,
+                Notes = dto.Notes
+            };
         }
     }
 }

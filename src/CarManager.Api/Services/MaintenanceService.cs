@@ -1,10 +1,12 @@
 ﻿using CarManager.Api;
 using CarManager.Api.Data;
+using CarManager.Api.DTOs;
 using CarManager.Api.DTOs.MaintenanceDTO;
 using CarManager.Api.DTOs.VehicleDTO;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enum;
+using CarManager.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +15,12 @@ namespace CarManager.Api.Services
     public class MaintenanceService : IMaintenanceService
     {
         private readonly CarManagerDbContext _db;
+        private readonly ILogger<MaintenanceService> _logger;
 
-        public MaintenanceService(CarManagerDbContext db)
+        public MaintenanceService(CarManagerDbContext db, ILogger<MaintenanceService> logger)
         {
             _db = db;
+            _logger = logger;
         }
 
         public async Task<List<MaintenanceDTO>> GetAllAsync()
@@ -87,6 +91,47 @@ namespace CarManager.Api.Services
 
             _db.Maintenances.Remove(entity);
             await _db.SaveChangesAsync();
+
+            return true;
+        }
+        public async Task<bool> RegisterTireChangeAsync(TireChangeDTO dto)
+        {
+            using var transaction = await _db.Database.BeginTransactionAsync();
+            var vehicle = await _db.Vehicles
+                .FirstOrDefaultAsync(v => v.Id == dto.VehicleId);
+
+            if (vehicle == null)
+            {
+                _logger.LogWarning("Vehicle {Id} not found for tire change", dto.VehicleId);
+                return false;
+            }
+
+            // 1. aggiorno stato veicolo
+            var oldType = vehicle.CurrentTireType;
+
+            vehicle.CurrentTireType = dto.NewTireType;
+            vehicle.LastTireChangeDate = dto.Date;
+
+            // 2. creo maintenance storica
+            var maintenance = new Maintenance
+            {
+                VehicleId = vehicle.Id,
+                Date = dto.Date,
+                MaintenanceType = MaintenanceType.CambioGomme,
+                Description = $"Cambio gomme {oldType} → {dto.NewTireType}",
+                Km = dto.Km,
+                Notes = dto.Notes
+            };
+
+            _db.Maintenances.Add(maintenance);
+
+            await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            _logger.LogInformation(
+                "Tire change for vehicle {Id}: {Old} → {New}",
+                vehicle.Id, oldType, dto.NewTireType
+            );
 
             return true;
         }

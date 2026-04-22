@@ -1,4 +1,5 @@
-﻿using CarManager.Api.DTOs.MaintenanceDTO;
+﻿using CarManager.Api.DTOs;
+using CarManager.Api.DTOs.MaintenanceDTO;
 
 
 namespace CarManager.Api.Services.Interfaces
@@ -14,5 +15,6 @@ namespace CarManager.Api.Services.Interfaces
         Task<(bool Success, string? Error)> UpdateAsync(int id, UpdateMaintenanceDTO dto);
 
         Task<bool> DeleteAsync(int id);
+        Task<bool> RegisterTireChangeAsync(TireChangeDTO dto);
     }
 }

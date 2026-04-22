@@ -22,6 +22,9 @@ namespace CarManager.Core.Models
         //// Navigation Properties
         public ICollection<Maintenance> Maintenance { get; set; } = new List<Maintenance>();
 
+        public TireType CurrentTireType { get; set; }
+        public DateTime? LastTireChangeDate { get; set; }
+
         //[Required(ErrorMessage ="Campo obbligatorio")]
         //public int ProprietarioId { get; set; }
 

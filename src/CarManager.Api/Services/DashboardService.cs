@@ -27,16 +27,25 @@ namespace CarManager.Api.Services
             var totalCost = await _db.Maintenances
                 .SumAsync(m => m.Cost ?? 0);
 
-            // 🛠 ultime manutenzioni
-            var lastMaintenances = await _db.Maintenances
+            // 🚗 costo manutenzioni per veicolo
+            var costByVehicle = await _db.Maintenances
                 .Include(m => m.Vehicle)
-                .OrderByDescending(m => m.Date)
-                .Take(5)
+                .GroupBy(m => new { m.VehicleId, m.Vehicle.Plate })
+                .Select(g => new
+                {
+                    VehicleId = g.Key.VehicleId,
+                    Plate = g.Key.Plate,
+                    TotalCost = g.Sum(x => x.Cost ?? 0)
+                })
+                .OrderByDescending(x => x.TotalCost)
                 .ToListAsync();
-
-            var lastMaintenancesDto = lastMaintenances
-                .Select(m => m.ToDto())
-                .ToList();
+             // 🛠 ultime manutenzioni
+             var lastMaintenances = await _db.Maintenances
+                 .Include(m => m.Vehicle)
+                 .OrderByDescending(m => m.Date)
+                 .Take(5)
+                 .Select(m => m.ToDto()) 
+                 .ToListAsync();
 
             // 🚗 veicoli senza manutenzione recente (ultimi 6 mesi)
             var recentVehicleIds = await _db.Maintenances
@@ -68,7 +77,7 @@ namespace CarManager.Api.Services
                 TotalOwners = totalOwners,
                 TotalMaintenances = totalMaintenances,
                 TotalMaintenanceCost = totalCost,
-                LastMaintenances = lastMaintenancesDto,
+                LastMaintenances = lastMaintenances,
                 VehiclesWithoutRecentMaintenance = vehiclesDto
             };
         }

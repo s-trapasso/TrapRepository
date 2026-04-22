@@ -6,13 +6,10 @@ using System.Threading.Tasks;
 
 namespace CarManager.Core.Enum
 {
-    public enum MaintenanceType
+    public enum TireType
     {
-        None = 0,
-        CambioOlio = 1,
-        CambioGomme = 2,
-        Freni = 3,
-        Revisione = 4,
-        Altro = 99
+        Estive = 0,
+        Invernali = 1,
+        AllSeason = 2
     }
 }
