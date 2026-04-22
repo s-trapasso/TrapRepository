@@ -1,5 +1,6 @@
 ﻿using CarManager.Core.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace CarManager.Api.Data
 {

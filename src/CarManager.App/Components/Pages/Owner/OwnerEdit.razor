@@ -1,0 +1,35 @@
+﻿@page "/owners/edit/{id:int}"
+@using CarManager.App.Components.MappingsUI
+@using CarManager.App.Models.Owner
+@using CarManager.App.Services.Interfaces
+@inject IOwnerApiClient OwnerApiClient
+@inject NavigationManager Nav
+
+<MudPaper Class="p-4">
+    <MudText Typo="Typo.h5">Modifica Proprietario</MudText>
+
+    <OwnerForm Model="_model"
+               SubmitText="Aggiorna"
+               OnSubmit="Update"
+               OnCancel="GoBack" />
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private OwnerCreateModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var owner = await OwnerApiClient.GetByIdAsync(Id);
+        _model = owner.ToCreateModel();
+    }
+
+    private async Task Update()
+    {
+        await OwnerApiClient.UpdateOwnerAsync(Id, _model);
+        Nav.NavigateTo("/owners");
+    }
+
+    private void GoBack() => Nav.NavigateTo("/owners");
+}

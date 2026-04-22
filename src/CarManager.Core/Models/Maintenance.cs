@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CarManager.Core.Enum;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CarManager.Core.Models
 {
@@ -17,13 +12,12 @@ namespace CarManager.Core.Models
 
         public DateTime Date { get; set; }
 
-        public string Type { get; set; } = string.Empty;
+        public MaintenanceType MaintenanceType { get; set; }
 
         public string? Description { get; set; }
 
         public int? Km { get; set; }
 
-        [Column(TypeName = "decimal(10,2)")]
         public decimal? Cost { get; set; }
 
         [MaxLength(150)]

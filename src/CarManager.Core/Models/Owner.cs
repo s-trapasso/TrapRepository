@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarManager.Core.Enum;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -10,15 +11,20 @@ namespace CarManager.Core.Models
 {
     public class Owner
     {
-       
+
         public int Id { get; set; }
+
         public string FirstName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string Address { get; set; } = string.Empty;
+
         public DateTime BirthDate { get; set; }
         public string BirthPlace { get; set; } = string.Empty;
-        public string Gender { get; set; } = string.Empty; // "M" o "F"
+
+        public OwnerGender Gender { get; set; }
+
         public string FiscalCode { get; set; } = string.Empty;
+
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 
 

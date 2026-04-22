@@ -1,5 +1,4 @@
-﻿using CarManager.Core.Models;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CarManager.Api.DTOs.OwnerDTO
 {
@@ -26,6 +25,6 @@ namespace CarManager.Api.DTOs.OwnerDTO
 
         [Required(ErrorMessage = "Campo obbligatorio"), MaxLength(16)]
         public string FiscalCode { get; set; } = string.Empty;
-
+        public List<VehicleDTO.VehicleDTO>? Vehicles { get; set; }
     }
 }

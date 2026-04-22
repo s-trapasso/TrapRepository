@@ -1,5 +1,7 @@
-using Microsoft.EntityFrameworkCore;
 using CarManager.Api.Data;
+using CarManager.Api.Services;
+using CarManager.Api.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -24,7 +26,10 @@ builder.Services.AddDbContext<CarManagerDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
-var app = builder.Build();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
+builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+builder.Services.AddScoped<IOwnerService, OwnerService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>(); var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

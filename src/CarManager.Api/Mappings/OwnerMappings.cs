@@ -14,7 +14,7 @@ namespace CarManager.Api.Mappings
               Address = owner.Address,
               BirthDate = owner.BirthDate,
               BirthPlace = owner.BirthPlace,
-              Gender = owner.Gender,
+              Gender = owner.Gender.ToString(),
               FiscalCode = owner.FiscalCode,
 
        };
@@ -33,6 +33,16 @@ namespace CarManager.Api.Mappings
             };
 
         public static void UpdateEntity(this UpdateOwnerDTO dto, Owner owner)
+        {
+            owner.FirstName = dto.FirstName;
+            owner.LastName = dto.LastName;
+            owner.Address = dto.Address;
+            owner.BirthDate = dto.BirthDate;
+            owner.BirthPlace = dto.BirthPlace;
+            owner.Gender = dto.Gender;
+            owner.FiscalCode = dto.FiscalCode;
+        }
+        public static void UpdateFrom(this Owner owner, UpdateOwnerDTO dto)
         {
             owner.FirstName = dto.FirstName;
             owner.LastName = dto.LastName;

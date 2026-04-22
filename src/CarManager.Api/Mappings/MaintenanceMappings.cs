@@ -14,7 +14,7 @@ namespace CarManager.Api.Mappings
                 Description = maintenance.Description,
                 Date = maintenance.Date,
                 Cost = maintenance.Cost,
-                Type = maintenance.Type,
+                MaintenanceType = maintenance.MaintenanceType,
                 Km = maintenance.Km,
                 Workshop = maintenance.Workshop,
                 Notes = maintenance.Notes
@@ -22,9 +22,9 @@ namespace CarManager.Api.Mappings
         public static Maintenance ToEntity(this CreateMaintenanceDTO dto) =>
             new()
             {
-                VehicleId = dto.VehicleId!.Value,                
+                VehicleId = dto.VehicleId,                
                 Date = dto.Date,
-                Type = dto.Type,
+                MaintenanceType = dto.MaintenanceType,
                 Description = dto.Description,
                 Km = dto.Km,
                 Cost = dto.Cost,
@@ -33,9 +33,8 @@ namespace CarManager.Api.Mappings
             };
         public static void UpdateEntity(this UpdateMaintenanceDTO dto, Maintenance maintenance)
         {
-            maintenance.VehicleId = dto.VehicleId;
             maintenance.Date = dto.Date;
-            maintenance.Type = dto.Type;
+            maintenance.MaintenanceType = dto.MaintenanceType;
             maintenance.Description = dto.Description;
             maintenance.Km = dto.Km;
             maintenance.Cost = dto.Cost;

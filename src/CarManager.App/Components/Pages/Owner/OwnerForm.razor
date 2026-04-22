@@ -1,0 +1,109 @@
+﻿@using CarManager.App.Models.Owner
+@using CarManager.App.Services.Interfaces
+
+@inject IOwnerApiClient OwnerApiClient
+
+<MudForm @ref="_form">
+    <MudGrid Spacing="3">
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Nome"
+                          Value="Model.FirstName"
+                          ValueChanged="@(async (string v) => { Model.FirstName = v; await OnOwnerDataChanged(); })"
+                          Immediate="true"
+                          Required="true" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Cognome"
+                          Value="Model.LastName"
+                          ValueChanged="@(async (string v) => { Model.LastName = v; await OnOwnerDataChanged(); })"
+                          Immediate="true"
+                          Required="true" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudDatePicker Label="Data di nascita"
+                           Date="Model.BirthDate"
+                           DateChanged="@(async (DateTime? v) => { Model.BirthDate = v; await OnOwnerDataChanged(); })"
+                           Required="true" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Luogo di nascita"
+                          Value="Model.BirthPlace"
+                          ValueChanged="@(async (string v) => { Model.BirthPlace = v; await OnOwnerDataChanged(); })"
+                          Immediate="true"
+                          Required="true" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Sesso (M/F)"
+                          Value="Model.Gender"
+                          ValueChanged="@(async (string v) => { Model.Gender = v; await OnOwnerDataChanged(); })"
+                          Immediate="true"
+                          Required="true" />
+        </MudItem>
+
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Codice Fiscale"
+                          Value="Model.FiscalCode"
+                          ReadOnly="true" />
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       OnClick="OnSubmit">
+                @SubmitText
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Class="ms-2"
+                       OnClick="OnCancel">
+                Annulla
+            </MudButton>
+        </MudItem>
+
+    </MudGrid>
+</MudForm>
+
+@code {
+    private MudForm? _form;
+    private CancellationTokenSource? _cts;
+
+    [Parameter, EditorRequired] public OwnerCreateModel Model { get; set; } = default!;
+    [Parameter] public string SubmitText { get; set; } = "Salva";
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task OnOwnerDataChanged()
+    {
+        // Annulla eventuale chiamata precedente
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(Model.FirstName) &&
+                !string.IsNullOrWhiteSpace(Model.LastName) &&
+                Model.BirthDate != null &&
+                !string.IsNullOrWhiteSpace(Model.BirthPlace) &&
+                !string.IsNullOrWhiteSpace(Model.Gender))
+            {
+                if(string.IsNullOrEmpty(Model.Address))
+                    Model.Address = string.Empty;
+
+                var fiscalCode = await OwnerApiClient.GetFiscalCodePreviewAsync(Model, _cts.Token);
+                Model.FiscalCode = fiscalCode ?? string.Empty;
+
+                if (_form != null)
+                    await _form.Validate();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Ignora se la chiamata è stata annullata
+        }
+    }
+}

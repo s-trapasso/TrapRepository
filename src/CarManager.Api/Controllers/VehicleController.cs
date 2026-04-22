@@ -1,8 +1,7 @@
-﻿using CarManager.Api.Data;
-using CarManager.Api.DTOs.VehicleDTO;
-using CarManager.Api.Mappings;
+﻿using CarManager.Api.DTOs.VehicleDTO;
+using CarManager.Api.Services.Interfaces;
+using CarManager.Core.Enum;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarManager.Api.Controllers;
 
@@ -10,24 +9,29 @@ namespace CarManager.Api.Controllers;
 [Route("api/[controller]")]
 public class VehiclesController : ControllerBase
 {
-    private readonly CarManagerDbContext _db;
+
+    private readonly IVehicleService _service;
     private readonly ILogger<VehiclesController> _logger;
-    public VehiclesController(CarManagerDbContext db, ILogger<VehiclesController> logger)
+    public VehiclesController(IVehicleService service, ILogger<VehiclesController> logger)
     {
-        _db = db;
+        _service = service;
         _logger = logger;
     }
 
     // GET: api/vehicles
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<IEnumerable<VehicleDTO>>> GetAll()
+    public async Task<ActionResult<IEnumerable<VehicleDTO>>> GetAll([FromQuery] string? plate)
     {
-        var vehicles = await _db.Vehicles
-            .OrderBy(v => v.Plate)
-            .ToListAsync();
+        _logger.LogInformation("Recupero veicoli filtro plate: {Plate}", plate);
 
-        var result = vehicles.Select(v => v.ToDto());
+        if (!string.IsNullOrWhiteSpace(plate))
+        {
+            var filtered = await _service.SearchByPlateAsync(plate);
+            return Ok(filtered);
+        }
+
+        var result = await _service.GetAllAsync();
         return Ok(result);
     }
 
@@ -38,104 +42,111 @@ public class VehiclesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<VehicleDTO>> GetById(int id)
     {
-        var vehicle = await _db.Vehicles.FindAsync(id);
+        _logger.LogInformation("Ricerca veicolo con Id: {Id}", id);
+
+        var vehicle = await _service.GetByIdAsync(id);
 
         if (vehicle == null)
+        {
+            _logger.LogWarning("Veicolo {Id} non trovato", id);
             return NotFound();
+        }
 
-        return Ok(vehicle.ToDto());
+        return Ok(vehicle);
     }
 
     // POST: api/vehicles
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<VehicleDTO>> Create([FromBody] CreateVehicleDTO dto)
     {
-        _logger.LogInformation("Creazione nuovo veicolo");
-        if (!ModelState.IsValid)
-            return BadRequest(ModelState);
+        _logger.LogInformation("Creazione nuovo veicolo con targa: {Plate}", dto.Plate);
 
-        // controllo targa unica
-        var exists = await _db.Vehicles.AnyAsync(v => v.Plate == dto.Plate);
-        if (exists)
+        if (!ModelState.IsValid)
         {
-            ModelState.AddModelError(nameof(dto.Plate), "Targa già esistente.");
-            return ValidationProblem(ModelState);
+            _logger.LogWarning("ModelState non valido per creazione veicolo");
+            return BadRequest(ModelState);
         }
 
-        var vehicle = dto.ToEntity();
+        var result = await _service.CreateAsync(dto);
 
-        _db.Vehicles.Add(vehicle);
-        await _db.SaveChangesAsync();
+        if (!result.Success)
+        {
+            _logger.LogWarning("Errore durante creazione veicolo: {Error}", result.Error);
 
-        var result = vehicle.ToDto();
-        _logger.LogInformation("Veicolo {Id} creato correttamente", vehicle.Id);
-        return CreatedAtAction(nameof(GetById), new { id = vehicle.Id }, result);
+            if (result.Error == VehicleError.DuplicatePlate)
+            {
+                ModelState.AddModelError(nameof(dto.Plate), "Targa già esistente");
+                return ValidationProblem(ModelState);
+            }
+
+            return StatusCode(StatusCodes.Status500InternalServerError, "Errore durante la creazione");
+        }
+
+        if (result.Vehicle == null)
+        {
+            _logger.LogError("Vehicle nullo dopo creazione");
+            return StatusCode(StatusCodes.Status500InternalServerError, "Errore interno");
+        }
+
+        _logger.LogInformation("Veicolo creato con Id: {Id}", result.Vehicle.Id);
+
+        return CreatedAtAction(
+            nameof(GetById),
+            new { id = result.Vehicle.Id },
+            result.Vehicle
+        );
     }
 
     // PUT: api/vehicles/{id}
     [HttpPut("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdateVehicleDTO dto)
     {
+        _logger.LogInformation("Aggiornamento veicolo Id: {Id}", id);
+
         if (!ModelState.IsValid)
+        {
+            _logger.LogWarning("ModelState non valido per update veicolo {Id}", id);
             return BadRequest(ModelState);
+        }
 
-        var vehicle = await _db.Vehicles.FindAsync(id);
-        if (vehicle == null)
-            return NotFound();
+        var result = await _service.UpdateAsync(id, dto);
 
-        dto.UpdateEntity(vehicle);
+        if (!result.Success)
+        {
+            _logger.LogWarning("Errore update veicolo {Id}: {Error}", id, result.Error);
+            return StatusCode(StatusCodes.Status500InternalServerError, "Errore durante l'aggiornamento");
+        }
 
-        await _db.SaveChangesAsync();
-        return NoContent(); // o Ok(vehicle.ToDto());
-    }
-
-    // DELETE: api/vehicles/{id}
-    [HttpDelete("{id:int}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var vehicle = await _db.Vehicles.FindAsync(id);
-        if (vehicle == null)
-            return NotFound();
-
-        _db.Vehicles.Remove(vehicle);
-        await _db.SaveChangesAsync();
+        _logger.LogInformation("Veicolo {Id} aggiornato con successo", id);
 
         return NoContent();
     }
 
-    // GET: api/vehicles/search/{plate}
-    [HttpGet("search/{plate}")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    // DELETE: api/vehicles/{id}
+    [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<ActionResult> GetByPlate(string plate)
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Delete(int id)
     {
-
-        if (string.IsNullOrWhiteSpace(plate))
+        _logger.LogInformation("Cancellazione veicolo {Id}", id);
+        var success = await _service.DeleteAsync(id);
+        if (!success)
         {
-            return BadRequest("Il parametro 'targa/plate' è obbligatorio");
+            _logger.LogWarning("Veicolo {Id} non trovato per la cancellazione", id);
+            return NotFound();
         }
-        var term = plate.Trim();
+        _logger.LogInformation("Veicolo {Id} rimosso dal database", id);
 
-        var vehicles = await _db.Vehicles
-            .Where(o => o.Plate.Contains(term))
-            .ToListAsync();
-
-        if (vehicles.Count == 0)
-        {
-            return NoContent();
-        }
-
-        var result = vehicles.Select(o => o.ToDto());
-        return Ok(result);
-
+        return NoContent();
     }
+
+
 
 }

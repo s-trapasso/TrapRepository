@@ -1,8 +1,10 @@
 ﻿@page "/owners"
 @using CarManager.App.Models.Owner
 @using CarManager.App.Services.Interfaces
+@using CarManager.App.Components.Pages.Commons
 @inject IOwnerApiClient OwnerApiClient
 @inject NavigationManager Nav
+@inject IDialogService DialogService
 
 
 <MudContainer>
@@ -61,6 +63,7 @@
                     <MudTh>Luogo di Nascita</MudTh>
                     <MudTh>Sesso</MudTh>
                     <MudTh>Codice Fiscale</MudTh>
+                    <MudTh>Azioni</MudTh> @*colonna azioni*@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Nome">@context.FirstName</MudTd>
@@ -70,6 +73,12 @@
                     <MudTd DataLabel="Luogo di Nascita">@context.BirthPlace</MudTd>
                     <MudTd DataLabel="Sesso">@context.Gender</MudTd>
                     <MudTd DataLabel="Codice Fiscale">@context.FiscalCode</MudTd>
+                    <MudTd>
+                        <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
+                            <MudMenuItem OnClick="@(() => EditOwner(context.Id))">Modifica</MudMenuItem>
+                            <MudMenuItem OnClick="@(() => DeleteOwner(context))">Elimina</MudMenuItem>
+                        </MudMenu>
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
         }
@@ -96,6 +105,35 @@
         finally
         {
             _isLoading = false;
+        }
+    }
+    private void EditOwner(int ownerId)
+    {
+        Nav.NavigateTo($"/owners/edit/{ownerId}");
+    }
+    private async Task DeleteOwner(OwnerModel owner)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Sei sicuro di voler eliminare il proprietario '{owner.FirstName} {owner.LastName}'?" },
+            { "ConfirmButtonText", "Elimina" },
+            { "Color", Color.Error }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small , CloseOnEscapeKey = true};
+        IDialogReference dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Conferma eliminazione", parameters, options);
+        DialogResult? result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            try
+            {
+                await OwnerApiClient.DeleteOwnerAsync(owner.Id);
+                _owners?.Remove(owner);
+                await OnInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Errore durante l'eliminazione del proprietario: {ex.Message}";
+            }
         }
     }
 }

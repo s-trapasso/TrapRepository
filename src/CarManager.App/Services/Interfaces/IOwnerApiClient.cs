@@ -11,5 +11,9 @@ namespace CarManager.App.Services.Interfaces
     {
         Task<IReadOnlyList<OwnerModel>> GetAllOwnersAsync(CancellationToken cancellationToken = default);
         Task<OwnerModel> CreateOwnerAsync(OwnerCreateModel ownerCreateModel, CancellationToken cancellationToken = default);
+        Task<string?> GetFiscalCodePreviewAsync(OwnerCreateModel ownerCreateModel, CancellationToken cancellationToken = default);
+        Task<OwnerModel> GetByIdAsync(int ownerId, CancellationToken cancellationToken = default);
+        Task<OwnerModel> UpdateOwnerAsync(int ownerId, OwnerCreateModel ownerUpdateModel, CancellationToken cancellationToken = default);
+        Task DeleteOwnerAsync(int ownerId, CancellationToken cancellationToken = default);
     }
 }

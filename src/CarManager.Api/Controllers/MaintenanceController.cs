@@ -1,7 +1,7 @@
 ﻿using CarManager.Api.Data;
 using CarManager.Api.DTOs.MaintenanceDTO;
-using CarManager.Api.DTOs.MaintenanceDTO;
 using CarManager.Api.Mappings;
+using CarManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,133 +9,91 @@ using System.Runtime.CompilerServices;
 
 namespace CarManager.Api.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
-    public class MaintenanceController : ControllerBase
+    [Route("api/[controller]")]
+    public class MaintenancesController : ControllerBase
     {
-        private readonly CarManagerDbContext _db;
+        private readonly IMaintenanceService _service;
+        private readonly ILogger<MaintenancesController> _logger;
 
-        public MaintenanceController(CarManagerDbContext db)
+        public MaintenancesController(IMaintenanceService service, ILogger<MaintenancesController> logger)
         {
-            _db = db;
+            _service = service;
+            _logger = logger;
         }
 
-        // GET: api/maintenance
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<IEnumerable<MaintenanceDTO>>> GetAll()
+        public async Task<ActionResult<List<MaintenanceDTO>>> GetAll()
         {
-            var maintenance = await _db.Maintenances
-                .Include(m => m.Vehicle)
-                .OrderBy(v => v.Id)
-                .ToListAsync();
-
-            var result = maintenance.Select(v => v.ToDto());
+            var result = await _service.GetAllAsync();
             return Ok(result);
         }
 
-        // GET: api/maintenance/{id}
-        [HttpGet("{id:int}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<MaintenanceDTO>> GetById(int id)
+        [HttpGet("vehicle/{vehicleId:int}")]
+        public async Task<ActionResult<List<MaintenanceDTO>>> GetByVehicle(int vehicleId)
         {
-            var maintenance = await _db.Maintenances
-                .Include(v => v.Vehicle)
-                .FirstOrDefaultAsync(v => v.Id == id);
-
-            if (maintenance == null)
-                return NotFound();
-
-            return Ok(maintenance.ToDto());
+            var result = await _service.GetByVehicleIdAsync(vehicleId);
+            return Ok(result);
         }
 
-        // POST: api/maintenance
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<MaintenanceDTO>> GetById(int id)
+        {
+            var result = await _service.GetByIdAsync(id);
+
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
+
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        public async Task<ActionResult<MaintenanceDTO>> Create([FromBody] CreateMaintenanceDTO dto)
+        public async Task<ActionResult> Create([FromBody] CreateMaintenanceDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            // Controllo che il veicolo esista
-            var vehicleExists = await _db.Vehicles
-                .AnyAsync(v => v.Id == dto.VehicleId);
-            if (!vehicleExists)
+            var result = await _service.CreateAsync(dto);
+
+            if (!result.Success)
             {
-                ModelState.AddModelError(nameof(dto.VehicleId), "Veicolo non trovato.");
-                return ValidationProblem(ModelState);
+                if (result.Error == "VehicleNotFound")
+                    return NotFound("Veicolo non trovato");
+
+                return StatusCode(500, "Errore creazione manutenzione");
             }
 
-            var maintenance = dto.ToEntity();
-
-            _db.Maintenances.Add(maintenance);
-            await _db.SaveChangesAsync();
-
-            var result = maintenance.ToDto();
-
-            return CreatedAtAction(nameof(GetById), new { id = maintenance.Id }, result);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
         }
 
-        // PUT: api/maintenance/{id}
         [HttpPut("{id:int}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateMaintenanceDTO dto)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var maintenance = await _db.Maintenances.FindAsync(id);
-            if (maintenance == null)
-                return NotFound();
+            var result = await _service.UpdateAsync(id, dto);
 
-            // controllo che il veicolo esista
-            var vehicleExists = await _db.Vehicles.AnyAsync(v => v.Id == dto.VehicleId);
-            if (!vehicleExists)
+            if (!result.Success)
             {
-                ModelState.AddModelError(nameof(dto.VehicleId), "Veicolo non trovato.");
-                return ValidationProblem(ModelState);
+                if (result.Error == "NotFound")
+                    return NotFound();
+
+                return StatusCode(500, "Errore aggiornamento manutenzione");
             }
-            dto.UpdateEntity(maintenance);
-
-            await _db.SaveChangesAsync();
-            return NoContent(); // o Ok(maintenance.ToDto());
-        }
-
-        // DELETE: api/maintenance/{id}
-        [HttpDelete("{id:int}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var maintenance = await _db.Maintenances.FindAsync(id);
-            if (maintenance == null)
-                return NotFound();
-
-            _db.Maintenances.Remove(maintenance);
-            await _db.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // GET: api/maintenances/search/{plate}
-        [HttpGet("vehicle/{vehicleId:int}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public async Task<ActionResult<IEnumerable<MaintenanceDTO>>> GetByVehicle(int vehicleId)
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            var maintenances = await _db.Maintenances
-                .Where(m => m.VehicleId == vehicleId)
-                .OrderByDescending(m => m.Date)
-                .ToListAsync();
+            var success = await _service.DeleteAsync(id);
 
-            var result = maintenances.Select(m => m.ToDto());
-            return Ok(result);
+            if (!success)
+                return NotFound();
+
+            return NoContent();
         }
     }
 }

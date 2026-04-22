@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace CarManager.App.Services.Implementations
@@ -36,6 +37,53 @@ namespace CarManager.App.Services.Implementations
                       ?? throw new Exception("Failed to create vehicle");
 
             return createdOwner;
+        }
+        public async Task<string?> GetFiscalCodePreviewAsync(OwnerCreateModel ownerCreateModel, CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/owners/fiscalcode/preview", ownerCreateModel, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            // l'endpoint restituisce una stringa semplice
+            var fiscalCode = await response.Content.ReadAsStringAsync(cancellationToken);
+            return fiscalCode.Trim('"'); // nel caso venga serializzato come JSON string
+        }
+        public async Task DeleteOwnerAsync(int ownerId, CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.DeleteAsync($"/api/owners/{ownerId}", cancellationToken);
+            response.EnsureSuccessStatusCode();
+        }
+
+        public async Task<OwnerModel> GetByIdAsync(int ownerId, CancellationToken cancellationToken = default)
+        {
+            var response = await _httpClient.GetAsync($"/api/owners/{ownerId}", cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            // Deserializza il JSON in OwnerModel
+            var owner = JsonSerializer.Deserialize<OwnerModel>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return owner!;
+        }
+
+        public async Task<OwnerModel> UpdateOwnerAsync(int ownerId, OwnerCreateModel ownerUpdateModel, CancellationToken cancellationToken = default)
+        {
+            var jsonContent = new StringContent(JsonSerializer.Serialize(ownerUpdateModel),Encoding.UTF8,"application/json");
+
+            var response = await _httpClient.PutAsync($"/api/owners/{ownerId}", jsonContent, cancellationToken);
+            response.EnsureSuccessStatusCode();
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var updatedOwner = JsonSerializer.Deserialize<OwnerModel>(content, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+
+            return updatedOwner!;
         }
     }
 }

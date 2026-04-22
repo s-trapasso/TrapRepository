@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CarManager.Api.Migrations
 {
     [DbContext(typeof(CarManagerDbContext))]
-    [Migration("20251204084652_AddMaintenanceTable")]
-    partial class AddMaintenanceTable
+    [Migration("20260422164844_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,7 +34,7 @@ namespace CarManager.Api.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal?>("Cost")
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
@@ -45,13 +45,12 @@ namespace CarManager.Api.Migrations
                     b.Property<int?>("Km")
                         .HasColumnType("int");
 
+                    b.Property<int>("MaintenanceType")
+                        .HasColumnType("int");
+
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("VehicleId")
                         .HasColumnType("int");
@@ -94,9 +93,8 @@ namespace CarManager.Api.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Gender")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Gender")
+                        .HasColumnType("int");
 
                     b.Property<string>("LastName")
                         .IsRequired()
