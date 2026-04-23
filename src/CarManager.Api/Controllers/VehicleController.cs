@@ -1,4 +1,4 @@
-﻿using CarManager.Api.DTOs.VehicleDTO;
+﻿using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enums;
 using Microsoft.AspNetCore.Mvc;

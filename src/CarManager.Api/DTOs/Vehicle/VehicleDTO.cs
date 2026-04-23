@@ -2,7 +2,7 @@
 using CarManager.Core.Extensions;
 
 
-namespace CarManager.Api.DTOs.VehicleDTO
+namespace CarManager.Api.DTOs.Vehicle
 {
     public class VehicleDTO
     {

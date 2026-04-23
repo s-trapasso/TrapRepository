@@ -1,5 +1,5 @@
 ﻿using CarManager.Api.Data;
-using CarManager.Api.DTOs.MaintenanceDTO;
+using CarManager.Api.DTOs.Maintenance;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Http;

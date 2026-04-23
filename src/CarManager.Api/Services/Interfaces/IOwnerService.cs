@@ -1,4 +1,4 @@
-﻿using CarManager.Api.DTOs.OwnerDTO;
+﻿using CarManager.Api.DTOs.Owner;
 
 namespace CarManager.Api.Services.Interfaces
 {

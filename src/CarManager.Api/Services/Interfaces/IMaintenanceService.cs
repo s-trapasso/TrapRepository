@@ -1,5 +1,5 @@
 ﻿using CarManager.Api.DTOs;
-using CarManager.Api.DTOs.MaintenanceDTO;
+using CarManager.Api.DTOs.Maintenance;
 
 
 namespace CarManager.Api.Services.Interfaces

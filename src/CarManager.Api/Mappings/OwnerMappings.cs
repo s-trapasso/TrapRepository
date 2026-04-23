@@ -1,4 +1,4 @@
-﻿using CarManager.Api.DTOs.OwnerDTO;
+﻿using CarManager.Api.DTOs.Owner;
 using CarManager.Core.Models;
 
 namespace CarManager.Api.Mappings

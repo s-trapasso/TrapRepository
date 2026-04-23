@@ -1,7 +1,7 @@
 ﻿using CarManager.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace CarManager.Api.DTOs.VehicleDTO;
+namespace CarManager.Api.DTOs.Vehicle;
 
 public class UpdateVehicleDTO
 {

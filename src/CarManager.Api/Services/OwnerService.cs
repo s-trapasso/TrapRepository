@@ -1,6 +1,6 @@
 ﻿using CarManager.Api.Data;
-using CarManager.Api.DTOs.OwnerDTO;
-using CarManager.Api.DTOs.VehicleDTO;
+using CarManager.Api.DTOs.Owner;
+using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;

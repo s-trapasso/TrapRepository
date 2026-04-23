@@ -1,9 +1,9 @@
 ﻿using CarManager.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace CarManager.Api.DTOs.OwnerDTO
+namespace CarManager.Api.DTOs.Owner
 {
-    public class CreateOwnerDTO
+    public class UpdateOwnerDTO
     {
         [Required, StringLength(50)]
         public string FirstName { get; set; } = default!;

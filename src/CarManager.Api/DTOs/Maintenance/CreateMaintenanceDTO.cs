@@ -2,14 +2,17 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CarManager.Api.DTOs.MaintenanceDTO
+namespace CarManager.Api.DTOs.Maintenance
 {
-    public class UpdateMaintenanceDTO
+    public class CreateMaintenanceDTO
     {
-        [Required]
+        [Required(ErrorMessage = "Veicolo obbligatorio")]
+        public int VehicleId { get; set; }
+
+        [Required(ErrorMessage = "La data è obbligatoria")]
         public DateTime Date { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "Il tipo è obbligatorio")]
         public MaintenanceType MaintenanceType { get; set; }
 
         [MaxLength(500)]

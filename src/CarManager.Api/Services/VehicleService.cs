@@ -1,6 +1,6 @@
 ﻿using CarManager.Api;
 using CarManager.Api.Data;
-using CarManager.Api.DTOs.VehicleDTO;
+using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enums;
@@ -24,6 +24,11 @@ namespace CarManager.Api.Services
 
             if (exists)
                 return (false, VehicleError.DuplicatePlate, null);
+
+            var ownerExists = await _db.Owners.AnyAsync(o => o.Id == dto.OwnerId);
+
+            if (!ownerExists)
+                return (false, VehicleError.NotFound, null);
 
             var vehicle = dto.ToEntity();
 

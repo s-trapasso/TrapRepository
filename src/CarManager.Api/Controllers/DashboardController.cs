@@ -16,9 +16,9 @@ namespace CarManager.Api.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<DashboardDTO>> Get()
+        public async Task<IActionResult> Get([FromQuery] DashboardQuery query)
         {
-            var result = await _service.GetDashboardAsync();
+            var result = await _service.GetDashboardAsync(query);
             return Ok(result);
         }
     }

@@ -1,13 +1,16 @@
 ﻿using CarManager.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
-namespace CarManager.Api.DTOs.VehicleDTO;
+namespace CarManager.Api.DTOs.Vehicle;
 
 public class CreateVehicleDTO
 {
     [Required]
     [StringLength(10, ErrorMessage = "La targa può avere massimo 10 caratteri")]
     public string Plate { get; set; } = string.Empty;
+
+    [Required]
+    public int OwnerId { get; set; }
 
     [Required]
     [StringLength(50)]

@@ -26,6 +26,8 @@ namespace CarManager.Core.Models
         public TireType CurrentTireType { get; set; }
         public string CurrentTireTypeName => CurrentTireType.GetDescription();
         public DateTime? LastTireChangeDate { get; set; }
+        public int OwnerId { get; set; }
+        public Owner Owner { get; set; } = null!;
 
         //[Required(ErrorMessage ="Campo obbligatorio")]
         //public int ProprietarioId { get; set; }

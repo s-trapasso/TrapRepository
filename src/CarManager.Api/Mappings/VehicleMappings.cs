@@ -1,4 +1,5 @@
-﻿using CarManager.Api.DTOs.VehicleDTO;
+﻿using CarManager.Api.DTOs.Vehicle;
+using CarManager.Core.Enums;
 using CarManager.Core.Models;
 using System.Security.Cryptography;
 
@@ -26,7 +27,11 @@ public static class VehicleMappings
             Model = dto.Model,
             Year = dto.Year,
             Km = dto.Km,
-            FuelType = dto.FuelType
+            FuelType = dto.FuelType,
+            OwnerId = dto.OwnerId,
+            CurrentTireType = TireType.AllSeason,
+            LastTireChangeDate = null
+
         };
 
     public static void UpdateEntity(this UpdateVehicleDTO dto, Vehicle vehicle)

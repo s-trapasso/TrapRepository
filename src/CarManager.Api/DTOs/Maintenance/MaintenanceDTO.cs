@@ -1,33 +1,31 @@
 ﻿using CarManager.Core.Enums;
+using CarManager.Core.Extensions;
+using CarManager.Core.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CarManager.Api.DTOs.MaintenanceDTO
+namespace CarManager.Api.DTOs.Maintenance
 {
-    public class CreateMaintenanceDTO
+    public class MaintenanceDTO
     {
-        [Required(ErrorMessage = "Veicolo obbligatorio")]
+        public int Id { get; set; }
+
         public int VehicleId { get; set; }
 
-        [Required(ErrorMessage = "La data è obbligatoria")]
+        public string? VehiclePlate { get; set; }
+
         public DateTime Date { get; set; }
 
-        [Required(ErrorMessage = "Il tipo è obbligatorio")]
         public MaintenanceType MaintenanceType { get; set; }
-
-        [MaxLength(500)]
+        public string MaintenanceTypeName => MaintenanceType.GetDescription();
         public string? Description { get; set; }
 
-        [Range(0, 9999999)]
         public int? Km { get; set; }
 
-        [Range(0, 999999.99)]
         public decimal? Cost { get; set; }
 
-        [MaxLength(150)]
         public string? Workshop { get; set; }
 
-        [MaxLength(500)]
         public string? Notes { get; set; }
     }
 }

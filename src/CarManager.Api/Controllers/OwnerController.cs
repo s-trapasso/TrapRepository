@@ -1,5 +1,5 @@
 ﻿using CarManager.Api.Data;
-using CarManager.Api.DTOs.OwnerDTO;
+using CarManager.Api.DTOs.Owner;
 using CarManager.Api.Mappings;
 using CarManager.Core.Models;
 using CodiceFiscaleLib;
@@ -104,10 +104,11 @@ namespace CarManager.Api.Controllers
                 _logger.LogInformation("Calcolo del codice fiscale per il nuovo proprietario {@Dto}", dto);
                 // 3) Calcolo del codice fiscale tramite libreria
                 //    (qui assumo che Gender sia "M"/"F" stringa; se è già char, togli il char.Parse)
+
                 var fiscalCode = CodiceFiscaleLib.Helpers.EncodingHelper.Encode(
                     dto.LastName,
                     dto.FirstName,
-                    char.Parse(dto.Gender.ToString()),   // oppure dto.Gender[0] se è sempre "M" o "F"
+                    dto.Gender == Core.Enums.OwnerGender.Male ? 'M' : 'F',
                     dto.BirthDate,
                     dto.BirthPlace            // qui dovrebbe essere il CODICE del comune, non il nome
                 );

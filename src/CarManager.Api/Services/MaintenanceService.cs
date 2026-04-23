@@ -1,8 +1,8 @@
 ﻿using CarManager.Api;
 using CarManager.Api.Data;
 using CarManager.Api.DTOs;
-using CarManager.Api.DTOs.MaintenanceDTO;
-using CarManager.Api.DTOs.VehicleDTO;
+using CarManager.Api.DTOs.Maintenance;
+using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enums;

@@ -1,4 +1,4 @@
-﻿using CarManager.Api.DTOs.VehicleDTO;
+﻿using CarManager.Api.DTOs.Vehicle;
 using CarManager.Core.Enums;
 
 namespace CarManager.Api.Services.Interfaces

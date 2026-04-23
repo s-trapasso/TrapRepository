@@ -1,5 +1,5 @@
 ﻿using CarManager.Api.DTOs;
-using CarManager.Api.DTOs.MaintenanceDTO;
+using CarManager.Api.DTOs.Maintenance;
 using CarManager.Core.Enums;
 using CarManager.Core.Models;
 
