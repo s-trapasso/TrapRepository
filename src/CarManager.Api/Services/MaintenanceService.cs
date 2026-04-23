@@ -5,7 +5,7 @@ using CarManager.Api.DTOs.MaintenanceDTO;
 using CarManager.Api.DTOs.VehicleDTO;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
-using CarManager.Core.Enum;
+using CarManager.Core.Enums;
 using CarManager.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -117,7 +117,7 @@ namespace CarManager.Api.Services
             {
                 VehicleId = vehicle.Id,
                 Date = dto.Date,
-                MaintenanceType = MaintenanceType.CambioGomme,
+                MaintenanceType = MaintenanceType.TireChange,
                 Description = $"Cambio gomme {oldType} → {dto.NewTireType}",
                 Km = dto.Km,
                 Notes = dto.Notes

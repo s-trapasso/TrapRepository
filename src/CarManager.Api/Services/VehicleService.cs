@@ -3,7 +3,7 @@ using CarManager.Api.Data;
 using CarManager.Api.DTOs.VehicleDTO;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
-using CarManager.Core.Enum;
+using CarManager.Core.Enums;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 

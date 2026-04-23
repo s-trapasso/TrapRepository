@@ -14,7 +14,7 @@ namespace CarManager.Api.Mappings
               Address = owner.Address,
               BirthDate = owner.BirthDate,
               BirthPlace = owner.BirthPlace,
-              Gender = owner.Gender.ToString(),
+              Gender = owner.Gender,
               FiscalCode = owner.FiscalCode,
 
        };

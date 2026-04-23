@@ -1,4 +1,4 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 

@@ -1,4 +1,5 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
+using CarManager.Core.Extensions;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -23,6 +24,7 @@ namespace CarManager.Core.Models
         public ICollection<Maintenance> Maintenance { get; set; } = new List<Maintenance>();
 
         public TireType CurrentTireType { get; set; }
+        public string CurrentTireTypeName => CurrentTireType.GetDescription();
         public DateTime? LastTireChangeDate { get; set; }
 
         //[Required(ErrorMessage ="Campo obbligatorio")]

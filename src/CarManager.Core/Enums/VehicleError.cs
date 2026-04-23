@@ -4,12 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarManager.Core.Enum
+namespace CarManager.Core.Enums
 {
     public enum VehicleError
     {
-        None,
-        NotFound,
-        DuplicatePlate
+        None = 0,
+        NotFound = 1,
+        DuplicatePlate = 2
     }
 }

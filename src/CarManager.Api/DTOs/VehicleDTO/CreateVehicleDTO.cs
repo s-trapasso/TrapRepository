@@ -1,4 +1,4 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace CarManager.Api.DTOs.VehicleDTO;

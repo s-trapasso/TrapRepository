@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using CarManager.Core.Enums;
+using CarManager.Core.Extensions;
+using System.ComponentModel.DataAnnotations;
 
 namespace CarManager.Api.DTOs.OwnerDTO
 {
@@ -21,7 +23,8 @@ namespace CarManager.Api.DTOs.OwnerDTO
         public string BirthPlace { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Campo obbligatorio"), MaxLength(1)]
-        public string Gender { get; set; } = string.Empty;  // "M" o "F"
+        public OwnerGender Gender { get; set; }
+        public string GenderName => Gender.GetDescription();
 
         [Required(ErrorMessage = "Campo obbligatorio"), MaxLength(16)]
         public string FiscalCode { get; set; } = string.Empty;

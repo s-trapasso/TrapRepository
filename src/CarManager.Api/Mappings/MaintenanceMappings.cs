@@ -1,6 +1,6 @@
 ﻿using CarManager.Api.DTOs;
 using CarManager.Api.DTOs.MaintenanceDTO;
-using CarManager.Core.Enum;
+using CarManager.Core.Enums;
 using CarManager.Core.Models;
 
 namespace CarManager.Api.Mappings
@@ -49,7 +49,7 @@ namespace CarManager.Api.Mappings
             {
                 VehicleId = dto.VehicleId,
                 Date = dto.Date,
-                MaintenanceType = MaintenanceType.CambioGomme,
+                MaintenanceType = MaintenanceType.TireChange,
                 Description = $"Cambio gomme {oldType} → {dto.NewTireType}",
                 Km = dto.Km,
                 Notes = dto.Notes

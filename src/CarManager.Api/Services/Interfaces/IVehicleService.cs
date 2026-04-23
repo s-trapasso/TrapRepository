@@ -1,5 +1,5 @@
 ﻿using CarManager.Api.DTOs.VehicleDTO;
-using CarManager.Core.Enum;
+using CarManager.Core.Enums;
 
 namespace CarManager.Api.Services.Interfaces
 {

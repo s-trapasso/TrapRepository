@@ -1,4 +1,5 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
+using CarManager.Core.Extensions;
 
 
 namespace CarManager.Api.DTOs.VehicleDTO
@@ -16,6 +17,7 @@ namespace CarManager.Api.DTOs.VehicleDTO
         public int Year { get; set; }
 
         public FuelTypeEnum FuelType { get; set; }
+        public string FuelTypeName => FuelType.GetDescription();
 
         public int Km { get; set; }
     }

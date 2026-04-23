@@ -1,4 +1,5 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
+using CarManager.Core.Extensions;
 using CarManager.Core.Models;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -16,7 +17,7 @@ namespace CarManager.Api.DTOs.MaintenanceDTO
         public DateTime Date { get; set; }
 
         public MaintenanceType MaintenanceType { get; set; }
-
+        public string MaintenanceTypeName => MaintenanceType.GetDescription();
         public string? Description { get; set; }
 
         public int? Km { get; set; }

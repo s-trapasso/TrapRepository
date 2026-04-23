@@ -1,6 +1,6 @@
 ﻿using CarManager.Api.DTOs.VehicleDTO;
 using CarManager.Api.Services.Interfaces;
-using CarManager.Core.Enum;
+using CarManager.Core.Enums;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarManager.Api.Controllers;

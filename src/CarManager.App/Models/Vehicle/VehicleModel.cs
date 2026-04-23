@@ -1,4 +1,4 @@
-﻿using CarManager.Core.Enum;
+﻿using CarManager.Core.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;
