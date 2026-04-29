@@ -1,10 +1,11 @@
 ﻿using CarManager.Api.Data;
 using CarManager.Api.DTOs.Owner;
 using CarManager.Api.Mappings;
+using CarManager.Api.Services.Interfaces;
+using CarManager.Core.Enums;
 using CarManager.Core.Models;
 using CodiceFiscaleLib;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace CarManager.Api.Controllers
 {
@@ -12,11 +13,11 @@ namespace CarManager.Api.Controllers
     [Route("api/[controller]")]
     public class OwnersController : ControllerBase
     {
-        private readonly CarManagerDbContext _db;
+        private readonly IOwnerService _service;
         private readonly ILogger<OwnersController> _logger;
-        public OwnersController(CarManagerDbContext db, ILogger<OwnersController> logger)
+        public OwnersController(IOwnerService service, ILogger<OwnersController> logger)
         {
-            _db = db;
+            _service = service;
             _logger = logger;
         }
 
@@ -28,20 +29,15 @@ namespace CarManager.Api.Controllers
             _logger.LogInformation("Recupero tutti i proprietari");
             try
             {
-                var owners = await _db.Owners
-                .OrderBy(v => v.Id)
-                .ToListAsync();
-
-                var result = owners.Select(v => v.ToDto());
-                _logger.LogInformation("Recuperati {Count} proprietari", owners.Count);
-                return Ok(result);
+                var owners = await _service.GetAllAsync();
+                _logger.LogInformation("Recuperati {Count} proprietari", owners.Count());
+                return Ok(owners);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Errore durante il recupero dei proprietari");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante il recupero dei proprietari.");
             }
-
         }
 
         // GET: api/owners/{id}
@@ -54,7 +50,7 @@ namespace CarManager.Api.Controllers
             _logger.LogInformation("Recupero il proprietario con Id {Id}", id);
             try
             {
-                var owner = await _db.Owners.FindAsync(id);
+                var owner = await _service.GetByIdAsync(id);
 
                 if (owner == null)
                 {
@@ -62,88 +58,67 @@ namespace CarManager.Api.Controllers
                     return NotFound();
                 }
                 _logger.LogInformation("Proprietario con Id {Id} recuperato con successo", id);
-                return Ok(owner.ToDto());
+                return Ok(owner);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Errore durante il recupero del proprietario con Id {Id}", id);
                 return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante il recupero del proprietario.");
             }
-
         }
 
         // POST: api/owners
+        // Metodo Create aggiornato per delegare completamente al service
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status422UnprocessableEntity)]
         public async Task<ActionResult<OwnerDTO>> Create([FromBody] CreateOwnerDTO dto)
         {
-            // 1) Prima cosa: validazione DataAnnotations del DTO
             if (!ModelState.IsValid)
             {
                 _logger.LogWarning("Dati di creazione proprietario non validi {@Dto}", dto);
                 return BadRequest(ModelState);
             }
-            
-            // 2) Controllo che i dati per il calcolo del CF siano sufficienti
-            //    (qui usi i nomi che hai nel DTO: FirstName, LastName, BirthDate, BirthPlace, Gender, ecc.)
-            if (string.IsNullOrWhiteSpace(dto.FirstName) ||
-                string.IsNullOrWhiteSpace(dto.LastName) ||
-                dto.BirthDate == default ||
-                string.IsNullOrWhiteSpace(dto.BirthPlace) ||
-                string.IsNullOrWhiteSpace(dto.Gender.ToString()))
-            {
-                _logger.LogWarning("Dati insufficienti per il calcolo del codice fiscale {@Dto}", dto);
-                ModelState.AddModelError(nameof(Owner.FiscalCode), "Dati insufficienti per calcolare il codice fiscale.");
-                return ValidationProblem(ModelState);
-            }
 
             try
             {
-                _logger.LogInformation("Calcolo del codice fiscale per il nuovo proprietario {@Dto}", dto);
-                // 3) Calcolo del codice fiscale tramite libreria
-                //    (qui assumo che Gender sia "M"/"F" stringa; se è già char, togli il char.Parse)
+                _logger.LogInformation("Creazione nuovo proprietario {@Dto}", dto);
 
-                var fiscalCode = CodiceFiscaleLib.Helpers.EncodingHelper.Encode(
-                    dto.LastName,
-                    dto.FirstName,
-                    dto.Gender == Core.Enums.OwnerGender.Male ? 'M' : 'F',
-                    dto.BirthDate,
-                    dto.BirthPlace            // qui dovrebbe essere il CODICE del comune, non il nome
-                );
+                var result = await _service.CreateAsync(dto);
 
-                // 4) Controllo unicità codice fiscale
-                var exists = await _db.Owners.AnyAsync(v => v.FiscalCode == fiscalCode);
-                if (exists)
+                if (!result.Success)
                 {
-                    _logger.LogWarning("Codice fiscale {FiscalCode} già esistente", fiscalCode);
+                    if (result.Error == ErrorCode.DuplicateFiscalCode)
+                    {
+                        _logger.LogWarning("Codice fiscale duplicato per {@Dto}", dto);
+                        ModelState.AddModelError(nameof(dto.FiscalCode), "Codice fiscale già esistente.");
+                        return ValidationProblem(ModelState);
+                    }
 
-                    ModelState.AddModelError(nameof(Owner.FiscalCode), "Codice fiscale già esistente.");
-                    return ValidationProblem(ModelState);
+                    if (result.Error == ErrorCode.ValidationError)
+                    {
+                        _logger.LogWarning("Dati non validi per il calcolo del codice fiscale {@Dto}", dto);
+                        ModelState.AddModelError(nameof(dto.FiscalCode), "Dati insufficienti o codice fiscale non calcolabile.");
+                        return ValidationProblem(ModelState);
+                    }
+
+                    _logger.LogError("Errore durante la creazione del proprietario: {Error}", result.Error);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante la creazione del proprietario.");
                 }
 
-                // 5) Mappatura DTO -> entità e assegnazione CF
-                var owner = dto.ToEntity();
-                owner.FiscalCode = fiscalCode;
-
-                _db.Owners.Add(owner);
-                await _db.SaveChangesAsync();
-
-                var result = owner.ToDto();
-                _logger.LogInformation("Proprietario creato con Id {Id}", owner.Id);
-                return CreatedAtAction(nameof(GetById), new { id = owner.Id }, result);
+                var created = result.Data!;
+                _logger.LogInformation("Proprietario creato con Id {Id}", created.Id);
+                return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Errore durante il calcolo del codice fiscale per {@Dto}", dto);
-                ModelState.AddModelError(nameof(Owner.FiscalCode), "Codice fiscale non valido.");
-                return ValidationProblem(ModelState);
+                _logger.LogError(ex, "Errore imprevisto durante la creazione del proprietario {@Dto}", dto);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante la creazione del proprietario.");
             }
         }
 
-
-        // PUT: api/owner/{id}
+        // PUT: api/owners/{id}
         [HttpPut("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -155,24 +130,28 @@ namespace CarManager.Api.Controllers
                 _logger.LogWarning("Dati di aggiornamento proprietario non validi {@Dto}", dto);
                 return BadRequest(ModelState);
             }
-               
+
             _logger.LogInformation("Aggiornamento del proprietario con Id {Id}", id);
-            var owner = await _db.Owners.FindAsync(id);
-            if (owner == null)
+
+            var result = await _service.UpdateAsync(id, dto);
+
+            if (!result.Success)
             {
-                _logger.LogWarning("Proprietario con Id {Id} non trovato per l'aggiornamento", id);
-                return NotFound();
+                if (result.Error == ErrorCode.OwnerNotFound)
+                {
+                    _logger.LogWarning("Proprietario con Id {Id} non trovato per l'aggiornamento", id);
+                    return NotFound();
+                }
+
+                _logger.LogError("Errore durante l'aggiornamento del proprietario: {Error}", result.Error);
+                return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante l'aggiornamento del proprietario.");
             }
-                
 
-            dto.UpdateEntity(owner);
-
-            await _db.SaveChangesAsync();
             _logger.LogInformation("Proprietario con Id {Id} aggiornato con successo", id);
-            return NoContent(); // o Ok(owner.ToDto());
+            return NoContent();
         }
 
-        // DELETE: api/owner/{id}
+        // DELETE: api/owners/{id}
         [HttpDelete("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -182,15 +161,27 @@ namespace CarManager.Api.Controllers
             _logger.LogInformation("Cancellazione del proprietario con Id {Id}", id);
             try
             {
-                var owner = await _db.Owners.FindAsync(id);
-                if (owner == null)
+                var result = await _service.DeleteAsync(id);
+
+                if (!result.Success)
                 {
-                    _logger.LogWarning("Proprietario con Id {Id} non trovato per la cancellazione", id);
-                    return NotFound();
+                    if (result.Error == ErrorCode.OwnerNotFound)
+                    {
+                        _logger.LogWarning("Proprietario con Id {Id} non trovato per la cancellazione", id);
+                        return NotFound();
+                    }
+
+                    // relazione non vuota o validazione business
+                    if (result.Error == ErrorCode.ValidationError)
+                    {
+                        _logger.LogWarning("Impossibile cancellare il proprietario {Id} per vincoli di relazione", id);
+                        return BadRequest("Il proprietario non può essere cancellato: esistono relazioni attive.");
+                    }
+
+                    _logger.LogError("Errore durante la cancellazione del proprietario: {Error}", result.Error);
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Errore del server durante la cancellazione del proprietario.");
                 }
-                   
-                _db.Owners.Remove(owner);
-                await _db.SaveChangesAsync();
+
                 _logger.LogInformation("Proprietario con Id {Id} cancellato con successo", id);
                 return NoContent();
             }
@@ -201,7 +192,7 @@ namespace CarManager.Api.Controllers
             }
         }
 
-        //GET: api/owners/search/{name}
+        // GET: api/owners/search/{name}
         [HttpGet("search/{name}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -216,48 +207,40 @@ namespace CarManager.Api.Controllers
             }
             var term = name.Trim();
 
-            var owners = await _db.Owners
-                .Where(o => o.FirstName.Contains(term) || o.LastName.Contains(term))
-                .ToListAsync();
+            var owners = await _service.SearchAsync(term);
 
-            if (owners.Count == 0)
+            if (owners == null || owners.Count == 0)
             {
                 _logger.LogInformation("Nessun proprietario trovato per il termine di ricerca '{Name}'", name);
                 return NoContent();
             }
 
-            var result = owners.Select(o => o.ToDto());
             _logger.LogInformation("{Count} proprietari trovati per il termine di ricerca '{Name}'", owners.Count, name);
-            return Ok(result);
-
+            return Ok(owners);
         }
+
+        // POST: api/owners/fiscalcode/preview
         // POST: api/owners/fiscalcode/preview
         [HttpPost("fiscalcode/preview")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult<string> GetFiscalCodePreview([FromBody] CreateOwnerDTO dto)
+        public ActionResult<string> GetFiscalCodePreview([FromBody] FiscalCodePreviewDTO dto)
         {
-            // volendo puoi usare lo stesso controllo che hai in Create
-            if (string.IsNullOrWhiteSpace(dto.FirstName) ||
-                string.IsNullOrWhiteSpace(dto.LastName) ||
-                dto.BirthDate == default ||
-                string.IsNullOrWhiteSpace(dto.BirthPlace) ||
-                string.IsNullOrWhiteSpace(dto.Gender.ToString()))
-            {
-                _logger.LogWarning("Dati insufficienti per il calcolo del codice fiscale (preview) {@Dto}", dto);
-                return BadRequest("Dati insufficienti per calcolare il codice fiscale.");
-            }
+            if (dto.Gender == OwnerGender.Unknown)
+                return BadRequest("Sesso non valido.");
 
             try
             {
+                var normalizedBirthPlace = Core.Extensions.BirthPlaceNormalizer.NormalizeBirthPlace(dto.BirthPlace);
+
                 var fiscalCode = CodiceFiscaleLib.Helpers.EncodingHelper.Encode(
                     dto.LastName,
                     dto.FirstName,
-                    char.Parse(dto.Gender.ToString()),
+                    dto.Gender == OwnerGender.Male ? 'M' : 'F',
                     dto.BirthDate,
-                    dto.BirthPlace
+                    normalizedBirthPlace
                 );
-                _logger.LogInformation("Calcolo del codice fiscale (preview) riuscito: {FiscalCode}", fiscalCode);
+
                 return Ok(fiscalCode);
             }
             catch (Exception ex)
@@ -266,6 +249,5 @@ namespace CarManager.Api.Controllers
                 return BadRequest("Errore nel calcolo del codice fiscale.");
             }
         }
-
     }
 }

@@ -1,37 +1,29 @@
-﻿using System;
+﻿using CarManager.App.Models.Vehicle;
+using CarManager.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using CarManager.App.Models.Vehicle;
 
 namespace CarManager.App.Models.Maintenance
 {
     public class MaintenanceModel
     {
         public int Id { get; set; }
-
         public int VehicleId { get; set; }
-        //public VehicleModel Vehicle { get; set; } = default!;
         public string? VehiclePlate { get; set; }
-
         public DateTime Date { get; set; }
 
-        public string Type { get; set; } = string.Empty;
+        public MaintenanceType MaintenanceType { get; set; }
+        public string? MaintenanceTypeName { get; set; }
 
         public string? Description { get; set; }
-
         public int? Km { get; set; }
-
-        [Column(TypeName = "decimal(10,2)")]
         public decimal? Cost { get; set; }
-
-        [MaxLength(150)]
         public string? Workshop { get; set; }
-
-        [MaxLength(500)]
         public string? Notes { get; set; }
     }
 }

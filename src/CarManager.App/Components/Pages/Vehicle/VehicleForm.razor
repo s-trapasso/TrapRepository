@@ -1,0 +1,197 @@
+﻿@using CarManager.App.Models.Vehicle
+@using CarManager.App.Models.Owner
+@using CarManager.App.Services.Interfaces
+@using CarManager.Core.Enums
+@using CarManager.Core.Extensions
+@using CarManager.App.Components.Pages.Owner
+
+@inject IOwnerApiClient OwnerApiClient
+@inject IDialogService DialogService
+
+<MudForm @ref="_form">
+    <MudGrid Spacing="3">
+
+        <!-- PROPRIETARIO -->
+        <MudItem xs="12">
+            <MudAutocomplete T="OwnerModel"
+                             Label="Proprietario"
+                             Value="_selectedOwner"
+                             ValueChanged="OnOwnerSelected"
+                             SearchFunc="SearchOwners"
+                             ToStringFunc="OwnerToString"
+                             ResetValueOnEmptyText="true"
+                             Clearable="true"
+                             Required="true" />
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       Class="mt-2"
+                       OnClick="OpenCreateOwnerDialog">
+                Censisci nuovo proprietario
+            </MudButton>
+        </MudItem>
+
+        <!-- TARGA -->
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Targa"
+                          @bind-Value="Model.Plate"
+                          Required="true" />
+        </MudItem>
+
+        <!-- MARCA -->
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Marca"
+                          @bind-Value="Model.Brand"
+                          Required="true" />
+        </MudItem>
+
+        <!-- MODELLO -->
+        <MudItem xs="12" sm="6">
+            <MudTextField Label="Modello"
+                          @bind-Value="Model.Model"
+                          Required="true" />
+        </MudItem>
+
+        <!-- ANNO -->
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="int" Label="Anno"
+                             @bind-Value="Model.Year"
+                             Required="true" />
+        </MudItem>
+
+        <!-- ALIMENTAZIONE -->
+        <MudItem xs="12" sm="6">
+            <MudSelect T="FuelTypeEnum"
+                       Label="Alimentazione"
+                       @bind-Value="Model.FuelType"
+                       Required="true">
+                <MudSelectItem Value="FuelTypeEnum.Unknown" Disabled="true">
+                    -- Seleziona alimentazione --
+                </MudSelectItem>
+
+                @foreach (var fuel in Enum.GetValues<FuelTypeEnum>().Where(f => f != FuelTypeEnum.Unknown))
+                {
+                    <MudSelectItem Value="@fuel">@fuel.GetDescription()</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+
+        <!-- KM -->
+        <MudItem xs="12" sm="6">
+            <MudNumericField T="int" Label="Km"
+                             @bind-Value="Model.Km"
+                             Required="true" />
+        </MudItem>
+
+        <!-- BUTTONS -->
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Disabled="IsSaving"
+                       OnClick="Submit">
+                @(IsSaving ? "Salvataggio..." : SubmitText)
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Class="ms-2"
+                       Disabled="IsSaving"
+                       OnClick="OnCancel">
+                Annulla
+            </MudButton>
+
+            @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+            {
+                <MudText Color="Color.Error" Class="mt-2">@ErrorMessage</MudText>
+            }
+        </MudItem>
+
+    </MudGrid>
+</MudForm>
+
+@code {
+    private MudForm? _form;
+    private OwnerModel? _selectedOwner;
+
+    [Parameter, EditorRequired] public VehicleCreateModel Model { get; set; } = default!;
+    [Parameter] public string SubmitText { get; set; } = "Salva";
+    [Parameter] public bool IsSaving { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+    [Parameter] public EventCallback OnSubmit { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    // opzionale: se in edit vuoi pre-selezionare l'owner (se hai endpoint per caricarlo)
+    [Parameter] public OwnerModel? InitialOwner { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        // se il chiamante passa l'owner iniziale (edit), lo mostriamo
+        if (InitialOwner is not null && _selectedOwner is null)
+        {
+            _selectedOwner = InitialOwner;
+            Model.OwnerId = InitialOwner.Id;
+        }
+    }
+
+    private string OwnerToString(OwnerModel? o)
+    {
+        if (o is null) return string.Empty;
+        var name = $"{o.LastName} {o.FirstName}".Trim();
+        return string.IsNullOrWhiteSpace(o.FiscalCode) ? name : $"{name} ({o.FiscalCode})";
+    }
+
+    private Task OnOwnerSelected(OwnerModel? owner)
+    {
+        _selectedOwner = owner;
+        Model.OwnerId = owner?.Id ?? 0;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<OwnerModel>> SearchOwners(string text, CancellationToken ct)
+    {
+        var all = await OwnerApiClient.GetAllOwnersAsync(ct);
+
+        if (string.IsNullOrWhiteSpace(text))
+            return all;
+
+        text = text.Trim();
+
+        return all.Where(o =>
+            o.FirstName.Contains(text, StringComparison.OrdinalIgnoreCase) ||
+            o.LastName.Contains(text, StringComparison.OrdinalIgnoreCase) ||
+            o.FiscalCode.Contains(text, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task OpenCreateOwnerDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        // usa il namespace dove hai messo CreateOwnerDialog
+        var dialog = DialogService.Show<CreateOwnerDialog>("Nuovo proprietario", options: options);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is OwnerModel created)
+        {
+            _selectedOwner = created;
+            Model.OwnerId = created.Id;
+            StateHasChanged();
+        }
+    }
+
+    private async Task Submit()
+    {
+        if (_form is null) return;
+
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        await OnSubmit.InvokeAsync();
+    }
+}

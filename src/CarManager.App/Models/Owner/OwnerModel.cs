@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarManager.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +15,8 @@ namespace CarManager.App.Models.Owner
         public string Address { get; set; } = string.Empty;
         public DateTime BirthDate { get; set; }
         public string BirthPlace { get; set; } = string.Empty;
-        public string Gender { get; set; } = string.Empty; // "M" o "F"
+        public OwnerGender Gender { get; set; }          // <— enum, non string
+        public string? GenderName { get; set; }          // <— valorizzato dall’API
         public string FiscalCode { get; set; } = string.Empty;
         
     }

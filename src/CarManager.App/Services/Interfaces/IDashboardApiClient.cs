@@ -4,12 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CarManager.Core.Enums
+namespace CarManager.App.Services.Interfaces
 {
-    public enum VehicleError
+    internal class IDashboardApiClient
     {
-        None = 0,
-        NotFound = 1,
-        DuplicatePlate = 2
     }
 }

@@ -28,5 +28,7 @@ namespace CarManager.App.Models.Vehicle
         public int Km { get; set; }
         [Required]
         public FuelTypeEnum FuelType { get; set; }
+        [Range(1, int.MaxValue, ErrorMessage = "Seleziona un proprietario.")]
+        public int OwnerId { get; set; }
     }
 }

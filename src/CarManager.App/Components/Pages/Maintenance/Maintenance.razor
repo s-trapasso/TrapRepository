@@ -1,9 +1,10 @@
 ﻿@page "/maintenances"
+@using CarManager.App.Components.Pages.Commons
 @using CarManager.App.Models.Maintenance
 @using CarManager.App.Services.Interfaces
 @inject IMaintenanceApiClient MaintenanceApiClient
 @inject NavigationManager Nav
-
+@inject IDialogService DialogService
 
 
 <MudContainer>
@@ -63,16 +64,23 @@
                     <MudTh>KM</MudTh>
                     <MudTh>Officina</MudTh>
                     <MudTh>Note</MudTh>
+                    <MudTh>Azioni</MudTh> @*colonna azioni*@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Targa">@context.VehiclePlate</MudTd>
                     <MudTd DataLabel="Data">@context.Date</MudTd>
-                    <MudTd DataLabel="Tipo">@context.Type</MudTd>
-                    <MudTd DataLabel="DEscrizione">@context.Description</MudTd>
+                    <MudTd DataLabel="Tipo">@context.MaintenanceTypeName</MudTd>
+                    <MudTd DataLabel="Descrizione">@context.Description</MudTd>
                     <MudTd DataLabel="Costo">@context.Cost</MudTd>
                     <MudTd DataLabel="KM">@context.Km</MudTd>
                     <MudTd DataLabel="Officina">@context.Workshop</MudTd>
                     <MudTd DataLabel="Note">@context.Notes</MudTd>
+                    <MudTd>
+                        <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
+                            <MudMenuItem OnClick="@(() => EditMaintenance(context.Id))">Modifica</MudMenuItem>
+                            <MudMenuItem OnClick="@(() => DeleteMaintenance(context))">Elimina</MudMenuItem>
+                        </MudMenu>
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
         }
@@ -100,6 +108,35 @@
         finally
         {
             _isLoading = false;
+        }
+    }
+    private void EditMaintenance(int maintenanceId)
+    {
+        Nav.NavigateTo($"/maintenances/edit/{maintenanceId}");
+    }
+    private async Task DeleteMaintenance(MaintenanceModel maintenance)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Sei sicuro di voler eliminare la manutenzione del veicolo '{maintenance.VehiclePlate}'?" },
+            { "ConfirmButtonText", "Elimina" },
+            { "Color", Color.Error }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, CloseOnEscapeKey = true };
+        IDialogReference dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Conferma eliminazione", parameters, options);
+        DialogResult? result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            try
+            {
+                await MaintenanceApiClient.DeleteMaintenanceAsync(maintenance.Id);
+                _maintenances?.Remove(maintenance);
+                await OnInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Errore durante l'eliminazione della manutenzione del veicolo '{maintenance.VehiclePlate}': {ex.Message}";
+            }
         }
     }
 }

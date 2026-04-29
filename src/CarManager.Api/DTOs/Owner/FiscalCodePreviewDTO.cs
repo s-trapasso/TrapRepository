@@ -3,16 +3,13 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CarManager.Api.DTOs.Owner
 {
-    public class CreateOwnerDTO
+    public class FiscalCodePreviewDTO
     {
         [Required, StringLength(50)]
         public string FirstName { get; set; } = default!;
 
         [Required, StringLength(50)]
         public string LastName { get; set; } = default!;
-
-        [Required, StringLength(100)]
-        public string Address { get; set; } = default!;
 
         [Required]
         public DateTime BirthDate { get; set; }
@@ -22,9 +19,5 @@ namespace CarManager.Api.DTOs.Owner
 
         [Required]
         public OwnerGender Gender { get; set; }
-
-        // Reso opzionale: il service calcola il codice fiscale se necessario.
-        [StringLength(16)]
-        public string? FiscalCode { get; set; }
     }
 }

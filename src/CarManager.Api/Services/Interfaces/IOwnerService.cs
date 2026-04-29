@@ -1,4 +1,5 @@
-﻿using CarManager.Api.DTOs.Owner;
+﻿using CarManager.Api.Common;
+using CarManager.Api.DTOs.Owner;
 
 namespace CarManager.Api.Services.Interfaces
 {
@@ -9,10 +10,12 @@ namespace CarManager.Api.Services.Interfaces
 
         Task<OwnerDTO?> GetWithVehiclesAsync(int id);
 
-        Task<(bool Success, string? Error, OwnerDTO? Data)> CreateAsync(CreateOwnerDTO dto);
+        Task<Result<OwnerDTO>> CreateAsync(CreateOwnerDTO dto);
 
-        Task<(bool Success, string? Error)> UpdateAsync(int id, UpdateOwnerDTO dto);
+        Task<Result<OwnerDTO>> UpdateAsync(int id, UpdateOwnerDTO dto);
 
-        Task<bool> DeleteAsync(int id);
+        Task<Result<bool>> DeleteAsync(int id);
+
+        Task<List<OwnerDTO>> SearchAsync(string term);
     }
 }

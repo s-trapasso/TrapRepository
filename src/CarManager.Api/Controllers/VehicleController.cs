@@ -1,4 +1,5 @@
-﻿using CarManager.Api.DTOs.Vehicle;
+﻿using CarManager.Api.Common;
+using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -57,47 +58,27 @@ public class VehiclesController : ControllerBase
 
     // POST: api/vehicles
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<VehicleDTO>> Create([FromBody] CreateVehicleDTO dto)
+    public async Task<IActionResult> Create([FromBody] CreateVehicleDTO dto)
     {
         _logger.LogInformation("Creazione nuovo veicolo con targa: {Plate}", dto.Plate);
 
         if (!ModelState.IsValid)
         {
             _logger.LogWarning("ModelState non valido per creazione veicolo");
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         var result = await _service.CreateAsync(dto);
-
-        if (!result.Success)
+        
+        if (result.Success)
         {
-            _logger.LogWarning("Errore durante creazione veicolo: {Error}", result.Error);
-
-            if (result.Error == VehicleError.DuplicatePlate)
-            {
-                ModelState.AddModelError(nameof(dto.Plate), "Targa già esistente");
-                return ValidationProblem(ModelState);
-            }
-
-            return StatusCode(StatusCodes.Status500InternalServerError, "Errore durante la creazione");
+            _logger.LogInformation("Vehicle created successfully with Id: {Id}", result.Data.Id);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data.Id }, result.Data);
         }
 
-        if (result.Vehicle == null)
-        {
-            _logger.LogError("Vehicle nullo dopo creazione");
-            return StatusCode(StatusCodes.Status500InternalServerError, "Errore interno");
-        }
-
-        _logger.LogInformation("Veicolo creato con Id: {Id}", result.Vehicle.Id);
-
-        return CreatedAtAction(
-            nameof(GetById),
-            new { id = result.Vehicle.Id },
-            result.Vehicle
-        );
+           
+        
+        return result.ToActionResult();
     }
 
     // PUT: api/vehicles/{id}
@@ -113,20 +94,14 @@ public class VehiclesController : ControllerBase
         if (!ModelState.IsValid)
         {
             _logger.LogWarning("ModelState non valido per update veicolo {Id}", id);
-            return BadRequest(ModelState);
+            return ValidationProblem(ModelState);
         }
 
         var result = await _service.UpdateAsync(id, dto);
-
         if (!result.Success)
-        {
-            _logger.LogWarning("Errore update veicolo {Id}: {Error}", id, result.Error);
-            return StatusCode(StatusCodes.Status500InternalServerError, "Errore durante l'aggiornamento");
-        }
+            _logger.LogWarning("Update failed for Vehicle {Id}", id);
 
-        _logger.LogInformation("Veicolo {Id} aggiornato con successo", id);
-
-        return NoContent();
+        return result.ToActionResult();
     }
 
     // DELETE: api/vehicles/{id}
@@ -136,15 +111,10 @@ public class VehiclesController : ControllerBase
     public async Task<IActionResult> Delete(int id)
     {
         _logger.LogInformation("Cancellazione veicolo {Id}", id);
-        var success = await _service.DeleteAsync(id);
-        if (!success)
-        {
-            _logger.LogWarning("Veicolo {Id} non trovato per la cancellazione", id);
-            return NotFound();
-        }
-        _logger.LogInformation("Veicolo {Id} rimosso dal database", id);
-
-        return NoContent();
+        var result = await _service.DeleteAsync(id);
+        if (!result.Success)
+            _logger.LogWarning("Delete failed for Vehicle {Id}", id);
+        return result.ToActionResult();
     }
 
 

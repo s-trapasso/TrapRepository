@@ -1,4 +1,5 @@
 using CarManager.Api.Data;
+using CarManager.Api.Mappings;
 using CarManager.Api.Services;
 using CarManager.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -18,13 +19,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Host.UseSerilog();
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters
-            .Add(new JsonStringEnumConverter());
-    });
-
+builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<CarManagerDbContext>(options =>
@@ -33,6 +28,7 @@ builder.Services.AddDbContext<CarManagerDbContext>(options =>
     options.UseSqlServer(connectionString);
 });
 
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
 builder.Services.AddScoped<IOwnerService, OwnerService>();

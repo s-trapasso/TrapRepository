@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarManager.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -15,19 +16,18 @@ namespace CarManager.App.Models.Owner
         [Required]
         [StringLength(50)]
         public string LastName { get; set; } = default!;
-        
+        [Required]
         [StringLength(100)]
-        public string? Address { get; set; }
+        public string Address { get; set; } = string.Empty;
         [Required]
         public DateTime? BirthDate { get; set; }
         [Required]
         [StringLength(50)]
         public string BirthPlace { get; set; } = default!;
         [Required]
-        [StringLength(1)]
-        public string Gender { get; set; } = default!; // "M" o "F"
+        public OwnerGender Gender { get; set; }
         [Required]
         [StringLength(16)]
-        public string FiscalCode { get; set; } = default!;
+        public string? FiscalCode { get; set; }
     }
 }

@@ -1,0 +1,34 @@
+﻿@page "/vehicles/edit/{id:int}"
+@using CarManager.App.Components.MappingsUI
+@using CarManager.App.Models.Vehicle
+@using CarManager.App.Services.Interfaces
+@inject IVehicleApiClient VehicleApiClient
+@inject NavigationManager Nav
+
+<MudPaper Class="p-4">
+    <MudText Typo="Typo.h5">Modifica Veicolo</MudText>
+    <VehicleForm Model="_model"
+                 SubmitText="Aggiorna"
+                 OnSubmit="Update"
+                 OnCancel="GoBack" />
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private VehicleCreateModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var vehicle = await VehicleApiClient.GetByIdAsync(Id);
+        _model = vehicle.ToCreateModel();
+    }
+
+    private async Task Update()
+    {
+        await VehicleApiClient.UpdateVehicleAsync(Id, _model);
+        Nav.NavigateTo("/vehicles");
+    }
+
+    private void GoBack() => Nav.NavigateTo("/vehicles");
+}

@@ -2,6 +2,8 @@
 @using CarManager.App.Models.Maintenance
 @using CarManager.App.Models.Vehicle
 @using CarManager.App.Services.Interfaces
+@using CarManager.Core.Extensions
+@using CarManager.Core.Enums
 @inject IMaintenanceApiClient MaintenanceApiClient
 @inject IVehicleApiClient VehicleApiClient
 @inject NavigationManager Nav
@@ -36,10 +38,21 @@
 
                 <!-- TIPO -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField Label="Tipo di manutenzione"
-                                  @bind-Value="_newMaintenance.Type"
-                                  Required="true"
-                                  For="@(() => _newMaintenance.Type)" />
+                    <MudSelect T="MaintenanceType"
+                               Label="Tipo di manutenzione"
+                               @bind-Value="_newMaintenance.MaintenanceType"
+                               Required="true"
+                               For="@(() => _newMaintenance.MaintenanceType)">
+
+                        <MudSelectItem Value="MaintenanceType.Unknown" Disabled="true">
+                            -- Seleziona un tipo --
+                        </MudSelectItem>
+
+                        @foreach (var t in Enum.GetValues<MaintenanceType>().Where(x => x != MaintenanceType.Unknown))
+                        {
+                            <MudSelectItem Value="t">@t.GetDescription()</MudSelectItem>
+                        }
+                    </MudSelect>
                 </MudItem>
 
                 <!-- DESCRIZIONE -->

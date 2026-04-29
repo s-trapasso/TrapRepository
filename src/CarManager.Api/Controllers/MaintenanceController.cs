@@ -2,6 +2,7 @@
 using CarManager.Api.DTOs.Maintenance;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
+using CarManager.Core.Enums;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,7 @@ namespace CarManager.Api.Controllers
 
             if (!result.Success)
             {
-                if (result.Error == "VehicleNotFound")
+                if (result.Error == ErrorCode.VehicleNotFound)
                     return NotFound("Veicolo non trovato");
 
                 return StatusCode(500, "Errore creazione manutenzione");
@@ -76,7 +77,7 @@ namespace CarManager.Api.Controllers
 
             if (!result.Success)
             {
-                if (result.Error == "NotFound")
+                if (result.Error == ErrorCode.NotFound)
                     return NotFound();
 
                 return StatusCode(500, "Errore aggiornamento manutenzione");
@@ -88,10 +89,15 @@ namespace CarManager.Api.Controllers
         [HttpDelete("{id:int}")]
         public async Task<IActionResult> Delete(int id)
         {
-            var success = await _service.DeleteAsync(id);
+            var result = await _service.DeleteAsync(id);
 
-            if (!success)
-                return NotFound();
+            if (!result.Success)
+            {
+                if (result.Error == ErrorCode.NotFound)
+                    return NotFound();
+
+                return StatusCode(500, "Errore eliminazione manutenzione");
+            }
 
             return NoContent();
         }

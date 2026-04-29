@@ -23,7 +23,7 @@ namespace CarManager.Api.DTOs.Owner
         [Required(ErrorMessage = "Campo obbligatorio"), MaxLength(100)]
         public string BirthPlace { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Campo obbligatorio"), MaxLength(1)]
+        [Required(ErrorMessage = "Campo obbligatorio")]
         public OwnerGender Gender { get; set; }
         public string GenderName => Gender.GetDescription();
 

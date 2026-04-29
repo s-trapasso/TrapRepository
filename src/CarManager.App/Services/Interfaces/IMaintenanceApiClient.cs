@@ -11,5 +11,6 @@ namespace CarManager.App.Services.Interfaces
     {
         Task<IReadOnlyList<MaintenanceModel>> GetAllMaintenancesAsync(CancellationToken cancellationToken = default);
         Task<MaintenanceModel> CreateMaintenanceAsync(MaintenanceCreateModel maintenanceCreateModel, CancellationToken cancellationToken = default);
+        Task DeleteMaintenanceAsync(int maintenanceId, CancellationToken cancellationToken = default);
     }
 }

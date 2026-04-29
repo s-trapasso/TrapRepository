@@ -1,0 +1,53 @@
+﻿@using CarManager.App.Models.Owner
+@using CarManager.App.Services.Interfaces
+@inject IOwnerApiClient OwnerApiClient
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" GutterBottom="true">Nuovo proprietario</MudText>
+
+        <OwnerForm Model="_model"
+                   SubmitText="@(_isSaving ? "Salvataggio..." : "Crea proprietario")"
+                   OnSubmit="HandleSubmit"
+                   OnCancel="Cancel" />
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <MudText Color="Color.Error" Class="mt-2">@_error</MudText>
+        }
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [CascadingParameter] public IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private OwnerCreateModel _model = new();
+    private bool _isSaving;
+    private string? _error;
+
+    private async Task HandleSubmit()
+    {
+        if (_isSaving) return;
+
+        _isSaving = true;
+        _error = null;
+
+        try
+        {
+            var created = await OwnerApiClient.CreateOwnerAsync(_model);
+
+            // Restituisce al chiamante l'owner creato (contiene Id)
+            MudDialog.Close(DialogResult.Ok(created));
+        }
+        catch (Exception ex)
+        {
+            _error = $"Errore durante la creazione del proprietario: {ex.Message}";
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

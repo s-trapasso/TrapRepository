@@ -1,4 +1,7 @@
-﻿using CarManager.Api;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using CarManager.Api;
+using CarManager.Api.Common;
 using CarManager.Api.Data;
 using CarManager.Api.DTOs;
 using CarManager.Api.DTOs.Maintenance;
@@ -16,112 +19,109 @@ namespace CarManager.Api.Services
     {
         private readonly CarManagerDbContext _db;
         private readonly ILogger<MaintenanceService> _logger;
-
-        public MaintenanceService(CarManagerDbContext db, ILogger<MaintenanceService> logger)
+        private readonly IMapper _mapper;
+        public MaintenanceService(CarManagerDbContext db, ILogger<MaintenanceService> logger, IMapper mapper)
         {
             _db = db;
             _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<List<MaintenanceDTO>> GetAllAsync()
         {
             return await _db.Maintenances
-                .Include(m => m.Vehicle)
-                .OrderByDescending(m => m.Date)
-                .Select(m => m.ToDto())
-                .ToListAsync();
+                            .ProjectTo<MaintenanceDTO>(_mapper.ConfigurationProvider) // 👈 usa AutoMapper per proiettare direttamente in DTO
+                            .ToListAsync();
         }
 
         public async Task<List<MaintenanceDTO>> GetByVehicleIdAsync(int vehicleId)
         {
             return await _db.Maintenances
-                .Where(m => m.VehicleId == vehicleId)
-                .OrderByDescending(m => m.Date)
-                .Select(m => m.ToDto())
-                .ToListAsync();
+                            .Where(m => m.VehicleId == vehicleId)
+                            .ProjectTo<MaintenanceDTO>(_mapper.ConfigurationProvider) // 👈 usa AutoMapper per proiettare direttamente in DTO
+                            .ToListAsync();
         }
 
         public async Task<MaintenanceDTO?> GetByIdAsync(int id)
         {
-            var entity = await _db.Maintenances
-                .Include(m => m.Vehicle)
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            return entity?.ToDto();
+            return await _db.Maintenances
+                            .Where(m => m.Id == id)
+                            .ProjectTo<MaintenanceDTO>(_mapper.ConfigurationProvider)
+                            .FirstOrDefaultAsync();
         }
 
-        public async Task<(bool Success, string? Error, MaintenanceDTO? Data)> CreateAsync(CreateMaintenanceDTO dto)
+        public async Task<Result<MaintenanceDTO>> CreateAsync(CreateMaintenanceDTO dto)
         {
-            var vehicle = await _db.Vehicles.FindAsync(dto.VehicleId);
+            var vehicleExists = await _db.Vehicles.AnyAsync(v => v.Id == dto.VehicleId);
 
-            if (vehicle == null)
-                return (false, "VehicleNotFound", null);
+            if (!vehicleExists)
+                return Result<MaintenanceDTO>.Fail(ErrorCode.VehicleNotFound);
 
-            var entity = dto.ToEntity();
+            var entity = _mapper.Map<Maintenance>(dto);
 
             _db.Maintenances.Add(entity);
             await _db.SaveChangesAsync();
 
-            // reload vehicle plate (opzionale ma utile per DTO)
-            await _db.Entry(entity).Reference(x => x.Vehicle).LoadAsync();
+            var result = await _db.Maintenances
+                                .Where(m => m.Id == entity.Id)
+                                .ProjectTo<MaintenanceDTO>(_mapper.ConfigurationProvider)
+                                .FirstAsync();
 
-            return (true, null, entity.ToDto());
+            return Result<MaintenanceDTO>.Ok(result);
         }
 
-        public async Task<(bool Success, string? Error)> UpdateAsync(int id, UpdateMaintenanceDTO dto)
+        public async Task<Result<MaintenanceDTO>> UpdateAsync(int id, UpdateMaintenanceDTO dto)
         {
             var entity = await _db.Maintenances.FindAsync(id);
 
             if (entity == null)
-                return (false, "NotFound");
+                return Result<MaintenanceDTO>.Fail(ErrorCode.NotFound);
 
-            dto.UpdateEntity(entity);
+            _mapper.Map(dto, entity);
 
             await _db.SaveChangesAsync();
 
-            return (true, null);
+            var result = await _db.Maintenances
+                                .Where(m => m.Id == id)
+                                .ProjectTo<MaintenanceDTO>(_mapper.ConfigurationProvider)
+                                .FirstAsync();
+
+            return Result<MaintenanceDTO>.Ok(result);
         }
 
-        public async Task<bool> DeleteAsync(int id)
+        public async Task<Result<bool>> DeleteAsync(int id)
         {
             var entity = await _db.Maintenances.FindAsync(id);
 
             if (entity == null)
-                return false;
+                return Result<bool>.Fail(ErrorCode.NotFound);
 
             _db.Maintenances.Remove(entity);
             await _db.SaveChangesAsync();
 
-            return true;
+            return Result<bool>.Ok(true);
         }
-        public async Task<bool> RegisterTireChangeAsync(TireChangeDTO dto)
+        public async Task<Result<bool>> RegisterTireChangeAsync(TireChangeDTO dto)
         {
-            using var transaction = await _db.Database.BeginTransactionAsync();
+            await using var transaction = await _db.Database.BeginTransactionAsync();
             var vehicle = await _db.Vehicles
                 .FirstOrDefaultAsync(v => v.Id == dto.VehicleId);
 
             if (vehicle == null)
             {
                 _logger.LogWarning("Vehicle {Id} not found for tire change", dto.VehicleId);
-                return false;
+                return Result<bool>.Fail(ErrorCode.VehicleNotFound);
             }
 
             // 1. aggiorno stato veicolo
             var oldType = vehicle.CurrentTireType;
 
+            //UPDATE VEHICLE
             vehicle.CurrentTireType = dto.NewTireType;
             vehicle.LastTireChangeDate = dto.Date;
 
             // 2. creo maintenance storica
-            var maintenance = new Maintenance
-            {
-                VehicleId = vehicle.Id,
-                Date = dto.Date,
-                MaintenanceType = MaintenanceType.TireChange,
-                Description = $"Cambio gomme {oldType} → {dto.NewTireType}",
-                Km = dto.Km,
-                Notes = dto.Notes
-            };
+            var maintenance = _mapper.Map<Maintenance>(dto);
 
             _db.Maintenances.Add(maintenance);
 
@@ -133,7 +133,7 @@ namespace CarManager.Api.Services
                 vehicle.Id, oldType, dto.NewTireType
             );
 
-            return true;
+            return Result<bool>.Ok(true);
         }
     }
 }

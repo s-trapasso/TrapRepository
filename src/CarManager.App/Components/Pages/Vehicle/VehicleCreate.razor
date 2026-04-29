@@ -1,8 +1,12 @@
 ﻿@page "/vehicles/create"
 @using CarManager.App.Models.Vehicle
 @using CarManager.App.Services.Interfaces
-
+@using CarManager.App.Models.Owner
+@using CarManager.App.Components.Pages.Owner
+@inject IOwnerApiClient OwnerApiClient
+@inject IDialogService DialogService
 @using CarManager.Core.Enums
+@using CarManager.Core.Extensions
 @inject IVehicleApiClient VehicleApiClient
 @inject NavigationManager Nav
 
@@ -12,6 +16,25 @@
         <MudText Typo="Typo.h4" GutterBottom="true">Nuovo Veicolo</MudText>
         <MudForm @ref="_newVehicleForm">
             <MudGrid Spacing="3">
+                <!-- PROPRIETARIO DEL VEICOLO -->
+                <MudItem xs="12">
+                    <MudAutocomplete T="OwnerModel"
+                                     Label="Proprietario"
+                                     Value="_selectedOwner"
+                                     ValueChanged="OnOwnerSelected"
+                                     SearchFunc="SearchOwners"
+                                     ToStringFunc="OwnerToString"
+                                     ResetValueOnEmptyText="true"
+                                     Clearable="true"
+                                     Required="true" />
+
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               Class="mt-2"
+                               OnClick="OpenCreateOwnerDialog">
+                        Censisci nuovo proprietario
+                    </MudButton>
+                </MudItem>
                 <!-- TARGA -->
                 <MudItem xs="12" sm="6">
                     <MudTextField Label="Targa"
@@ -35,10 +58,7 @@
                 </MudItem>
                 <!-- ANNO -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField Label="Anno"
-                                  @bind-Value="_newVehicle.Year"
-                                  Required="true"
-                                  For="@(() => _newVehicle.Year)" />
+                    <MudNumericField T="int" Label="Anno" @bind-Value="_newVehicle.Year" Required="true" />
                 </MudItem>
                 <!-- ALIMENTAZIONE -->
                 <MudItem xs="12" sm="6">
@@ -47,18 +67,20 @@
                                @bind-Value="_newVehicle.FuelType"
                                Required="true"
                                For="@(() => _newVehicle.FuelType)">
-                        @foreach (var fuel in Enum.GetValues<FuelTypeEnum>())
+
+                        <MudSelectItem Value="FuelTypeEnum.Unknown" Disabled="true">
+                            -- Seleziona alimentazione --
+                        </MudSelectItem>
+
+                        @foreach (var fuel in Enum.GetValues<FuelTypeEnum>().Where(f => f != FuelTypeEnum.Unknown))
                         {
-                            <MudSelectItem Value="@fuel">@fuel</MudSelectItem>
+                            <MudSelectItem Value="@fuel">@fuel.GetDescription()</MudSelectItem>
                         }
                     </MudSelect>
                 </MudItem>
                 <!-- KM -->
                 <MudItem xs="12" sm="6">
-                    <MudTextField Label="Km"
-                                  @bind-Value="_newVehicle.Km"
-                                  Required="true"
-                                  For="@(() => _newVehicle.Km)" />
+                    <MudNumericField T="int" Label="Km" @bind-Value="_newVehicle.Km" Required="true" />
                 </MudItem>
 
                 <!--BUTTONS-->
@@ -91,9 +113,69 @@
     private VehicleCreateModel _newVehicle = new();
     private bool _isSaving = false;
     private string? _errorMessage;
+    private OwnerModel? _selectedOwner;
 
+    private string OwnerToString(OwnerModel? ownerModel)
+    {
+        if (ownerModel is null) return string.Empty;
+        var name = $"{ownerModel.LastName} {ownerModel.FirstName}".Trim();
+        return string.IsNullOrWhiteSpace(ownerModel.FiscalCode) ? name : $"{name} ({ownerModel.FiscalCode})"; 
+    }
+
+    private Task OnOwnerSelected(OwnerModel? owner)
+    {
+        _selectedOwner = owner;
+        _newVehicle.OwnerId = owner?.Id ?? 0;
+        return Task.CompletedTask;
+    }
+
+    private async Task<IEnumerable<OwnerModel>> SearchOwners(string value, CancellationToken cancellationToken)
+    {
+        var all = await OwnerApiClient.GetAllOwnersAsync(cancellationToken);
+
+        if (string.IsNullOrWhiteSpace(value))
+            return all;
+
+        value = value.Trim();
+
+        return all.Where(o =>
+        o.FirstName.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+        o.LastName.Contains(value, StringComparison.OrdinalIgnoreCase) ||
+        o.FiscalCode.Contains(value, StringComparison.OrdinalIgnoreCase));
+    }
+    private async Task OpenCreateOwnerDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+
+        var dialog = DialogService.Show<CreateOwnerDialog>("Nuovo proprietario", options: options);
+        var result = await dialog.Result;
+
+        if (result is null || result.Canceled)
+            return;
+
+        if (result.Data is OwnerModel created)
+        {
+            _selectedOwner = created;
+            _newVehicle.OwnerId = created.Id;
+
+            // forza refresh UI
+            StateHasChanged();
+        }
+    }
     private async Task HandleValidSubmit()
     {
+        if (_newVehicleForm is null)
+            return;
+
+        await _newVehicleForm.Validate();
+        if (!_newVehicleForm.IsValid)
+            return;
+
         _isSaving = true;
         _errorMessage = null;
         try

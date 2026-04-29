@@ -1,5 +1,7 @@
 ﻿@using CarManager.App.Models.Owner
 @using CarManager.App.Services.Interfaces
+@using CarManager.Core.Enums
+@using CarManager.Core.Extensions
 
 @inject IOwnerApiClient OwnerApiClient
 
@@ -36,13 +38,25 @@
                           Immediate="true"
                           Required="true" />
         </MudItem>
-
         <MudItem xs="12" sm="6">
-            <MudTextField Label="Sesso (M/F)"
-                          Value="Model.Gender"
-                          ValueChanged="@(async (string v) => { Model.Gender = v; await OnOwnerDataChanged(); })"
+            <MudTextField Label="Indirizzo"
+                          Value="Model.Address"
+                          ValueChanged="@(async (string v) => { Model.Address = v; await OnOwnerDataChanged(); })"
                           Immediate="true"
                           Required="true" />
+        </MudItem>
+
+
+        <MudItem xs="12" sm="6">
+                <MudSelect T="int"
+                           Label="Sesso"
+                           Value="(int)Model.Gender"
+                           ValueChanged="@(async (int v) => { Model.Gender = (OwnerGender)v; await OnOwnerDataChanged(); })"
+                           Required="true">
+                    <MudSelectItem Value="0" Disabled="true">-- Seleziona --</MudSelectItem>
+                    <MudSelectItem Value="1">@OwnerGender.Male.GetDescription()</MudSelectItem>
+                    <MudSelectItem Value="2">@OwnerGender.Female.GetDescription()</MudSelectItem>
+                </MudSelect>
         </MudItem>
 
         <MudItem xs="12" sm="6">
@@ -71,6 +85,7 @@
 @code {
     private MudForm? _form;
     private CancellationTokenSource? _cts;
+    private string? _lastPreviewKey;
 
     [Parameter, EditorRequired] public OwnerCreateModel Model { get; set; } = default!;
     [Parameter] public string SubmitText { get; set; } = "Salva";
@@ -79,31 +94,71 @@
 
     private async Task OnOwnerDataChanged()
     {
+        Console.WriteLine("1) fired");
+
         // Annulla eventuale chiamata precedente
         _cts?.Cancel();
+        _cts?.Dispose();
         _cts = new CancellationTokenSource();
+        var token = _cts.Token;
 
         try
         {
-            if (!string.IsNullOrWhiteSpace(Model.FirstName) &&
+            // Debounce: aspetta che l'utente smetta di digitare per 500ms prima di fare la chiamata
+            await Task.Delay(500, token);
+            Console.WriteLine("2) debounce passed");
+
+            var hasMinimumData =
+                !string.IsNullOrWhiteSpace(Model.FirstName) &&
                 !string.IsNullOrWhiteSpace(Model.LastName) &&
                 Model.BirthDate != null &&
                 !string.IsNullOrWhiteSpace(Model.BirthPlace) &&
-                !string.IsNullOrWhiteSpace(Model.Gender))
+                Model.Gender != OwnerGender.Unknown;
+
+            Console.WriteLine(
+                $"3) hasMinimumData={hasMinimumData} gender={(int)Model.Gender} birthDate={Model.BirthDate} birthPlace='{Model.BirthPlace}'");
+
+            if (!hasMinimumData)
             {
-                if(string.IsNullOrEmpty(Model.Address))
-                    Model.Address = string.Empty;
-
-                var fiscalCode = await OwnerApiClient.GetFiscalCodePreviewAsync(Model, _cts.Token);
-                Model.FiscalCode = fiscalCode ?? string.Empty;
-
-                if (_form != null)
-                    await _form.Validate();
+                Model.FiscalCode = string.Empty;
+                _lastPreviewKey = null; // forza il refresh al prossimo cambio
+                return;
             }
+
+            // Normalizza Address (non serve ai fini del CF, ma evita null)
+            Model.Address ??= string.Empty;
+
+            // Dedupe: se i dati minimi non cambiano, non richiamare
+            var previewKey =
+                $"{Model.FirstName.Trim()}|{Model.LastName.Trim()}|{Model.BirthDate:yyyy-MM-dd}|{Model.BirthPlace.Trim()}|{(int)Model.Gender}";
+
+            Console.WriteLine($"3b) previewKey='{previewKey}' last='{_lastPreviewKey}'");
+
+            if (previewKey == _lastPreviewKey)
+                return;
+
+            _lastPreviewKey = previewKey;
+
+            Console.WriteLine("4) calling api...");
+
+            var fiscalCode = await OwnerApiClient.GetFiscalCodePreviewAsync(Model, token);
+            Console.WriteLine($"5) api returned '{fiscalCode}'");
+
+            Model.FiscalCode = fiscalCode?.Trim() ?? string.Empty;
+
+            if (_form != null)
+                await _form.Validate();
         }
         catch (OperationCanceledException)
         {
-            // Ignora se la chiamata è stata annullata
+            // Atteso: annullato perché l’utente ha continuato a digitare
+            Console.WriteLine("CANCELED");
+        }
+        catch (Exception ex)
+        {
+            // Non far crashare l’UI mentre l’utente digita.
+            Console.WriteLine(ex.ToString());
+            Model.FiscalCode = string.Empty;
         }
     }
 }

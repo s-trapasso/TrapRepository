@@ -12,6 +12,8 @@ public class UpdateVehicleDTO
     [Required]
     [StringLength(50)]
     public string Model { get; set; } = string.Empty;
+    [Required]
+    public string Plate { get; set; } = string.Empty;
 
     [Range(1900, 2100)]
     public int Year { get; set; }

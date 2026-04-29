@@ -11,5 +11,8 @@ namespace CarManager.App.Services.Interfaces
     {
         Task<IReadOnlyList<VehicleModel>> GetAllVehiclesAsync(CancellationToken cancellationToken = default);
         Task<VehicleModel> CreateVehicleAsync(VehicleCreateModel vehicleCreateModel, CancellationToken cancellationToken = default);
+        Task<VehicleModel> GetByIdAsync(int vehicleId, CancellationToken cancellationToken = default);
+        Task UpdateVehicleAsync(int vehicleId, VehicleCreateModel vehicleUpdateModel, CancellationToken cancellationToken = default);
+        Task DeleteVehicleAsync(int vehicleId, CancellationToken cancellationToken = default);
     }
 }

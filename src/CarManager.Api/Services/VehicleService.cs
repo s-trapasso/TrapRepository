@@ -1,9 +1,13 @@
-﻿using CarManager.Api;
+﻿using AutoMapper;
+using AutoMapper.QueryableExtensions;
+using CarManager.Api;
+using CarManager.Api.Common;
 using CarManager.Api.Data;
 using CarManager.Api.DTOs.Vehicle;
 using CarManager.Api.Mappings;
 using CarManager.Api.Services.Interfaces;
 using CarManager.Core.Enums;
+using CarManager.Core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,91 +16,109 @@ namespace CarManager.Api.Services
     public class VehicleService : IVehicleService
     {
         private readonly CarManagerDbContext _db;
-
-        public VehicleService(CarManagerDbContext db)
+        private readonly IMapper _mapper;
+        private readonly ILogger<VehicleService> _logger;
+        public VehicleService(CarManagerDbContext db, IMapper mapper, ILogger<VehicleService> logger)
         {
             _db = db;
-        }
-        public async Task<(bool Success, VehicleError Error, VehicleDTO? Vehicle)> CreateAsync(CreateVehicleDTO dto)
-        {
-            var exists = await _db.Vehicles
-                .AnyAsync(v => v.Plate.ToLower() == dto.Plate.ToLower());
-
-            if (exists)
-                return (false, VehicleError.DuplicatePlate, null);
-
-            var ownerExists = await _db.Owners.AnyAsync(o => o.Id == dto.OwnerId);
-
-            if (!ownerExists)
-                return (false, VehicleError.NotFound, null);
-
-            var vehicle = dto.ToEntity();
-
-            _db.Vehicles.Add(vehicle);
-            await _db.SaveChangesAsync();
-
-            return (true, VehicleError.None, vehicle.ToDto());
+            _mapper = mapper;
+            _logger = logger;
         }
 
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var vehicle = await _db.Vehicles.FindAsync(id);
-            if (vehicle == null)
-                return false;
 
-            _db.Vehicles.Remove(vehicle);
-            await _db.SaveChangesAsync();
 
-            return true;
-        }
-
+        // =========================
+        // GET ALL
+        // =========================
         public async Task<List<VehicleDTO>> GetAllAsync()
         {
-            var vehicles = await _db.Vehicles
-            .AsNoTracking()
-            .OrderBy(v => v.Plate)
-            .ToListAsync();
-
-            return vehicles.Select(v => v.ToDto()).ToList();
+            return await _db.Vehicles
+                .ProjectTo<VehicleDTO>(_mapper.ConfigurationProvider)
+                .ToListAsync();
         }
 
-        public async Task<VehicleDTO?> GetByIdAsync(int id)
-        {
-            var vehicle = await _db.Vehicles
-                .AsNoTracking()
-                .FirstOrDefaultAsync(v => v.Id == id);
-
-            return vehicle?.ToDto();
-        }
-
+        // =========================
+        // SEARCH
+        // =========================
         public async Task<List<VehicleDTO>> SearchByPlateAsync(string plate)
         {
-            var term = plate.Trim().ToLower();
-
-            var vehicles = await _db.Vehicles
-                .AsNoTracking()
-                .Where(v => v.Plate.ToLower().Contains(term))
+            return await _db.Vehicles
+                .Where(v => v.Plate.Contains(plate))
+                .ProjectTo<VehicleDTO>(_mapper.ConfigurationProvider)
                 .ToListAsync();
-
-            return vehicles.Select(v => v.ToDto()).ToList();
         }
 
-        public async Task<(bool Success, VehicleError Error)> UpdateAsync(int id, UpdateVehicleDTO dto)
+        // =========================
+        // GET BY ID
+        // =========================
+        public async Task<VehicleDTO?> GetByIdAsync(int id)
         {
-            var vehicle = await _db.Vehicles.FindAsync(id);
-            if (vehicle == null)
-                return (false, VehicleError.NotFound);
+            return await _db.Vehicles
+                .Where(v => v.Id == id)
+                .ProjectTo<VehicleDTO>(_mapper.ConfigurationProvider)
+                .FirstOrDefaultAsync();
+        }
 
+        // =========================
+        // CREATE
+        // =========================
+        public async Task<Result<VehicleDTO>> CreateAsync(CreateVehicleDTO dto)
+        {
             var exists = await _db.Vehicles
-                .AnyAsync(v => v.Id != id);
+                .AnyAsync(v => v.Plate == dto.Plate);
 
             if (exists)
-                return (false, VehicleError.DuplicatePlate);
+                return Result<VehicleDTO>.Fail(ErrorCode.DuplicatePlate);
 
-            dto.UpdateEntity(vehicle);
+            var entity = _mapper.Map<Vehicle>(dto);
+
+            _db.Vehicles.Add(entity);
             await _db.SaveChangesAsync();
 
-            return (true, VehicleError.None);
+            var result = await _db.Vehicles
+                .Where(v => v.Id == entity.Id)
+                .ProjectTo<VehicleDTO>(_mapper.ConfigurationProvider)
+                .FirstAsync();
+
+            return Result<VehicleDTO>.Ok(result);
+        }
+
+        // =========================
+        // UPDATE
+        // =========================
+        public async Task<Result<VehicleDTO>> UpdateAsync(int id, UpdateVehicleDTO dto)
+        {
+            var entity = await _db.Vehicles.FindAsync(id);
+
+            if (entity == null)
+                return Result<VehicleDTO>.Fail(ErrorCode.NotFound);
+
+            _mapper.Map(dto, entity);
+
+            await _db.SaveChangesAsync();
+
+            var result = await _db.Vehicles
+                .Where(v => v.Id == id)
+                .ProjectTo<VehicleDTO>(_mapper.ConfigurationProvider)
+                .FirstAsync();
+
+            return Result<VehicleDTO>.Ok(result);
+        }
+
+        // =========================
+        // DELETE
+        // =========================
+        public async Task<Result<bool>> DeleteAsync(int id)
+        {
+            var entity = await _db.Vehicles.FindAsync(id);
+
+            if (entity == null)
+                return Result<bool>.Fail(ErrorCode.NotFound);
+
+            _db.Vehicles.Remove(entity);
+            await _db.SaveChangesAsync();
+
+            return Result<bool>.Ok(true);
         }
     }
 }

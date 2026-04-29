@@ -1,8 +1,10 @@
 ﻿@page "/vehicles"
+@using CarManager.App.Components.Pages.Commons
 @using CarManager.App.Models.Vehicle
 @using CarManager.App.Services.Interfaces
 @inject IVehicleApiClient VehicleApiClient
 @inject NavigationManager Nav
+@inject IDialogService DialogService
 
 <MudContainer>
     <MudPaper Class="p-4 mb-4">
@@ -59,14 +61,21 @@
                     <MudTh>Anno</MudTh>
                     <MudTh>Alimentazione</MudTh>
                     <MudTh>KM</MudTh>
+                    <MudTh>Azioni</MudTh> @*colonna azioni*@
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Targa">@context.Plate</MudTd>
                     <MudTd DataLabel="Marca">@context.Brand</MudTd>
                     <MudTd DataLabel="Modello">@context.Model</MudTd>
                     <MudTd DataLabel="Anno">@context.Year</MudTd>
-                    <MudTd DataLabel="Alimentazione">@context.FuelType</MudTd>
+                    <MudTd DataLabel="Alimentazione">@context.FuelTypeName</MudTd>
                     <MudTd DataLabel="KM">@context.Km</MudTd>
+                    <MudTd>
+                        <MudMenu Icon="@Icons.Material.Filled.Menu" AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopRight">
+                            <MudMenuItem OnClick="@(() => EditVehicle(context.Id))">Modifica</MudMenuItem>
+                            <MudMenuItem OnClick="@(() => DeleteVehicle(context))">Elimina</MudMenuItem>
+                        </MudMenu>
+                    </MudTd>
                 </RowTemplate>
             </MudTable>
         }
@@ -94,6 +103,36 @@
         finally
         {
             _isLoading = false;
+        }
+    }
+
+    private void EditVehicle(int vehicleId)
+    {
+        Nav.NavigateTo($"/vehicles/edit/{vehicleId}");
+    }
+    private async Task DeleteVehicle(VehicleModel vehicle)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Message", $"Sei sicuro di voler eliminare il veicolo '{vehicle.Brand} {vehicle.Model}'?" },
+            { "ConfirmButtonText", "Elimina" },
+            { "Color", Color.Error }
+        };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small, CloseOnEscapeKey = true };
+        IDialogReference dialog = await DialogService.ShowAsync<ConfirmDeleteDialog>("Conferma eliminazione", parameters, options);
+        DialogResult? result = await dialog.Result;
+        if (!result.Canceled)
+        {
+            try
+            {
+                await VehicleApiClient.DeleteVehicleAsync(vehicle.Id);
+                _vehicles?.Remove(vehicle);
+                await OnInitializedAsync();
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"Errore durante l'eliminazione del veicolo: {ex.Message}";
+            }
         }
     }
 }

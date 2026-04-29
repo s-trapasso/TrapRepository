@@ -14,17 +14,28 @@ namespace CarManager.Core.Models
 
         public int Id { get; set; }
 
+        [Required, MaxLength(100)]
         public string FirstName { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
         public string LastName { get; set; } = string.Empty;
+
+        [MaxLength(200)]
         public string Address { get; set; } = string.Empty;
 
+        [Required]
         public DateTime BirthDate { get; set; }
+
+        [MaxLength(100)]
         public string BirthPlace { get; set; } = string.Empty;
 
+        [Required]
         public OwnerGender Gender { get; set; }
 
+        [MaxLength(32)]
         public string FiscalCode { get; set; } = string.Empty;
 
+        // Navigation Properties
         public ICollection<Vehicle> Vehicles { get; set; } = new List<Vehicle>();
 
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CarManager.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -21,8 +22,7 @@ namespace CarManager.App.Models.Maintenance
         public DateTime Date { get; set; }
 
         [Required(ErrorMessage = "Il tipo è obbligatorio")]
-        [MaxLength(100)]
-        public string Type { get; set; } = string.Empty;
+        public MaintenanceType MaintenanceType { get; set; } // enum (int)
 
         [MaxLength(500)]
         public string? Description { get; set; }
