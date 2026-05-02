@@ -1,9 +1,10 @@
-﻿using Serilog;
+﻿using Microsoft.EntityFrameworkCore;
+using Serilog;
+using VehicleManager.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// ── Logging ──────────────────────────────────────────────────────────────────
+// ── Logging ───────────────────────────────────────────────────────────────────
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .Enrich.FromLogContext()
@@ -12,6 +13,16 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+
+// ── Database ──────────────────────────────────────────────────────────────────
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseSqlServer(builder.Configuration.GetConnectionString("VehicleManagerDev"));
+
+    if (builder.Environment.IsDevelopment())
+        options.EnableSensitiveDataLogging();
+});
+
 // ── Services ──────────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -25,10 +36,8 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// AutoMapper: scansiona tutti i profili nel progetto Api
 builder.Services.AddAutoMapper(typeof(Program));
 
-// CORS: permette al client MAUI di chiamare l'API in locale
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("LocalApp", policy =>
@@ -37,20 +46,27 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
-// TODO Step 3: aggiungere DbContext
-// TODO Step 4: aggiungere Repository e UnitOfWork
-// TODO Step 5: aggiungere i Services applicativi
+// TODO Step 4: Repository e UnitOfWork
+// TODO Step 5: Services applicativi
 
 var app = builder.Build();
 
-// ── Middleware pipeline ───────────────────────────────────────────────────────
+// ── Migrazione automatica all'avvio (sviluppo) ────────────────────────────────
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    db.Database.Migrate();
+}
+
+// ── Middleware ────────────────────────────────────────────────────────────────
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "VehicleManager API v1");
-        c.RoutePrefix = string.Empty; // Swagger alla root: http://localhost:5000
+        c.RoutePrefix = string.Empty;
     });
 }
 

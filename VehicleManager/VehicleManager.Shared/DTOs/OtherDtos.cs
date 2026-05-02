@@ -75,6 +75,12 @@ public class OwnerDto
     public string? Note { get; set; }
     public int NumeroVeicoli { get; set; }
     public DateTime CreatedAt { get; set; }
+    public string? PatenteNumero { get; set; }
+    public string? PatenteCategoria { get; set; }
+    public DateOnly? PatenteScadenza { get; set; }
+    public DateOnly? PatenteMedicaScadenza { get; set; }
+    public DeadlineStatus StatoPatente { get; set; }
+    public DeadlineStatus StatoVisitaMedica { get; set; }
 }
 
 public class CreateOwnerDto
@@ -102,6 +108,16 @@ public class CreateOwnerDto
 
     [StringLength(500)]
     public string? Note { get; set; }
+
+    [StringLength(20)]
+    public string? PatenteNumero { get; set; }
+
+    [StringLength(10)]
+    public string? PatenteCategoria { get; set; }
+
+    public DateOnly? PatenteScadenza { get; set; }
+
+    public DateOnly? PatenteMedicaScadenza { get; set; }
 }
 
 public class UpdateOwnerDto : CreateOwnerDto { }

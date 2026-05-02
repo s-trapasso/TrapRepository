@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using VehicleManager.Shared.Enums;
 
 namespace VehicleManager.Shared.Entities;
 
@@ -36,4 +37,30 @@ public class Owner : BaseEntity
 
     // ── Relazioni ────────────────────────────────────────────────────────────
     public ICollection<VehicleOwnership> Veicoli { get; set; } = new List<VehicleOwnership>();
+
+    [StringLength(20)]
+    public string? PatenteNumero { get; set; }
+
+    [StringLength(10)]
+    public string? PatenteCategoria { get; set; }    // es. "A", "B", "A/B"
+
+    public DateOnly? PatenteScadenza { get; set; }
+
+    public DateOnly? PatenteMedicaScadenza { get; set; }
+
+    // Proprietà calcolate (non salvate nel DB)
+    public DeadlineStatus StatoPatente => CalcolaStato(PatenteScadenza);
+    public DeadlineStatus StatoVisitaMedica => CalcolaStato(PatenteMedicaScadenza);
+
+    private static DeadlineStatus CalcolaStato(DateOnly? scadenza)
+    {
+        if (scadenza == null) return DeadlineStatus.Valida;
+        var giorni = (int)(scadenza.Value.ToDateTime(TimeOnly.MinValue) - DateTime.Today).TotalDays;
+        return giorni switch
+        {
+            < 0 => DeadlineStatus.Scaduta,
+            <= 30 => DeadlineStatus.InScadenza,
+            _ => DeadlineStatus.Valida
+        };
+    }
 }
