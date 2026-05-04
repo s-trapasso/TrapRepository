@@ -13,7 +13,6 @@
   <ItemGroup>
     <!-- AutoMapper: mapping automatico Entity <-> DTO -->
     <PackageReference Include="AutoMapper" Version="16.1.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.0" />
     <!-- Swagger / OpenAPI: UI per testare gli endpoint -->
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <!-- Serilog: logging strutturato su file + console -->

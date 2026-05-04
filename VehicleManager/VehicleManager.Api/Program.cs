@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Serilog;
 using VehicleManager.Data;
+using VehicleManager.Data.UnitOfWork;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,7 +18,7 @@ builder.Host.UseSerilog();
 // ── Database ──────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
-    options.UseSqlServer(builder.Configuration.GetConnectionString("VehicleManagerDev"));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
     if (builder.Environment.IsDevelopment())
         options.EnableSensitiveDataLogging();
@@ -36,7 +37,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(Program).Assembly));
 
 builder.Services.AddCors(options =>
 {
@@ -46,7 +47,9 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader());
 });
 
-// TODO Step 4: Repository e UnitOfWork
+// Unit of Work (include tutti i repository)
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 // TODO Step 5: Services applicativi
 
 var app = builder.Build();
