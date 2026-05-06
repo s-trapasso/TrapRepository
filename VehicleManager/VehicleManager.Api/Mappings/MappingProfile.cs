@@ -22,7 +22,10 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ScadenzeInScadenza, opt => opt.MapFrom(src =>
                 src.Scadenze.Count(d => d.Stato == DeadlineStatus.InScadenza)))
             .ForMember(dest => dest.ScadenzeScadute, opt => opt.MapFrom(src =>
-                src.Scadenze.Count(d => d.Stato == DeadlineStatus.Scaduta)));
+                src.Scadenze.Count(d => d.Stato == DeadlineStatus.Scaduta)))
+            .ForMember(dest => dest.Manutenzioni, opt => opt.MapFrom(src => src.Manutenzioni))
+            .ForMember(dest => dest.Scadenze, opt => opt.MapFrom(src => src.Scadenze))
+            .ForMember(dest => dest.Proprietari, opt => opt.MapFrom(src => src.Proprietari));
 
         CreateMap<Vehicle, VehicleSummaryDto>()
             .ForMember(dest => dest.ProprietarioAttuale, opt => opt.MapFrom(src =>

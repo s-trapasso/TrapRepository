@@ -1,17 +1,86 @@
-﻿@inherits LayoutComponentBase
+﻿@using VehicleManager.App.Services
+@inherits LayoutComponentBase
+@inject IDeadlineService DeadlineService
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<MudThemeProvider Theme="_theme" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+<MudLayout>
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu"
+                       Color="Color.Inherit"
+                       Edge="Edge.Start"
+                       OnClick="ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-2">🚗 Vehicle Manager</MudText>
+        <MudSpacer />
+        @if (_totaleAlert > 0)
+        {
+            <MudBadge Content="_totaleAlert" Color="Color.Error" Overlap="true">
+                <MudIconButton Icon="@Icons.Material.Filled.Notifications"
+                               Color="Color.Inherit"
+                               Href="/scadenze" />
+            </MudBadge>
+        }
+    </MudAppBar>
 
-        <article class="content px-4">
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.subtitle1" Class="mt-2"><b>Navigazione</b></MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All"
+                        Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/veicoli"
+                        Icon="@Icons.Material.Filled.DirectionsCar">Veicoli</MudNavLink>
+            <MudNavLink Href="/manutenzioni"
+                        Icon="@Icons.Material.Filled.Build">Manutenzioni</MudNavLink>
+            <MudNavLink Href="/scadenze"
+                        Icon="@Icons.Material.Filled.EventBusy">Scadenze</MudNavLink>
+            <MudNavLink Href="/proprietari"
+                        Icon="@Icons.Material.Filled.People">Proprietari</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
             @Body
-        </article>
-    </main>
-</div>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private int _totaleAlert = 0;
+
+    private MudTheme _theme = new MudTheme()
+    {
+        PaletteLight = new PaletteLight()
+        {
+            Primary = "#1565C0",
+            Secondary = "#42A5F5",
+            AppbarBackground = "#1565C0",
+        }
+    };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var response = await DeadlineService.GetDashboardAlertAsync();
+                if (response.Success && response.Data != null)
+                {
+                    _totaleAlert = response.Data.TotaleAlert;
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+}
+

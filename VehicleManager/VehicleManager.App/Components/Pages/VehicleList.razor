@@ -1,0 +1,154 @@
+﻿@page "/veicoli"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+@inject IVehicleService VehicleService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Veicoli — Vehicle Manager</PageTitle>
+
+<div class="d-flex align-center justify-space-between mb-4">
+    <MudText Typo="Typo.h5">Veicoli</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               Href="/veicoli/nuovo">Nuovo veicolo</MudButton>
+</div>
+
+<MudPaper Elevation="2" Class="mb-3 pa-3">
+    <MudGrid AlignItems="AlignItems.Center">
+        <MudItem xs="12" md="4">
+            <MudTextField @bind-Value="_searchText" Label="Cerca per targa, marca, modello"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true" Clearable="true" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSelect @bind-Value="_filtroTipo" Label="Tipo veicolo" Clearable="true">
+                @foreach (VehicleType tipo in Enum.GetValues<VehicleType>())
+                {
+                    <MudSelectItem Value="@((VehicleType?)tipo)">@tipo</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudCheckBox @bind-Value="_soloAttivi" Label="Solo attivi" Color="Color.Primary" />
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudPaper Elevation="2">
+        <MudTable Items="VeicoliFiltrati" Hover="true" Dense="true" Striped="true">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<VehicleSummaryDto, object>(x => x.Targa)">Targa</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<VehicleSummaryDto, object>(x => x.Marca)">Marca / Modello</MudTableSortLabel></MudTh>
+                <MudTh>Tipo</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<VehicleSummaryDto, object>(x => x.Anno)">Anno</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<VehicleSummaryDto, object>(x => x.KmAttuali)">Km</MudTableSortLabel></MudTh>
+                <MudTh>Proprietario</MudTh>
+                <MudTh>Scadenze</MudTh>
+                <MudTh>Azioni</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudLink Href="@($"/veicoli/{context.Id}")"><b>@context.Targa</b></MudLink>
+                </MudTd>
+                <MudTd>@context.Marca @context.Modello</MudTd>
+                <MudTd>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                        @context.TipoLabel
+                    </MudChip>
+                </MudTd>
+                <MudTd>@context.Anno</MudTd>
+                <MudTd>@context.KmAttuali.ToString("N0")</MudTd>
+                <MudTd>@(context.ProprietarioAttuale ?? "—")</MudTd>
+                <MudTd>
+                    @if (context.ScadenzeScadute > 0)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small">@context.ScadenzeScadute scadute</MudChip>
+                    }
+                    else if (context.ScadenzeInScadenza > 0)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small">@context.ScadenzeInScadenza in scad.</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">OK</MudChip>
+                    }
+                </MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                   Size="Size.Small" Color="Color.Primary"
+                                   Href="@($"/veicoli/{context.Id}")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small" Color="Color.Warning"
+                                   Href="@($"/veicoli/{context.Id}/modifica")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => ConfermaEliminazione(context))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4">Nessun veicolo trovato.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@code {
+    private List<VehicleSummaryDto> _vehicles = [];
+    private bool _loading = true;
+    private string _searchText = string.Empty;
+    private VehicleType? _filtroTipo;
+    private bool _soloAttivi = false;
+
+    private IEnumerable<VehicleSummaryDto> VeicoliFiltrati => _vehicles
+        .Where(v => (_soloAttivi ? v.Attivo : true)
+            && (_filtroTipo == null || v.Tipo == _filtroTipo)
+            && (string.IsNullOrEmpty(_searchText) ||
+                v.Targa.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                v.Marca.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ||
+                v.Modello.Contains(_searchText, StringComparison.OrdinalIgnoreCase)));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CaricaVeicoli();
+    }
+
+    private async Task CaricaVeicoli()
+    {
+        _loading = true;
+        var response = await VehicleService.GetAllAsync();
+        if (response.Success) _vehicles = response.Data ?? [];
+        _loading = false;
+    }
+
+    private async Task ConfermaEliminazione(VehicleSummaryDto vehicle)
+    {
+        var result = await DialogService.ShowMessageBox(
+            "Conferma eliminazione",
+            $"Eliminare il veicolo {vehicle.Marca} {vehicle.Modello} ({vehicle.Targa})?",
+            yesText: "Elimina", cancelText: "Annulla");
+
+        if (result == true)
+        {
+            var response = await VehicleService.DeleteAsync(vehicle.Id);
+            if (response.Success)
+            {
+                Snackbar.Add("Veicolo eliminato.", Severity.Success);
+                await CaricaVeicoli();
+            }
+            else
+            {
+                Snackbar.Add(response.ErrorMessage ?? "Errore durante l'eliminazione.", Severity.Error);
+            }
+        }
+    }
+}

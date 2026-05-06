@@ -1,62 +1,68 @@
-﻿namespace VehicleManager.Shared.Enums;
+﻿using System.ComponentModel;
+
+namespace VehicleManager.Shared.Enums;
 
 public enum VehicleType
 {
-    Automobile = 0,
-    Moto = 1,
-    Furgone = 2,
-    Camion = 3,
-    Bicicletta = 4,
-    Altro = 99
+    Unknown = 0,
+    [Description("Automobile")] Automobile = 1,
+    [Description("Moto")] Moto = 2,
+    [Description("Furgone")] Furgone = 3,
+    [Description("Camion")] Camion = 4,
+    [Description("Bicicletta")] Bicicletta = 5,
+    [Description("Altro")] Altro = 99
 }
 
 public enum FuelType
 {
-    Benzina = 0,
-    Diesel = 1,
-    Ibrido = 2,
-    Elettrico = 3,
-    GPL = 4,
-    Metano = 5,
-    Altro = 99
+    Unknown = 0,
+    [Description("Benzina")] Benzina = 1,
+    [Description("Diesel")] Diesel = 2,
+    [Description("Ibrido")] Ibrido = 3,
+    [Description("Elettrico")] Elettrico = 4,
+    [Description("GPL")] GPL = 5,
+    [Description("Metano")] Metano = 6,
+    [Description("Altro")] Altro = 99
 }
 
 public enum MaintenanceType
 {
-    Tagliando = 0,
-    CambioOlio = 1,
-    CambioPneumatici = 2,
-    FreniAnteriori = 3,
-    FreniPosteriori = 4,
-    Batteria = 5,
-    CorreaDistribuzione = 6,
-    Filtri = 7,
-    RevisioneGenerale = 8,
-    Carrozzeria = 9,
-    Elettronica = 10,
-    Altro = 99
+    Unknown = 0,
+    [Description("Tagliando")] Tagliando = 1,
+    [Description("Cambio olio")] CambioOlio = 2,
+    [Description("Cambio pneumatici")] CambioPneumatici = 3,
+    [Description("Freni anteriori")] FreniAnteriori = 4,
+    [Description("Freni posteriori")] FreniPosteriori = 5,
+    [Description("Batteria")] Batteria = 6,
+    [Description("Cinghia distribuzione")] CorreaDistribuzione = 7,
+    [Description("Filtri")] Filtri = 8,
+    [Description("Revisione generale")] RevisioneGenerale = 9,
+    [Description("Carrozzeria")] Carrozzeria = 10,
+    [Description("Elettronica")] Elettronica = 11,
+    [Description("Altro")] Altro = 99
 }
 
 public enum DeadlineType
 {
-    Bollo = 0,
-    Assicurazione = 1,
-    Revisione = 2,
-    Tagliando = 3,
-    PatenteMedica = 4,
-    Altro = 99
+    Unknown = 0,
+    [Description("Bollo")] Bollo = 1,
+    [Description("Assicurazione")] Assicurazione = 2,
+    [Description("Revisione")] Revisione = 3,
+    [Description("Tagliando")] Tagliando = 4,
+    [Description("Visita medica")] PatenteMedica = 5,
+    [Description("Altro")] Altro = 99
 }
 
 public enum DeadlineStatus
 {
-    Valida = 0,  // > 30 giorni alla scadenza
-    InScadenza = 1,  // <= 30 giorni
-    Scaduta = 2   // già scaduta
+    [Description("Valida")] Valida = 0,
+    [Description("In scadenza")] InScadenza = 1,
+    [Description("Scaduta")] Scaduta = 2
 }
 
 public enum OwnershipType
 {
-    Proprietario = 0,
-    Intestatario = 1,
-    Utilizzatore = 2  // es. auto aziendale in uso
+    [Description("Proprietario")] Proprietario = 0,
+    [Description("Intestatario")] Intestatario = 1,
+    [Description("Utilizzatore")] Utilizzatore = 2
 }

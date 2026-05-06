@@ -1,0 +1,167 @@
+﻿@page "/scadenze"
+@page "/scadenze/nuova"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+@inject IDeadlineService DeadlineService
+@inject IVehicleService VehicleService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Scadenze — Vehicle Manager</PageTitle>
+
+<div class="d-flex align-center justify-space-between mb-4">
+    <MudText Typo="Typo.h5">Scadenze</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.Add"
+               OnClick="ApriForm">Nuova scadenza</MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" PanelClass="pa-3">
+        <MudTabPanel Text="Tutte">
+            <ScadenzeTabella Items="_tutte" OnElimina="Elimina" />
+        </MudTabPanel>
+        <MudTabPanel Text="@($"Scadute ({_scadute.Count})")" BadgeColor="Color.Error" BadgeDot="@(_scadute.Any())">
+            <ScadenzeTabella Items="_scadute" OnElimina="Elimina" />
+        </MudTabPanel>
+        <MudTabPanel Text="@($"In scadenza ({_inScadenza.Count})")" BadgeColor="Color.Warning" BadgeDot="@(_inScadenza.Any())">
+            <ScadenzeTabella Items="_inScadenza" OnElimina="Elimina" />
+        </MudTabPanel>
+    </MudTabs>
+}
+
+<!-- Dialog nuova scadenza -->
+@* <MudDialog @bind-IsOpen="_formOpen">
+    <TitleContent>Nuova scadenza</TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSelect @bind-Value="_newDeadline.VehicleId" Label="Veicolo *">
+                    @foreach (var v in _vehicles)
+                    {
+                        <MudSelectItem Value="@v.Id">@v.Marca @v.Modello (@v.Targa)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect @bind-Value="_newDeadline.Tipo" Label="Tipo scadenza">
+                    @foreach (DeadlineType t in Enum.GetValues<DeadlineType>())
+                    {
+                        <MudSelectItem Value="@t">@t</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_scadenzaDate" Label="Data scadenza *" DateFormat="dd/MM/yyyy" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newDeadline.Descrizione" Label="Descrizione" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newDeadline.Compagnia" Label="Compagnia / Ente" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_newDeadline.Costo" Label="Costo (€)" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_newDeadline.GiorniPreavviso" Label="Giorni preavviso" Min="0" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _formOpen = false)">Annulla</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="SalvaScadenza" Disabled="_saving">Salva</MudButton>
+    </DialogActions>
+</MudDialog> *@
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error">@_error</MudAlert>
+}
+
+@code {
+    private List<DeadlineDto> _tutte = [];
+    private List<DeadlineDto> _scadute = [];
+    private List<DeadlineDto> _inScadenza = [];
+    private List<VehicleSummaryDto> _vehicles = [];
+    private bool _loading = true;
+    private bool _formOpen = false;
+    private bool _saving = false;
+    private CreateDeadlineDto _newDeadline = new();
+    private DateTime? _scadenzaDate;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await CaricaDati();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message + " — " + ex.StackTrace;
+        }
+        // Apri direttamente il form se siamo su /scadenze/nuova
+        if (Nav.Uri.EndsWith("/nuova")) _formOpen = true;
+    }
+
+    private async Task CaricaDati()
+    {
+        _loading = true;
+        var tTask = DeadlineService.GetAllAsync();
+        var sTask = DeadlineService.GetScaduteAsync();
+        var iTask = DeadlineService.GetInScadenzaAsync();
+        var vTask = VehicleService.GetAllAsync();
+        await Task.WhenAll(tTask, sTask, iTask, vTask);
+
+        var t = await tTask; if (t.Success) _tutte = t.Data ?? [];
+        var s = await sTask; if (s.Success) _scadute = s.Data ?? [];
+        var i = await iTask; if (i.Success) _inScadenza = i.Data ?? [];
+        var v = await vTask; if (v.Success) _vehicles = v.Data ?? [];
+        _loading = false;
+    }
+
+    private void ApriForm()
+    {
+        _newDeadline = new CreateDeadlineDto();
+        _scadenzaDate = null;
+        _formOpen = true;
+    }
+
+    private async Task SalvaScadenza()
+    {
+        if (_scadenzaDate.HasValue)
+            _newDeadline.DataScadenza = DateOnly.FromDateTime(_scadenzaDate.Value);
+
+        _saving = true;
+        var response = await DeadlineService.CreateAsync(_newDeadline);
+        if (response.Success)
+        {
+            Snackbar.Add("Scadenza salvata!", Severity.Success);
+            _formOpen = false;
+            await CaricaDati();
+        }
+        else
+        {
+            Snackbar.Add(response.ErrorMessage ?? "Errore.", Severity.Error);
+        }
+        _saving = false;
+    }
+
+    private async Task Elimina(int id)
+    {
+        var response = await DeadlineService.DeleteAsync(id);
+        if (response.Success)
+        {
+            Snackbar.Add("Scadenza eliminata.", Severity.Success);
+            await CaricaDati();
+        }
+    }
+}

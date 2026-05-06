@@ -1,0 +1,203 @@
+﻿@page "/veicoli/nuovo"
+@page "/veicoli/{Id:int}/modifica"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+@inject IVehicleService VehicleService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>@(_isNew ? "Nuovo veicolo" : "Modifica veicolo") — Vehicle Manager</PageTitle>
+
+<div class="d-flex align-center justify-space-between mb-4">
+    <MudText Typo="Typo.h5">@(_isNew ? "Nuovo veicolo" : "Modifica veicolo")</MudText>
+    <MudButton Variant="Variant.Outlined"
+               StartIcon="@Icons.Material.Filled.ArrowBack"
+               OnClick="@(() => Nav.NavigateTo(_isNew ? "/veicoli" : $"/veicoli/{Id}"))">
+        Annulla
+    </MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudPaper Class="pa-4" Elevation="2">
+        <MudForm @ref="_form">
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string" @bind-Value="_model.Targa" Label="Targa *"
+                                  Required="true" HelperText="Es. AB123CD" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string" @bind-Value="_model.Marca" Label="Marca *"
+                                  Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string" @bind-Value="_model.Modello" Label="Modello *"
+                                  Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudTextField T="string" @bind-Value="_model.Versione" Label="Versione"
+                                  HelperText="Es. 1.6 TDI Sport" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudNumericField T="int" @bind-Value="_model.Anno" Label="Anno *"
+                                     Min="1900" Max="2100" Required="true" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudSelect T="VehicleType" @bind-Value="_model.Tipo" Label="Tipo veicolo">
+                        <MudSelectItem T="VehicleType" Value="VehicleType.Unknown" Disabled="true">
+                            -- Seleziona tipo --
+                        </MudSelectItem>
+                        @foreach (var t in Enum.GetValues<VehicleType>().Where(t => t != VehicleType.Unknown))
+                        {
+                            <MudSelectItem T="VehicleType" Value="@t">@t.GetDescription()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudSelect T="FuelType" @bind-Value="_model.Carburante" Label="Carburante">
+                        <MudSelectItem T="FuelType" Value="FuelType.Unknown" Disabled="true">
+                            -- Seleziona carburante --
+                        </MudSelectItem>
+                        @foreach (var f in Enum.GetValues<FuelType>().Where(f => f != FuelType.Unknown))
+                        {
+                            <MudSelectItem T="FuelType" Value="@f">@f.GetDescription()</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string" @bind-Value="_model.Colore" Label="Colore" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudTextField T="string" @bind-Value="_model.Vin" Label="Telaio (VIN)"
+                                  HelperText="17 caratteri" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudNumericField T="int" @bind-Value="_model.KmAttuali"
+                                     Label="Km attuali" Min="0" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudDatePicker @bind-Date="_dataImmatricolazioneDate"
+                                   Label="Data immatricolazione"
+                                   DateFormat="dd/MM/yyyy" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudDatePicker @bind-Date="_dataAcquistoDate"
+                                   Label="Data acquisto"
+                                   DateFormat="dd/MM/yyyy" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudNumericField T="decimal?" @bind-Value="_model.PrezzoAcquisto"
+                                     Label="Prezzo acquisto (euro)" Min="0" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField T="string" @bind-Value="_model.Note" Label="Note" Lines="3" />
+                </MudItem>
+                @if (!_isNew)
+                {
+                    <MudItem xs="12">
+                        <MudCheckBox T="bool" @bind-Value="_attivoValue"
+                                     Label="Veicolo attivo" Color="Color.Primary" />
+                    </MudItem>
+                }
+            </MudGrid>
+
+            <div class="d-flex justify-end gap-2 mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           OnClick="Salva" Disabled="_saving"
+                           StartIcon="@Icons.Material.Filled.Save">
+                    @(_saving ? "Salvataggio..." : "Salva")
+                </MudButton>
+            </div>
+        </MudForm>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private CreateVehicleDto _model = new();
+    private UpdateVehicleDto? _modelUpdate;
+    private DateTime? _dataImmatricolazioneDate;
+    private DateTime? _dataAcquistoDate;
+    private bool _loading = true;
+    private bool _saving = false;
+    private bool _isNew => Id == null;
+    private bool _attivoValue = true;
+    private MudForm? _form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!_isNew)
+        {
+            var response = await VehicleService.GetByIdAsync(Id!.Value);
+            if (response.Success && response.Data != null)
+            {
+                var v = response.Data;
+                _modelUpdate = new UpdateVehicleDto
+                {
+                    Targa = v.Targa,
+                    Marca = v.Marca,
+                    Modello = v.Modello,
+                    Versione = v.Versione,
+                    Anno = v.Anno,
+                    Tipo = v.Tipo,
+                    Carburante = v.Carburante,
+                    Colore = v.Colore,
+                    Vin = v.Vin,
+                    KmAttuali = v.KmAttuali,
+                    PrezzoAcquisto = v.PrezzoAcquisto,
+                    Note = v.Note,
+                    Attivo = v.Attivo,
+                    DataImmatricolazione = v.DataImmatricolazione,
+                    DataAcquisto = v.DataAcquisto
+                };
+                _model = _modelUpdate;
+                _attivoValue = v.Attivo;
+                _dataImmatricolazioneDate = v.DataImmatricolazione?.ToDateTime(TimeOnly.MinValue);
+                _dataAcquistoDate = v.DataAcquisto?.ToDateTime(TimeOnly.MinValue);
+            }
+        }
+        _loading = false;
+    }
+
+    private async Task Salva()
+    {
+        if (_form is null) return;
+        await _form.Validate();
+        if (!_form.IsValid) return;
+
+        _saving = true;
+
+        _model.DataImmatricolazione = _dataImmatricolazioneDate.HasValue
+            ? DateOnly.FromDateTime(_dataImmatricolazioneDate.Value) : null;
+        _model.DataAcquisto = _dataAcquistoDate.HasValue
+            ? DateOnly.FromDateTime(_dataAcquistoDate.Value) : null;
+
+        if (_modelUpdate != null)
+            _modelUpdate.Attivo = _attivoValue;
+
+        ApiResponse<VehicleDto> response;
+
+        if (_isNew)
+            response = await VehicleService.CreateAsync(_model);
+        else
+            response = await VehicleService.UpdateAsync(Id!.Value, _modelUpdate ?? new UpdateVehicleDto());
+
+        if (response.Success)
+        {
+            Snackbar.Add(_isNew ? "Veicolo creato!" : "Veicolo aggiornato!", Severity.Success);
+            Nav.NavigateTo($"/veicoli/{response.Data!.Id}");
+        }
+        else
+        {
+            Snackbar.Add(response.ErrorMessage ?? "Errore durante il salvataggio.", Severity.Error);
+        }
+
+        _saving = false;
+    }
+}

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 using System.Net.Http;
+using VehicleManager.App.Services;
 
 namespace VehicleManager.App
 {
@@ -33,6 +34,11 @@ namespace VehicleManager.App
                 sp.GetRequiredService<IHttpClientFactory>().CreateClient("VehicleManagerApi"));
 
             // TODO Step 6: aggiungere i servizi client (VehicleClientService, ecc.)
+            // Servizi client
+            builder.Services.AddScoped<IVehicleService, VehicleService>();
+            builder.Services.AddScoped<IMaintenanceService, MaintenanceService>();
+            builder.Services.AddScoped<IOwnerService, OwnerService>();
+            builder.Services.AddScoped<IDeadlineService, DeadlineService>();
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
     		builder.Logging.AddDebug();

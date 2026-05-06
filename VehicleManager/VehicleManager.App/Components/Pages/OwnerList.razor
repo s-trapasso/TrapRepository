@@ -1,0 +1,260 @@
+﻿@page "/proprietari"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+@inject IOwnerService OwnerService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Proprietari — Vehicle Manager</PageTitle>
+
+<div class="d-flex align-center justify-space-between mb-4">
+    <MudText Typo="Typo.h5">Proprietari</MudText>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+               StartIcon="@Icons.Material.Filled.PersonAdd"
+               OnClick="ApriForm">Nuovo proprietario</MudButton>
+</div>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else
+{
+    <MudPaper Elevation="2">
+        <MudTable Items="_owners" Dense="true" Hover="true" Striped="true">
+            <HeaderContent>
+                <MudTh>Nome</MudTh>
+                <MudTh>Telefono</MudTh>
+                <MudTh>Email</MudTh>
+                <MudTh>Patente</MudTh>
+                <MudTh>Scad. patente</MudTh>
+                <MudTh>Visita medica</MudTh>
+                <MudTh>Veicoli</MudTh>
+                <MudTh>Azioni</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><b>@context.NomeCompleto</b></MudTd>
+                <MudTd>@(context.Telefono ?? "—")</MudTd>
+                <MudTd>@(context.Email ?? "—")</MudTd>
+                <MudTd>
+                    @if (!string.IsNullOrEmpty(context.PatenteCategoria))
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">
+                            @context.PatenteCategoria — @context.PatenteNumero
+                        </MudChip>
+                    }
+                    else
+                    {
+
+                        <span>—</span>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (context.PatenteScadenza.HasValue)
+                    {
+                        <MudChip T="string" Size="Size.Small"
+                                 Color="@StatoColor(context.StatoPatente)">
+                            @context.PatenteScadenza.Value.ToString("dd/MM/yyyy")
+                        </MudChip>
+                    }
+                    else
+                    {
+
+                        <span>—</span>
+                    }
+                </MudTd>
+                <MudTd>
+                    @if (context.PatenteMedicaScadenza.HasValue)
+                    {
+                        <MudChip T="string" Size="Size.Small"
+                                 Color="@StatoColor(context.StatoVisitaMedica)">
+                            @context.PatenteMedicaScadenza.Value.ToString("dd/MM/yyyy")
+                        </MudChip>
+                    }
+                    else
+                    {
+
+                        <span>—</span>
+                    }
+                </MudTd>
+                <MudTd>@context.NumeroVeicoli</MudTd>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                   Size="Size.Small" Color="Color.Warning"
+                                   OnClick="@(() => ApriModifica(context))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Size="Size.Small" Color="Color.Error"
+                                   OnClick="@(() => Elimina(context))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4">Nessun proprietario registrato.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@* <!-- Dialog form -->
+<MudDialog @bind-IsOpen="_formOpen">
+    <TitleContent>@(_editId == null ? "Nuovo proprietario" : "Modifica proprietario")</TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.Nome" Label="Nome *" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.Cognome" Label="Cognome *" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.Telefono" Label="Telefono" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.Email" Label="Email" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.CodiceFiscale" Label="Codice fiscale" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_form.Indirizzo" Label="Indirizzo" />
+            </MudItem>
+            <MudDivider Class="my-2" />
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_form.PatenteCategoria" Label="Categoria patente"
+                              HelperText="Es. A, B, A/B" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_form.PatenteNumero" Label="Numero patente" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker @bind-Date="_patenteScadenzaDate" Label="Scadenza patente"
+                               DateFormat="dd/MM/yyyy" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker @bind-Date="_visitaScadenzaDate" Label="Scadenza visita medica"
+                               DateFormat="dd/MM/yyyy" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_form.Note" Label="Note" Lines="2" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _formOpen = false)">Annulla</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                   OnClick="Salva" Disabled="_saving">Salva</MudButton>
+    </DialogActions>
+</MudDialog> *@
+
+@code {
+    private List<OwnerDto> _owners = [];
+    private bool _loading = true;
+    private bool _formOpen = false;
+    private bool _saving = false;
+    private int? _editId;
+    private CreateOwnerDto _form = new();
+    private DateTime? _patenteScadenzaDate;
+    private DateTime? _visitaScadenzaDate;
+
+    protected override async Task OnInitializedAsync() => await Carica();
+
+    private async Task Carica()
+    {
+        _loading = true;
+        var r = await OwnerService.GetAllAsync();
+        if (r.Success) _owners = r.Data ?? [];
+        _loading = false;
+    }
+
+    private void ApriForm()
+    {
+        _editId = null;
+        _form = new CreateOwnerDto();
+        _patenteScadenzaDate = null;
+        _visitaScadenzaDate = null;
+        _formOpen = true;
+    }
+
+    private void ApriModifica(OwnerDto o)
+    {
+        _editId = o.Id;
+        _form = new CreateOwnerDto
+        {
+            Nome = o.Nome,
+            Cognome = o.Cognome,
+            Telefono = o.Telefono,
+            Email = o.Email,
+            CodiceFiscale = o.CodiceFiscale,
+            Indirizzo = o.Indirizzo,
+            Note = o.Note,
+            PatenteCategoria = o.PatenteCategoria,
+            PatenteNumero = o.PatenteNumero,
+            PatenteScadenza = o.PatenteScadenza,
+            PatenteMedicaScadenza = o.PatenteMedicaScadenza
+        };
+        _patenteScadenzaDate = o.PatenteScadenza?.ToDateTime(TimeOnly.MinValue);
+        _visitaScadenzaDate = o.PatenteMedicaScadenza?.ToDateTime(TimeOnly.MinValue);
+        _formOpen = true;
+    }
+
+    private async Task Salva()
+    {
+        _form.PatenteScadenza = _patenteScadenzaDate.HasValue
+            ? DateOnly.FromDateTime(_patenteScadenzaDate.Value) : null;
+        _form.PatenteMedicaScadenza = _visitaScadenzaDate.HasValue
+            ? DateOnly.FromDateTime(_visitaScadenzaDate.Value) : null;
+
+        _saving = true;
+        ApiResponse<OwnerDto> r;
+
+        if (_editId == null)
+            r = await OwnerService.CreateAsync(_form);
+        else
+            r = await OwnerService.UpdateAsync(_editId.Value, new UpdateOwnerDto
+            {
+                Nome = _form.Nome,
+                Cognome = _form.Cognome,
+                Telefono = _form.Telefono,
+                Email = _form.Email,
+                CodiceFiscale = _form.CodiceFiscale,
+                Indirizzo = _form.Indirizzo,
+                Note = _form.Note,
+                PatenteCategoria = _form.PatenteCategoria,
+                PatenteNumero = _form.PatenteNumero,
+                PatenteScadenza = _form.PatenteScadenza,
+                PatenteMedicaScadenza = _form.PatenteMedicaScadenza
+            });
+
+        if (r.Success)
+        {
+            Snackbar.Add(_editId == null ? "Proprietario creato!" : "Proprietario aggiornato!", Severity.Success);
+            _formOpen = false;
+            await Carica();
+        }
+        else
+        {
+            Snackbar.Add(r.ErrorMessage ?? "Errore.", Severity.Error);
+        }
+        _saving = false;
+    }
+
+    private async Task Elimina(OwnerDto o)
+    {
+        var result = await DialogService.ShowMessageBox("Conferma",
+            $"Eliminare {o.NomeCompleto}?", yesText: "Elimina", cancelText: "Annulla");
+        if (result == true)
+        {
+            var r = await OwnerService.DeleteAsync(o.Id);
+            if (r.Success) { Snackbar.Add("Eliminato.", Severity.Success); await Carica(); }
+            else Snackbar.Add(r.ErrorMessage ?? "Errore.", Severity.Error);
+        }
+    }
+
+    private Color StatoColor(DeadlineStatus stato) => stato switch
+    {
+        DeadlineStatus.Scaduta => Color.Error,
+        DeadlineStatus.InScadenza => Color.Warning,
+        _ => Color.Success
+    };
+}

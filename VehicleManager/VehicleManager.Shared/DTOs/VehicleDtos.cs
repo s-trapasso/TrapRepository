@@ -32,6 +32,9 @@ public class VehicleDto
     public int NumeroManutenzioni { get; set; }
     public int ScadenzeInScadenza { get; set; }
     public int ScadenzeScadute { get; set; }
+    public List<MaintenanceDto> Manutenzioni { get; set; } = [];
+    public List<DeadlineDto> Scadenze { get; set; } = [];
+    public List<VehicleOwnershipDto> Proprietari { get; set; } = [];
 }
 
 // ── Riepilogo per lista/dashboard (più leggero) ───────────────────────────────
@@ -74,8 +77,8 @@ public class CreateVehicleDto
     [Range(1900, 2100)]
     public int Anno { get; set; }
 
-    public VehicleType Tipo { get; set; } = VehicleType.Automobile;
-    public FuelType Carburante { get; set; } = FuelType.Benzina;
+    public VehicleType Tipo { get; set; } = VehicleType.Unknown;
+    public FuelType Carburante { get; set; } = FuelType.Unknown;
 
     [StringLength(30)]
     public string? Colore { get; set; }

@@ -1,0 +1,63 @@
+﻿@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+
+<MudTable Items="Items" Dense="true" Hover="true" Striped="true">
+    <HeaderContent>
+        <MudTh>Veicolo</MudTh>
+        <MudTh>Tipo</MudTh>
+        <MudTh>Descrizione</MudTh>
+        <MudTh>Scadenza</MudTh>
+        <MudTh>Giorni</MudTh>
+        <MudTh>Stato</MudTh>
+        <MudTh>Costo</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.VehicleLabel</MudTd>
+        <MudTd>@context.TipoLabel</MudTd>
+        <MudTd>@(context.Descrizione ?? "—")</MudTd>
+        <MudTd>@context.DataScadenza.ToString("dd/MM/yyyy")</MudTd>
+        <MudTd>
+            <MudText Color="@GiorniColor(context.GiorniAllaScadenza)">
+                @context.GiorniAllaScadenza gg
+            </MudText>
+        </MudTd>
+        <MudTd>
+            <MudChip T="string" Size="Size.Small" Color="@StatoColor(context.Stato)">
+                @context.StatoLabel
+            </MudChip>
+        </MudTd>
+        <MudTd>@(context.Costo?.ToString("C") ?? "—")</MudTd>
+        <MudTd>
+            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                           Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => OnElimina.InvokeAsync(context.Id))" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText Class="pa-4">Nessuna scadenza.</MudText>
+    </NoRecordsContent>
+</MudTable>
+
+@code {
+    [Parameter] public List<DeadlineDto> Items { get; set; } = [];
+    [Parameter] public EventCallback<int> OnElimina { get; set; }
+
+    private Color StatoColor(DeadlineStatus stato) => stato switch
+    {
+        DeadlineStatus.Scaduta    => Color.Error,
+        DeadlineStatus.InScadenza => Color.Warning,
+        _                         => Color.Success
+    };
+
+    private Color GiorniColor(int giorni) 
+    {
+        if (giorni < 0)
+            return Color.Error;
+
+        if (giorni <= 30)
+            return Color.Warning;
+
+        return Color.Success;
+    }
+}

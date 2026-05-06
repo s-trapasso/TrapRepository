@@ -1,0 +1,171 @@
+﻿@page "/"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@inject IVehicleService VehicleService
+@inject IDeadlineService DeadlineService
+@inject NavigationManager Nav
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudText Typo="Typo.h5" Class="mb-4">Dashboard</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" Class="mb-4" />
+}
+else
+{
+    <!-- Riepilogo numeri -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 d-flex align-center gap-3" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.DirectionsCar"
+                         Color="Color.Primary" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4"><b>@_vehicles.Count</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Veicoli totali</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 d-flex align-center gap-3" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle"
+                         Color="Color.Success" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4"><b>@_vehicles.Count(v => v.Attivo)</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Veicoli attivi</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 d-flex align-center gap-3" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.Warning"
+                         Color="Color.Warning" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4"><b>@(_alert?.InScadenzaCount ?? 0)</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">In scadenza</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4 d-flex align-center gap-3" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.Error"
+                         Color="Color.Error" Size="Size.Large" />
+                <div>
+                    <MudText Typo="Typo.h4"><b>@(_alert?.ScaduteCount ?? 0)</b></MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Scadute</MudText>
+                </div>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Alert scadenze -->
+    @if (_alert != null && _alert.TotaleAlert > 0)
+    {
+        <MudText Typo="Typo.h6" Class="mb-2">⚠️ Alert</MudText>
+        <MudGrid Class="mb-4">
+            @foreach (var d in _alert.Scadute.Take(5))
+            {
+                <MudItem xs="12" md="6">
+                    <MudAlert Severity="Severity.Error" Dense="true">
+                        <b>@d.TipoLabel</b> — @d.VehicleLabel scaduta il @d.DataScadenza.ToString("dd/MM/yyyy")
+                    </MudAlert>
+                </MudItem>
+            }
+            @foreach (var d in _alert.InScadenza.Take(5))
+            {
+                <MudItem xs="12" md="6">
+                    <MudAlert Severity="Severity.Warning" Dense="true">
+                        <b>@d.TipoLabel</b> — @d.VehicleLabel scade tra @d.GiorniAllaScadenza giorni
+                    </MudAlert>
+                </MudItem>
+            }
+            @foreach (var o in _alert.PatenteInScadenza)
+            {
+                <MudItem xs="12" md="6">
+                    <MudAlert Severity="Severity.Warning" Dense="true">
+                        🪪 Patente <b>@o.NomeCompleto</b> scade il @o.PatenteScadenza?.ToString("dd/MM/yyyy")
+                    </MudAlert>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+
+    <!-- Lista veicoli recenti -->
+    <MudText Typo="Typo.h6" Class="mb-2">Veicoli</MudText>
+    <MudPaper Elevation="2">
+        <MudTable T="VehicleSummaryDto" Items="_vehicles" Hover="true" Dense="true"
+                  OnRowClick="@(row => Nav.NavigateTo($"/veicoli/{row.Item.Id}"))">
+            <HeaderContent>
+                <MudTh>Targa</MudTh>
+                <MudTh>Veicolo</MudTh>
+                <MudTh>Anno</MudTh>
+                <MudTh>Km</MudTh>
+                <MudTh>Proprietario</MudTh>
+                <MudTh>Stato</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd><b>@context.Targa</b></MudTd>
+                <MudTd>@context.Marca @context.Modello</MudTd>
+                <MudTd>@context.Anno</MudTd>
+                <MudTd>@context.KmAttuali.ToString("N0") km</MudTd>
+                <MudTd>@(context.ProprietarioAttuale ?? "—")</MudTd>
+                <MudTd>
+                    @if (context.ScadenzeScadute > 0)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small">
+                            @context.ScadenzeScadute scadute
+                        </MudChip>
+                    }
+                    else if (context.ScadenzeInScadenza > 0)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small">
+                            @context.ScadenzeInScadenza in scadenza
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small">OK</MudChip>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Class="pa-4">Nessun veicolo. <MudLink Href="/veicoli/nuovo">Aggiungine uno!</MudLink></MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+}
+
+
+
+
+
+
+@code {
+    private List<VehicleSummaryDto> _vehicles = [];
+    private DashboardAlertData? _alert;
+    private bool _loading = true;
+    private string? _error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var vTask = VehicleService.GetAllAsync();
+        var aTask = DeadlineService.GetDashboardAlertAsync();
+        await Task.WhenAll(vTask, aTask);
+
+        var vRes = await vTask;
+        var aRes = await aTask;
+
+        if (vRes.Success) _vehicles = vRes.Data ?? [];
+        else _error = vRes.ErrorMessage;
+
+        if (aRes.Success) _alert = aRes.Data;
+
+        _loading = false;
+    }
+}

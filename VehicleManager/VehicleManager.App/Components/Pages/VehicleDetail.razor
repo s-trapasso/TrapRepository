@@ -1,0 +1,216 @@
+﻿@page "/veicoli/{Id:int}"
+@using VehicleManager.App.Services
+@using VehicleManager.Shared.DTOs
+@using VehicleManager.Shared.Enums
+@inject IVehicleService VehicleService
+@inject IMaintenanceService MaintenanceService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
+
+<PageTitle>Dettaglio Veicolo — Vehicle Manager</PageTitle>
+
+@if (_loading)
+{
+    <MudProgressLinear Indeterminate="true" Color="Color.Primary" />
+}
+else if (_vehicle == null)
+{
+    <MudAlert Severity="Severity.Error">Veicolo non trovato.</MudAlert>
+}
+else
+{
+    <!-- Header -->
+    <div class="d-flex align-center justify-space-between mb-4">
+        <div>
+            <MudText Typo="Typo.h5">@_vehicle.Marca @_vehicle.Modello</MudText>
+            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">
+                @_vehicle.Targa — @_vehicle.Anno
+                <MudChip T="string" Size="Size.Small" Class="ml-2"
+                         Color="@(_vehicle.Attivo ? Color.Success : Color.Default)">
+                    @(_vehicle.Attivo ? "Attivo" : "Non attivo")
+                </MudChip>
+            </MudText>
+        </div>
+        <div class="d-flex gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Warning"
+                       StartIcon="@Icons.Material.Filled.Edit"
+                       Href="@($"/veicoli/{Id}/modifica")">Modifica</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       OnClick="@(() => Nav.NavigateTo("/veicoli"))">Torna alla lista</MudButton>
+        </div>
+    </div>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-4">
+
+        <!-- TAB 1: Dati veicolo -->
+        <MudTabPanel Text="Dati veicolo" Icon="@Icons.Material.Filled.Info">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle1" Class="mb-3"><b>Dati tecnici</b></MudText>
+                        <MudSimpleTable Dense="true">
+                            <tbody>
+                                <tr><td><b>Targa</b></td><td>@_vehicle.Targa</td></tr>
+                                <tr><td><b>Marca</b></td><td>@_vehicle.Marca</td></tr>
+                                <tr><td><b>Modello</b></td><td>@_vehicle.Modello</td></tr>
+                                <tr><td><b>Versione</b></td><td>@(_vehicle.Versione ?? "—")</td></tr>
+                                <tr><td><b>Anno</b></td><td>@_vehicle.Anno</td></tr>
+                                <tr><td><b>Tipo</b></td><td>@_vehicle.TipoLabel</td></tr>
+                                <tr><td><b>Carburante</b></td><td>@_vehicle.CarburanteLabel</td></tr>
+                                <tr><td><b>Colore</b></td><td>@(_vehicle.Colore ?? "—")</td></tr>
+                                <tr><td><b>Telaio (VIN)</b></td><td>@(_vehicle.Vin ?? "—")</td></tr>
+                            </tbody>
+                        </MudSimpleTable>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudPaper Class="pa-4" Elevation="1">
+                        <MudText Typo="Typo.subtitle1" Class="mb-3"><b>Dati acquisto e km</b></MudText>
+                        <MudSimpleTable Dense="true">
+                            <tbody>
+                                <tr><td><b>Km attuali</b></td><td>@_vehicle.KmAttuali.ToString("N0") km</td></tr>
+                                <tr><td><b>Data immatricolazione</b></td><td>@(_vehicle.DataImmatricolazione?.ToString("dd/MM/yyyy") ?? "—")</td></tr>
+                                <tr><td><b>Data acquisto</b></td><td>@(_vehicle.DataAcquisto?.ToString("dd/MM/yyyy") ?? "—")</td></tr>
+                                <tr><td><b>Prezzo acquisto</b></td><td>@(_vehicle.PrezzoAcquisto?.ToString("C") ?? "—")</td></tr>
+                                <tr><td><b>Proprietario attuale</b></td><td>@(_vehicle.ProprietarioAttuale ?? "—")</td></tr>
+                                <tr><td><b>N° manutenzioni</b></td><td>@_vehicle.NumeroManutenzioni</td></tr>
+                            </tbody>
+                        </MudSimpleTable>
+                        @if (!string.IsNullOrEmpty(_vehicle.Note))
+                        {
+                            <MudText Typo="Typo.subtitle2" Class="mt-3 mb-1"><b>Note</b></MudText>
+                            <MudText Typo="Typo.body2">@_vehicle.Note</MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- TAB 2: Manutenzioni -->
+        <MudTabPanel Text="Manutenzioni" Icon="@Icons.Material.Filled.Build">
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudText Typo="Typo.subtitle1">Storico interventi</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Href="@($"/manutenzioni/nuova?vehicleId={Id}")">
+                    Nuovo intervento
+                </MudButton>
+            </div>
+            <MudTable Items="_vehicle.Manutenzioni" Dense="true" Hover="true" Striped="true">
+                <HeaderContent>
+                    <MudTh>Data</MudTh>
+                    <MudTh>Tipo</MudTh>
+                    <MudTh>Descrizione</MudTh>
+                    <MudTh>Km</MudTh>
+                    <MudTh>Officina</MudTh>
+                    <MudTh>Costo</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.DataIntervento.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd><MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@context.TipoLabel</MudChip></MudTd>
+                    <MudTd>@context.Descrizione</MudTd>
+                    <MudTd>@(context.KmAlMomento?.ToString("N0") ?? "—")</MudTd>
+                    <MudTd>@(context.Officina ?? "—")</MudTd>
+                    <MudTd>@(context.Costo?.ToString("C") ?? "—")</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">Nessuna manutenzione registrata.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 3: Scadenze -->
+        <MudTabPanel Text="Scadenze" Icon="@Icons.Material.Filled.EventBusy">
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudText Typo="Typo.subtitle1">Scadenzario</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Href="@($"/scadenze/nuova?vehicleId={Id}")">
+                    Nuova scadenza
+                </MudButton>
+            </div>
+            <MudTable Items="_vehicle.Scadenze" Dense="true" Hover="true" Striped="true">
+                <HeaderContent>
+                    <MudTh>Tipo</MudTh>
+                    <MudTh>Descrizione</MudTh>
+                    <MudTh>Scadenza</MudTh>
+                    <MudTh>Giorni</MudTh>
+                    <MudTh>Stato</MudTh>
+                    <MudTh>Costo</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.TipoLabel</MudTd>
+                    <MudTd>@(context.Descrizione ?? "—")</MudTd>
+                    <MudTd>@context.DataScadenza.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@context.GiorniAllaScadenza</MudTd>
+                    <MudTd>
+                        <MudChip T="string" Size="Size.Small"
+                                 Color="@StatoColor(context.Stato)">
+                            @context.StatoLabel
+                        </MudChip>
+                    </MudTd>
+                    <MudTd>@(context.Costo?.ToString("C") ?? "—")</MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">Nessuna scadenza registrata.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 4: Proprietari -->
+        <MudTabPanel Text="Proprietari" Icon="@Icons.Material.Filled.People">
+            <MudText Typo="Typo.subtitle1" Class="mb-3">Storico proprietà</MudText>
+            <MudTable Items="_vehicle.Proprietari" Dense="true" Hover="true" Striped="true">
+                <HeaderContent>
+                    <MudTh>Proprietario</MudTh>
+                    <MudTh>Tipo</MudTh>
+                    <MudTh>Data acquisto</MudTh>
+                    <MudTh>Data cessione</MudTh>
+                    <MudTh>Prezzo acquisto</MudTh>
+                    <MudTh>Km acquisto</MudTh>
+                    <MudTh>Attuale</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd><b>@context.NomeProprietario</b></MudTd>
+                    <MudTd>@context.TipoProprietà</MudTd>
+                    <MudTd>@context.DataAcquisto.ToString("dd/MM/yyyy")</MudTd>
+                    <MudTd>@(context.DataCessione?.ToString("dd/MM/yyyy") ?? "—")</MudTd>
+                    <MudTd>@(context.PrezzoAcquisto?.ToString("C") ?? "—")</MudTd>
+                    <MudTd>@(context.KmAlAcquisto?.ToString("N0") ?? "—")</MudTd>
+                    <MudTd>
+                        @if (context.IsAttuale)
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText Class="pa-4">Nessun proprietario registrato.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudTabPanel>
+
+    </MudTabs>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private VehicleDto? _vehicle;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await VehicleService.GetByIdAsync(Id);
+        if (response.Success) _vehicle = response.Data;
+        _loading = false;
+    }
+
+    private Color StatoColor(DeadlineStatus stato) => stato switch
+    {
+        DeadlineStatus.Scaduta => Color.Error,
+        DeadlineStatus.InScadenza => Color.Warning,
+        _ => Color.Success
+    };
+}
