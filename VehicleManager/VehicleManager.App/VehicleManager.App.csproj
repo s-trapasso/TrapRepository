@@ -51,7 +51,7 @@
     <!-- Blazor WebView per MAUI -->
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="$(MauiVersion)" />
     <!-- MudBlazor: libreria UI componenti (tabelle, form, dialog, badge) -->
-    <PackageReference Include="MudBlazor" Version="7.0.0" />
+    <PackageReference Include="MudBlazor" Version="8.15.0" />
     <!-- Gestione preferenze e storage locale -->
     <PackageReference Include="Microsoft.Maui.Essentials" Version="$(MauiVersion)" />
   </ItemGroup>

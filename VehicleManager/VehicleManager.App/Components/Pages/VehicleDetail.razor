@@ -2,10 +2,14 @@
 @using VehicleManager.App.Services
 @using VehicleManager.Shared.DTOs
 @using VehicleManager.Shared.Enums
+@using VehicleManager.App.Components.Pages.Dialog
+
 @inject IVehicleService VehicleService
+@inject IOwnerService OwnerService
 @inject IMaintenanceService MaintenanceService
 @inject ISnackbar Snackbar
 @inject NavigationManager Nav
+@inject IDialogService DialogService
 
 <PageTitle>Dettaglio Veicolo — Vehicle Manager</PageTitle>
 
@@ -161,6 +165,16 @@ else
         <!-- TAB 4: Proprietari -->
         <MudTabPanel Text="Proprietari" Icon="@Icons.Material.Filled.People">
             <MudText Typo="Typo.subtitle1" Class="mb-3">Storico proprietà</MudText>
+            
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                           OnClick="ApriAssegnaProprietario">
+                    Assegna proprietario
+                </MudButton>
+            </div>
+
             <MudTable Items="_vehicle.Proprietari" Dense="true" Hover="true" Striped="true">
                 <HeaderContent>
                     <MudTh>Proprietario</MudTh>
@@ -213,4 +227,53 @@ else
         DeadlineStatus.InScadenza => Color.Warning,
         _ => Color.Success
     };
+
+    private async Task ApriAssegnaProprietario()
+    {
+         var parameters = new DialogParameters
+         {
+             { "VehicleId", _vehicle.Id }
+         };
+
+         var options = new DialogOptions
+         {
+             CloseButton = true,
+             MaxWidth = MaxWidth.Small,
+             CloseOnEscapeKey = true
+         };
+
+         var dialog = await DialogService.ShowAsync<AssegnaProprietarioDialog>(
+             "Assegna proprietario",
+             parameters,
+             options);
+
+         var result = await dialog.Result;
+
+         if (!result.Canceled && result.Data is int ownerId)
+         {
+             var dto = new CreateVehicleOwnershipDto
+             {
+                 VehicleId = _vehicle.Id,
+                 OwnerId = ownerId
+             };
+
+             var response = await OwnerService.AssegnaVeicoloAsync(dto);
+
+             if (response.Success)
+             {
+                 Snackbar.Add("Proprietario assegnato con successo", Severity.Success);
+                await RefreshTabProprietari(_vehicle.Id);
+             }
+             else
+             {
+                 Snackbar.Add(response.ErrorMessage ?? "Errore assegnazione", Severity.Error);
+             }
+         }
+    }
+
+    private async Task RefreshTabProprietari(int id)
+    {
+        var response = await VehicleService.GetByIdAsync(Id);
+        if (response.Success) _vehicle = response.Data;
+    }
 }
